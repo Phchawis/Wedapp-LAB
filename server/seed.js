@@ -27,7 +27,9 @@ export const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 
 // แปลงชนิดไฟล์จากนามสกุล/ไมม์
 export function kindFromFile(name, mime) {
   const ext = path.extname(name || '').toLowerCase();
-  if (ext === '.pdf' || mime === 'application/pdf') return 'pdf';
-  if (['.doc', '.docx'].includes(ext) || (mime || '').includes('word')) return 'word';
+  const m = mime || '';
+  if (ext === '.pdf' || m === 'application/pdf') return 'pdf';
+  if (['.doc', '.docx'].includes(ext) || m.includes('word')) return 'word';
+  if (['.xls', '.xlsx', '.xlsm', '.csv'].includes(ext) || m.includes('sheet') || m.includes('excel') || m.includes('csv')) return 'excel';
   return 'other';
 }

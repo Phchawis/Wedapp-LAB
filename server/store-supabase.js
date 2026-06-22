@@ -140,9 +140,13 @@ export async function createSupabaseStore() {
       return data ? attFromRow(data) : null;
     },
     async readAttachmentData(att) {
-      const { data, error } = await sb.storage.from(BUCKET).download(att.storage);
-      if (error || !data) return null;
-      return Buffer.from(await data.arrayBuffer());
+      // retry ครั้งหนึ่งเผื่อ read-after-write ของ Storage ยังไม่พร้อม
+      for (let i = 0; i < 2; i++) {
+        const { data, error } = await sb.storage.from(BUCKET).download(att.storage);
+        if (!error && data) return Buffer.from(await data.arrayBuffer());
+        if (i === 0) await new Promise((r) => setTimeout(r, 400));
+      }
+      return null;
     },
     async saveFile(file) {
       const ext = (file.originalname.match(/\.[^.]+$/) || [''])[0];

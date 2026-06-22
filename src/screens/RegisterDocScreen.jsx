@@ -161,9 +161,9 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '20px 16px', cursor: 'pointer', borderRadius: 'var(--radius-md)', border: '1.5px dashed var(--border-default)', background: 'var(--slate-50)', color: 'var(--text-secondary)', font: 'var(--type-ui)' }}
           >
             <Icon name="Download" size={18} color="var(--brand-600)" style={{ transform: 'rotate(180deg)' }} />
-            คลิกหรือลากไฟล์ Word / PDF มาวางที่นี่ (สูงสุด 25 MB ต่อไฟล์)
+            คลิกหรือลากไฟล์ Word / Excel / PDF มาวางที่นี่ (สูงสุด 25 MB ต่อไฟล์)
           </div>
-          <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
             style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
 
           {files.length > 0 && (

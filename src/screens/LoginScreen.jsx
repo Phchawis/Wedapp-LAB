@@ -8,8 +8,8 @@ const seal = '/lab-seal.png';
 /* Login — identity gate for the QMS. Split: indigo gradient brand panel
    with the hospital seal, clean form card. Authenticates against the API. */
 export function LoginScreen({ onSubmit }) {
-  const [user, setUser] = useState('creator');
-  const [pw, setPw] = useState('creator123');
+  const [user, setUser] = useState('');
+  const [pw, setPw] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const narrow = useNarrow(860);
@@ -101,14 +101,6 @@ export function LoginScreen({ onSubmit }) {
             </div>
             <Button type="submit" block size="lg" disabled={busy} style={{ boxShadow: 'var(--glow-brand)' }} iconRight={<Icon name="ArrowRight" size={18} color="#fff" />}>{busy ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบ'}</Button>
           </form>
-          <div style={{ marginTop: 22, padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--slate-50)', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>บัญชีทดลอง (Demo)</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--text-2xs)/1.5 var(--font-mono)', color: 'var(--text-secondary)' }}>
-              <span>creator / creator123 — แก้ไขได้ทุกอย่าง</span>
-              <span>admin / admin123 — จัดการผู้ใช้ · นำเข้า/ลบเอกสาร</span>
-              <span>user / user123 — ดู ดาวน์โหลด พิมพ์</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

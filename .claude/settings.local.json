@@ -18,7 +18,13 @@
       "Bash(curl -s http://localhost:3001/api/documents -H 'Authorization: Bearer __TRACKED_VAR__' -w '\\\\ndocs HTTP %{http_code}\\\\n' -o /tmp/docs.json)",
       "Bash(node -e \"const d=require\\('/tmp/docs.json'\\);console.log\\('doc count:',d.length\\)\")",
       "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(48\\).toString\\('base64url'\\)\\)\")",
-      "Bash(curl -s -o /dev/null -w \"API HTTP %{http_code}\\\\n\" -X POST http://localhost:3001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"creator\",\"password\":\"creator123\"}')"
+      "Bash(curl -s -o /dev/null -w \"API HTTP %{http_code}\\\\n\" -X POST http://localhost:3001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"creator\",\"password\":\"creator123\"}')",
+      "Bash(curl -s -o /dev/null -w \"api %{http_code}\\\\n\" http://localhost:3001/api/documents)",
+      "Bash(curl -s -X POST http://localhost:3001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"creator\",\"password\":\"creator123\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(node --env-file=.env -e \"import\\('@supabase/supabase-js'\\).then\\(async \\({createClient}\\)=>{const sb=createClient\\(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}}\\);const {data,error}=await sb.from\\('app_users'\\).select\\('username,role'\\);if\\(error\\){console.log\\('ERROR:',error.message\\)}else{console.log\\('users in Supabase:',JSON.stringify\\(data\\)\\)}}\\)\")",
+      "Bash(node --env-file=.env -e \"import\\('jsonwebtoken'\\).then\\(j=>{console.log\\(j.default.sign\\({username:'gpharkp',name:'gpharkp',role:'creator'},process.env.JWT_SECRET,{expiresIn:'1h'}\\)\\)}\\)\")",
+      "Bash(git add *)",
+      "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"เพิ่มรองรับไฟล์ Excel, เอากล่องบัญชีทดลองออก, เตรียม deploy \\(Render\\)\")"
     ]
   }
 }

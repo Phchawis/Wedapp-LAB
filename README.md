@@ -29,6 +29,27 @@ Backend เลือก store เองใน [`server/store.js`](server/store.j
 
 > ⚠️ `service_role`/`sb_secret` key ใช้เฉพาะฝั่ง backend เท่านั้น ห้ามใส่ใน frontend และห้าม commit `.env`
 
+## Deploy ขึ้นออนไลน์ (Render — ฟรี)
+แอปรันเป็น **บริการเดียว**: backend (Express) เสิร์ฟทั้ง API และหน้าเว็บที่ build แล้ว → ใช้โฮสต์ตัวเดียวจบ
+
+ขั้นตอน:
+1. นำโค้ดขึ้น GitHub (repo นี้ commit ไว้ให้แล้ว — เหลือ push):
+   ```bash
+   git remote add origin https://github.com/<ชื่อคุณ>/<ชื่อ-repo>.git
+   git branch -M main
+   git push -u origin main
+   ```
+   *(ไม่ถนัด command line ใช้แอป **GitHub Desktop** ลากโฟลเดอร์เข้าไป แล้วกด Publish ก็ได้)*
+2. ไปที่ https://render.com → สมัคร/ล็อกอิน (ไม่ต้องใส่บัตร) → **New → Blueprint** → เลือก repo ที่เพิ่ง push
+   Render จะอ่าน [`render.yaml`](render.yaml) ตั้งค่า build/start ให้อัตโนมัติ
+3. Render จะถามค่า env 2 ตัว — กรอก:
+   - `SUPABASE_URL` = `https://eyekndzyolctexjgvcxh.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` = secret key (`sb_secret_…`)
+   *(`JWT_SECRET` Render สุ่มให้เอง)*
+4. กด **Apply / Create** → รอ build เสร็จ → ได้ลิงก์ `https://tuh-lab-qms.onrender.com` เปิดใช้งานได้เลย
+
+> โน้ต: แพลนฟรีจะ "หลับ" เมื่อไม่มีคนใช้ ~15 นาที เปิดครั้งถัดไปจะตื่นช้า ~30–50 วินาที (ครั้งเดียว) — ปกติของฟรีทุกเจ้า
+
 ## โฟลว์การทำงาน
 **เข้าสู่ระบบ (Login)** → **แดชบอร์ด** → **ทะเบียนเอกสาร** (กรองตามประเภท / หมวดงาน / สถานะ + ค้นหา) → **รายละเอียดเอกสาร** (header เอกสารควบคุม, ไฟล์แนบ PDF/Word/URL, ประวัติการแก้ไข, การดำเนินการ workflow)
 
