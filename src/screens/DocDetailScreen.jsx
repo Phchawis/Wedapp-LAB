@@ -1,0 +1,227 @@
+import { Button, StatusBadge, DocTypeTag, Card, Alert } from '../components/ds/index.js';
+import { Icon } from '../components/Icon.jsx';
+import { FILE_META } from '../components/FileChip.jsx';
+import { useNarrow } from '../hooks/useNarrow.js';
+import { QMS } from '../data/taxonomy.js';
+import { can } from '../auth/users.js';
+import { api } from '../api.js';
+
+const seal = '/lab-seal.png';
+const TODAY = '2026-06-22';
+
+/* DocDetailScreen — controlled-document view: header band, attachments,
+   revision history, and permission-gated workflow / export actions. */
+export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
+  const Q = QMS;
+  const catObj = Q.WORK_CATEGORIES.find((c) => c.code === doc.cat);
+  const typeObj = Q.DOC_TYPES.find((t) => t.code === doc.type);
+  const narrow = useNarrow(900);
+
+  const canEdit = can(role, 'docs:edit');
+  const canDelete = can(role, 'docs:delete');
+  const attachments = doc.attachments || [];
+
+  // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
+  const publish = () => onUpdate(doc.no, { status: 'effective', updated: TODAY, action: 'doc:publish' });
+  const recordEdit = () => onUpdate(doc.no, { rev: doc.rev + 1, status: 'review', updated: TODAY, action: 'doc:edit' });
+  const obsolete = () => onUpdate(doc.no, { status: 'obsolete', updated: TODAY, action: 'doc:obsolete' });
+  const removeDoc = () => {
+    if (window.confirm(`ยืนยันการลบเอกสาร ${doc.no} ออกจากทะเบียน?`)) onDelete(doc);
+  };
+
+  // เปิด/ดาวน์โหลดไฟล์แนบจริงจาก backend
+  const openAttachment = async (att, download) => {
+    if (att.kind === 'url') { window.open(att.url, '_blank', 'noopener'); return; }
+    try {
+      const blob = await api.downloadAttachment(att.id);
+      const url = URL.createObjectURL(blob);
+      if (download) {
+        const a = document.createElement('a');
+        a.href = url; a.download = att.name; a.click();
+      } else {
+        window.open(url, '_blank', 'noopener');
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+      window.alert(e.message || 'เปิดไฟล์ไม่สำเร็จ');
+    }
+  };
+
+  // ดาวน์โหลดสรุปข้อมูลเอกสารเป็นไฟล์ข้อความ (จำลองการดาวน์โหลด)
+  const downloadDoc = () => {
+    const lines = [
+      `เลขที่เอกสาร: ${doc.no}`,
+      `ชื่อเอกสาร: ${doc.th}`,
+      `ประเภท: ${typeObj.th} (${doc.type})`,
+      `หมวดงาน: ${catObj.th} (${doc.cat})`,
+      `แก้ไขครั้งที่: ${String(doc.rev).padStart(2, '0')}`,
+      `สถานะ: ${Q.STATUS[doc.status]?.th || doc.status}`,
+      `วันที่: ${doc.updated}`,
+      `ผู้รับผิดชอบ: ${doc.owner}`,
+      `ระยะเวลาจัดเก็บ: ${doc.retention ? doc.retention + ' ปี' : '-'}`,
+      `ไฟล์แนบ: ${doc.files.join(', ')}`,
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.no}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const printDoc = () => window.print();
+
+  const Field = ({ k, v }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <span style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{k}</span>
+      <span style={{ font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{v}</span>
+    </div>
+  );
+
+  return (
+    <div className="qms-rise" style={{ maxWidth: 1080 }}>
+      <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: 0, marginBottom: 16 }}>
+        <Icon name="ArrowLeft" size={16} /> กลับสู่ทะเบียนเอกสาร
+      </button>
+
+      {doc.status === 'review' && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert tone="warning" title="เอกสารฉบับนี้อยู่ระหว่างทบทวน" icon={<Icon name="AlertTriangle" size={18} color="var(--amber-700)" />}>
+            กรุณาใช้เอกสารฉบับที่ประกาศใช้ล่าสุดจนกว่าการทบทวนจะแล้วเสร็จ
+          </Alert>
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24, alignItems: 'start' }}>
+        {/* Main column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Controlled-document header band */}
+          <div style={{ background: '#fff', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr', borderBottom: '1.5px solid var(--brand-700)' }}>
+              <div style={{ background: 'var(--brand-50)', display: 'grid', placeItems: 'center', borderRight: '1px solid var(--border-subtle)' }}>
+                <img src={seal} alt="ตราโรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ" style={{ width: 46, height: 46, objectFit: 'contain' }} />
+              </div>
+              <div style={{ padding: '14px 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                  <DocTypeTag type={doc.type} />
+                  <StatusBadge status={doc.status} size="sm" />
+                </div>
+                <h1 style={{ font: 'var(--fw-bold) var(--text-2xl)/1.2 var(--font-display)', color: 'var(--text-primary)', marginBottom: 4 }}>{doc.th}</h1>
+                <div style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)' }}>{typeObj.th} · หมวดงาน{catObj.th}</div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 16, padding: '16px 18px', background: 'var(--slate-50)' }}>
+              <Field k="เลขที่เอกสาร" v={doc.no} />
+              <Field k="แก้ไขครั้งที่" v={String(doc.rev).padStart(2, '0')} />
+              <Field k="ประกาศใช้" v={doc.updated} />
+              <Field k="ผู้รับผิดชอบ" v={doc.owner} />
+              <Field k="ระยะเวลาจัดเก็บ" v={doc.retention ? doc.retention + ' ปี' : '—'} />
+            </div>
+          </div>
+
+          {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
+          <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>
+            {attachments.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {attachments.map((att) => {
+                  const m = FILE_META[att.kind] || { label: 'ไฟล์', icon: 'FileText', c: 'var(--slate-600)', bg: 'var(--slate-100)' };
+                  const isUrl = att.kind === 'url';
+                  return (
+                    <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', background: m.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                        <Icon name={m.icon} size={19} color={m.c} sw={2} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.2 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.name}</div>
+                        <div style={{ font: 'var(--text-2xs)/1.3 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>
+                          {isUrl ? 'ลิงก์ภายนอก' : `${m.label}${att.size ? ' · ' + (att.size / 1024).toFixed(0) + ' KB' : ''}`}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {isUrl ? (
+                          <Button variant="secondary" size="sm" onClick={() => openAttachment(att)} iconLeft={<Icon name="ExternalLink" size={15} color="var(--teal-700)" />}>เปิดลิงก์</Button>
+                        ) : (
+                          <>
+                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--teal-700)" />}>เปิดดู</Button>}
+                            <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลด</Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                  {(doc.files || []).map((f) => {
+                    const m = FILE_META[f] || { label: f, c: 'var(--slate-600)', bg: 'var(--slate-100)', icon: 'FileText' };
+                    return (
+                      <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-sm)', background: m.bg, color: m.c, font: 'var(--fw-semibold) var(--text-xs)/1 var(--font-body)' }}>
+                        <Icon name={m.icon} size={14} color={m.c} sw={2.2} /> {m.label}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>เอกสารตัวอย่าง — ยังไม่มีไฟล์จริงในระบบ (ลงทะเบียนใหม่เพื่อแนบไฟล์)</div>
+              </div>
+            )}
+          </Card>
+
+          {/* Revision history */}
+          <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> ประวัติการแก้ไข</span>}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {Q.REVISIONS.map((r, i) => (
+                <div key={r.rev} style={{ display: 'flex', gap: 14, paddingBottom: i === Q.REVISIONS.length - 1 ? 0 : 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--teal-700)' : 'var(--slate-100)', color: i === 0 ? '#fff' : 'var(--text-secondary)', display: 'grid', placeItems: 'center', font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', flexShrink: 0 }}>{String(r.rev).padStart(2, '0')}</span>
+                    {i !== Q.REVISIONS.length - 1 && <span style={{ width: 1.5, flex: 1, background: 'var(--border-default)', marginTop: 4 }} />}
+                  </div>
+                  <div style={{ paddingBottom: 4 }}>
+                    <div style={{ font: 'var(--fw-medium) var(--text-base)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{r.note}</div>
+                    <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>{r.date} · {r.by}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Right rail */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 'calc(var(--topbar-height) + 16px)' }}>
+          {/* Export — available to every role */}
+          <Card padding="md">
+            <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>ดาวน์โหลด / พิมพ์</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Button variant="secondary" block size="sm" onClick={downloadDoc} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลดเอกสาร</Button>
+              <Button variant="secondary" block size="sm" onClick={printDoc} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์เอกสาร</Button>
+            </div>
+          </Card>
+
+          {/* Workflow — Creator (docs:edit) only */}
+          {canEdit && (
+            <Card padding="md">
+              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>การดำเนินการ (Workflow)</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Button variant="secondary" block size="sm" onClick={publish} disabled={doc.status === 'effective'} iconLeft={<Icon name="Megaphone" size={15} color="var(--teal-700)" />}>บันทึกประกาศใช้</Button>
+                <Button variant="secondary" block size="sm" onClick={recordEdit} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="PencilLine" size={15} color="var(--teal-700)" />}>บันทึกแก้ไข</Button>
+                <Button variant="secondary" block size="sm" onClick={obsolete} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="Ban" size={15} color="var(--teal-700)" />}>ยกเลิกการใช้งาน</Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Delete — Creator & Admin (docs:delete) */}
+          {canDelete && (
+            <Card padding="md">
+              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>จัดการเอกสาร</div>
+              <Button variant="danger" block size="sm" onClick={removeDoc} iconLeft={<Icon name="Trash2" size={15} color="#fff" />}>ลบเอกสารออกจากทะเบียน</Button>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DocDetailScreen;

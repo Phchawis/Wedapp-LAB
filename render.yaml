@@ -1,0 +1,20 @@
+# Render Blueprint — รัน TUH Lab QMS เป็นบริการเดียว (backend เสิร์ฟทั้ง API + เว็บ)
+# วิธีใช้: ดู README หัวข้อ "Deploy ขึ้น Render"
+services:
+  - type: web
+    name: tuh-lab-qms
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: JWT_SECRET
+        generateValue: true        # Render สุ่มให้อัตโนมัติ
+      - key: SUPABASE_URL
+        sync: false                # กรอกในหน้า Render เอง
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false                # กรอกในหน้า Render เอง (เป็นความลับ)
+      - key: SUPABASE_BUCKET
+        value: qms-files

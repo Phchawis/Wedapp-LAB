@@ -1,0 +1,199 @@
+/* ── Webfonts ────────────────────────────────────────────────
+   Anuphan (display) · Sarabun (body/UI) · IBM Plex Mono (codes). */
+@import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ── Color System ───────────────────────────────────────────
+   Palette drawn from the laboratory seal: indigo ring (brand +
+   UI primary), coral centre (warm accent), green medical cross. */
+:root {
+  /* Brand · indigo (seal ring) */
+  --brand-900: #1B2152;
+  --brand-800: #262E73;
+  --brand-700: #343E9B;   /* primary action / brand */
+  --brand-600: #4250BC;
+  --brand-500: #5E6CD6;
+  --brand-400: #8893E3;
+  --brand-300: #B4BBEE;
+  --brand-100: #E3E6F9;
+  --brand-50:  #F1F2FC;
+
+  /* Accent · coral (seal centre) */
+  --accent-700: #C2422A;
+  --accent-600: #DD5236;
+  --accent-500: #EC6647;
+  --accent-400: #F2876E;
+  --accent-100: #FBE2DA;
+  --accent-50:  #FDF0EC;
+
+  /* legacy aliases (older refs resolve to the indigo brand) */
+  --teal-900: var(--brand-900);
+  --teal-800: var(--brand-800);
+  --teal-700: var(--brand-700);
+  --teal-600: var(--brand-600);
+  --teal-500: var(--brand-500);
+  --teal-300: var(--brand-300);
+  --teal-100: var(--brand-100);
+  --teal-50:  var(--brand-50);
+  --gold-500: var(--accent-500);
+  --gold-100: var(--accent-100);
+
+  /* Supporting · sky (info / links) */
+  --blue-700: #1B5E8F;
+  --blue-600: #2374AE;
+  --blue-100: #DEEDF7;
+  --blue-50:  #EFF6FB;
+
+  /* Neutrals · cool blue-slate */
+  --slate-950: #11131F;
+  --slate-900: #181B2A;
+  --slate-800: #262A3D;
+  --slate-700: #3A3F55;
+  --slate-600: #54596F;
+  --slate-500: #70758C;
+  --slate-400: #969BB0;
+  --slate-300: #C4C8D6;
+  --slate-200: #E0E2EC;
+  --slate-100: #EEEFF5;
+  --slate-50:  #F6F7FB;
+  --white:     #FFFFFF;
+
+  /* Status ramps */
+  --green-700: #1B7A36;
+  --green-600: #259544;
+  --green-100: #DCF0E2;
+  --amber-700: #9A6800;
+  --amber-600: #C28400;
+  --amber-100: #FBEFD0;
+  --red-700:   #A31621;
+  --red-600:   #C42330;
+  --red-100:   #F9E0E2;
+  --violet-700:#5B3FA6;
+  --violet-600:#6E4FC4;
+  --violet-100:#EBE5F8;
+
+  /* Semantic surface aliases */
+  --surface-page:    var(--slate-50);
+  --surface-card:    var(--white);
+  --surface-sunken:  var(--slate-100);
+  --surface-inverse: var(--slate-900);
+  --surface-brand:   var(--brand-700);
+  --surface-brand-soft: var(--brand-50);
+
+  /* Semantic text aliases */
+  --text-primary:   var(--slate-900);
+  --text-secondary: var(--slate-600);
+  --text-tertiary:  var(--slate-500);
+  --text-on-brand:  var(--white);
+  --text-link:      var(--brand-600);
+  --text-disabled:  var(--slate-400);
+
+  /* Semantic line aliases */
+  --border-subtle:  var(--slate-200);
+  --border-default: var(--slate-300);
+  --border-strong:  var(--slate-400);
+  --border-brand:   var(--brand-600);
+  --focus-ring:     var(--brand-500);
+
+  /* Document-control status */
+  --status-draft-fg:     var(--slate-700);
+  --status-draft-bg:     var(--slate-100);
+  --status-review-fg:    var(--amber-700);
+  --status-review-bg:    var(--amber-100);
+  --status-approved-fg:  var(--blue-700);
+  --status-approved-bg:  var(--blue-100);
+  --status-effective-fg: var(--green-700);
+  --status-effective-bg: var(--green-100);
+  --status-obsolete-fg:  var(--red-700);
+  --status-obsolete-bg:  var(--red-100);
+  --status-controlled-fg:var(--violet-700);
+  --status-controlled-bg:var(--violet-100);
+
+  /* Modern effect tokens (gradients / glow / glass) */
+  --grad-brand:       linear-gradient(135deg, #4250BC 0%, #343E9B 55%, #262E73 100%);
+  --grad-brand-vivid: linear-gradient(140deg, #5E6CD6 0%, #343E9B 52%, #1B2152 100%);
+  --grad-hero:        linear-gradient(135deg, #4250BC 0%, #5A4FB8 42%, #C2422A 100%);
+  --grad-accent:      linear-gradient(135deg, #F2876E 0%, #EC6647 50%, #C2422A 100%);
+  --grad-sheen:       linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
+  --glow-brand:       0 10px 30px -8px rgba(52,62,155,.45);
+  --glow-brand-soft:  0 6px 18px -8px rgba(52,62,155,.35);
+  --glow-accent:      0 10px 30px -8px rgba(236,102,71,.40);
+  --glass-bg:         rgba(255,255,255,.72);
+  --glass-border:     rgba(255,255,255,.55);
+
+  /* ── Typography ── */
+  --font-display: 'Anuphan', 'Sarabun', system-ui, sans-serif;
+  --font-body:    'Sarabun', system-ui, -apple-system, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --text-2xs: 0.6875rem;  /* 11px */
+  --text-xs:  0.75rem;    /* 12px */
+  --text-sm:  0.8125rem;  /* 13px */
+  --text-base:0.9375rem;  /* 15px */
+  --text-md:  1.0625rem;  /* 17px */
+  --text-lg:  1.25rem;    /* 20px */
+  --text-xl:  1.5rem;     /* 24px */
+  --text-2xl: 1.875rem;   /* 30px */
+  --text-3xl: 2.375rem;   /* 38px */
+  --text-4xl: 3rem;       /* 48px */
+
+  --leading-tight: 1.25;
+  --leading-snug:  1.4;
+  --leading-normal:1.6;
+  --leading-relaxed:1.75;
+
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+
+  --type-page-title:  var(--fw-bold) var(--text-2xl)/var(--leading-tight) var(--font-display);
+  --type-section:     var(--fw-semibold) var(--text-xl)/var(--leading-snug) var(--font-display);
+  --type-card-title:  var(--fw-semibold) var(--text-lg)/var(--leading-snug) var(--font-display);
+  --type-body:        var(--fw-regular) var(--text-base)/var(--leading-normal) var(--font-body);
+  --type-ui:          var(--fw-medium) var(--text-sm)/var(--leading-snug) var(--font-body);
+  --type-caption:     var(--fw-regular) var(--text-xs)/var(--leading-snug) var(--font-body);
+  --type-code:        var(--fw-medium) var(--text-sm)/var(--leading-snug) var(--font-mono);
+
+  /* ── Spacing ── */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --container-max: 1320px;
+  --sidebar-width: 264px;
+  --topbar-height: 60px;
+  --page-gutter: var(--space-8);
+
+  /* ── Radius · Elevation · Motion ── */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 26, 30, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 26, 30, 0.08), 0 1px 2px rgba(15, 26, 30, 0.05);
+  --shadow-md: 0 4px 10px -2px rgba(15, 26, 30, 0.10), 0 2px 4px -2px rgba(15, 26, 30, 0.06);
+  --shadow-lg: 0 12px 24px -6px rgba(15, 26, 30, 0.14), 0 4px 8px -4px rgba(15, 26, 30, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(30, 158, 146, 0.35);
+
+  --ease-standard: cubic-bezier(0.2, 0, 0.13, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 260ms;
+}
