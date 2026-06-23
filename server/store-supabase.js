@@ -125,6 +125,7 @@ export async function createSupabaseStore() {
       if (patch.status != null) row.status = patch.status;
       if (patch.rev != null) row.rev = patch.rev;
       if (patch.updated != null) row.updated = patch.updated;
+      if (patch.files != null) row.files = patch.files;
       const { data, error } = await sb.from('documents').update(row).eq('no', no).select().maybeSingle();
       must(error);
       return data ? withAtt(docFromRow(data)) : null;
@@ -141,6 +142,22 @@ export async function createSupabaseStore() {
     async getAttachment(id) {
       const { data, error } = await sb.from('attachments').select('*').eq('id', id).maybeSingle();
       must(error);
+      return data ? attFromRow(data) : null;
+    },
+    // แทนที่ไฟล์แนบเดิมด้วยไฟล์ใหม่ (อัปเดตเวอร์ชัน) — ลบไฟล์เก่าใน Storage ด้วย
+    async updateAttachment(id, patch) {
+      const { data: cur } = await sb.from('attachments').select('storage_path').eq('id', id).maybeSingle();
+      const row = {};
+      if (patch.name != null) row.name = patch.name;
+      if (patch.kind != null) row.kind = patch.kind;
+      if (patch.mime != null) row.mime = patch.mime;
+      if (patch.size != null) row.size = patch.size;
+      if (patch.storage != null) row.storage_path = patch.storage;
+      const { data, error } = await sb.from('attachments').update(row).eq('id', id).select().maybeSingle();
+      must(error);
+      if (patch.storage && cur?.storage_path && cur.storage_path !== patch.storage) {
+        await sb.storage.from(BUCKET).remove([cur.storage_path]);
+      }
       return data ? attFromRow(data) : null;
     },
     async readAttachmentData(att) {
