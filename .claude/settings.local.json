@@ -50,7 +50,8 @@
       "Bash(node --check server/index.js)",
       "Bash(echo \"pid $!\")",
       "Bash(kill 75526)",
-      "Bash(rm -f /tmp/qms-test.log)"
+      "Bash(rm -f /tmp/qms-test.log)",
+      "Bash(kill 77954)"
     ]
   }
 }
