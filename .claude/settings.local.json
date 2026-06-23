@@ -35,7 +35,18 @@
       "Bash(echo \"origin HEAD: $\\(git ls-remote origin -h refs/heads/master)",
       "Bash(gh api *)",
       "Bash(git log *)",
-      "Bash(git grep *)"
+      "Bash(git grep *)",
+      "Bash(unset SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY)",
+      "Bash(QMS_API_PORT=3099 node server/index.js)",
+      "Bash(echo \"started pid $!\")",
+      "Read(//tmp/**)",
+      "Bash(printf 'version two NEW content with thai ภาษาไทย')",
+      "Bash(curl -s -X POST __TRACKED_VAR__/documents/__TRACKED_VAR__/attachments/__TRACKED_VAR__/version -H 'Authorization: Bearer __TRACKED_VAR__' -F 'file=@v2.xlsx;filename=ไฟล์เวอร์ชัน2.xlsx')",
+      "Bash(node -e \"const d=require\\('/tmp/updated.json'\\);console.log\\('rev:',d.rev,'| att:',d.attachments.map\\(a=>a.name+' / '+a.size+'B'\\),'| history:',d.history.map\\(h=>h.action\\)\\)\")",
+      "Bash(node -e \"console.log\\(require\\('/tmp/updated.json'\\).attachments[0].id\\)\")",
+      "Bash(curl -s __TRACKED_VAR__/attachments/__TRACKED_VAR__/download -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(kill 73733)",
+      "Bash(rm -f /tmp/v1.xlsx /tmp/v2.xlsx /tmp/created.json /tmp/updated.json /tmp/testno.txt /tmp/testtok.txt /tmp/testatt.txt /tmp/qms-test.log)"
     ]
   }
 }
