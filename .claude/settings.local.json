@@ -33,7 +33,9 @@
       "WebSearch",
       "Bash(git ls-remote *)",
       "Bash(echo \"origin HEAD: $\\(git ls-remote origin -h refs/heads/master)",
-      "Bash(gh api *)"
+      "Bash(gh api *)",
+      "Bash(git log *)",
+      "Bash(git grep *)"
     ]
   }
 }
