@@ -58,6 +58,12 @@ export const api = {
   createDocument: (formData) => req('/documents', { method: 'POST', body: formData, isForm: true }),
   updateDocument: (no, patch) => req('/documents/' + encodeURIComponent(no), { method: 'PATCH', body: patch }),
   deleteDocument: (no) => req('/documents/' + encodeURIComponent(no), { method: 'DELETE' }),
+  // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ (แทนที่ไฟล์เดิม) — ส่งไฟล์เดียวแบบ FormData
+  updateAttachmentFile: (no, id, file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return req('/documents/' + encodeURIComponent(no) + '/attachments/' + encodeURIComponent(id) + '/version', { method: 'POST', body: fd, isForm: true });
+  },
 
   listUsers: () => req('/users'),
   createUser: (u) => req('/users', { method: 'POST', body: u }),
