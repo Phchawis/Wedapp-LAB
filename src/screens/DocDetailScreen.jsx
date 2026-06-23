@@ -47,30 +47,47 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
     }
   };
 
-  // ดาวน์โหลดสรุปข้อมูลเอกสารเป็นไฟล์ข้อความ (จำลองการดาวน์โหลด)
-  const downloadDoc = () => {
-    const lines = [
-      `เลขที่เอกสาร: ${doc.no}`,
-      `ชื่อเอกสาร: ${doc.th}`,
-      `ประเภท: ${typeObj.th} (${doc.type})`,
-      `หมวดงาน: ${catObj.th} (${doc.cat})`,
-      `แก้ไขครั้งที่: ${String(doc.rev).padStart(2, '0')}`,
-      `สถานะ: ${Q.STATUS[doc.status]?.th || doc.status}`,
-      `วันที่: ${doc.updated}`,
-      `ผู้รับผิดชอบ: ${doc.owner}`,
-      `ระยะเวลาจัดเก็บ: ${doc.retention ? doc.retention + ' ปี' : '-'}`,
-      `ไฟล์แนบ: ${doc.files.join(', ')}`,
-    ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${doc.no}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // ไฟล์จริงที่อัปโหลด (ไม่นับลิงก์) และไฟล์ PDF สำหรับสั่งพิมพ์
+  const fileAtts = attachments.filter((a) => a.kind !== 'url');
+  const printablePdf = fileAtts.find((a) => a.kind === 'pdf');
+
+  // ดาวน์โหลดไฟล์เอกสารจริงทั้งหมด
+  const downloadDoc = async () => {
+    if (fileAtts.length === 0) {
+      window.alert('เอกสารนี้ยังไม่มีไฟล์แนบให้ดาวน์โหลด');
+      return;
+    }
+    for (const a of fileAtts) {
+      await openAttachment(a, true);
+    }
   };
 
-  const printDoc = () => window.print();
+  // พิมพ์เอกสาร — เปิดไฟล์ PDF แล้วสั่งพิมพ์ (เบราว์เซอร์พิมพ์ตรงได้เฉพาะ PDF)
+  const printDoc = async () => {
+    if (!printablePdf) {
+      window.alert('พิมพ์ตรงจากระบบได้เฉพาะไฟล์ PDF\nเอกสารนี้ไม่มีไฟล์ PDF — กรุณาดาวน์โหลดไฟล์แล้วสั่งพิมพ์จากโปรแกรม (เช่น Word/Excel)');
+      return;
+    }
+    try {
+      const blob = await api.downloadAttachment(printablePdf.id);
+      const url = URL.createObjectURL(blob);
+      // พิมพ์ผ่าน iframe ที่ซ่อนไว้ ถ้าไม่ได้ค่อยเปิดแท็บใหม่ให้พิมพ์เอง
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.src = url;
+      iframe.onload = () => {
+        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
+        catch { window.open(url, '_blank', 'noopener'); }
+      };
+      document.body.appendChild(iframe);
+      setTimeout(() => { URL.revokeObjectURL(url); iframe.remove(); }, 60000);
+    } catch (e) {
+      window.alert(e.message || 'พิมพ์เอกสารไม่สำเร็จ');
+    }
+  };
 
   const Field = ({ k, v }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
