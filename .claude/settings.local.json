@@ -46,7 +46,11 @@
       "Bash(node -e \"console.log\\(require\\('/tmp/updated.json'\\).attachments[0].id\\)\")",
       "Bash(curl -s __TRACKED_VAR__/attachments/__TRACKED_VAR__/download -H 'Authorization: Bearer __TRACKED_VAR__')",
       "Bash(kill 73733)",
-      "Bash(rm -f /tmp/v1.xlsx /tmp/v2.xlsx /tmp/created.json /tmp/updated.json /tmp/testno.txt /tmp/testtok.txt /tmp/testatt.txt /tmp/qms-test.log)"
+      "Bash(rm -f /tmp/v1.xlsx /tmp/v2.xlsx /tmp/created.json /tmp/updated.json /tmp/testno.txt /tmp/testtok.txt /tmp/testatt.txt /tmp/qms-test.log)",
+      "Bash(node --check server/index.js)",
+      "Bash(echo \"pid $!\")",
+      "Bash(kill 75526)",
+      "Bash(rm -f /tmp/qms-test.log)"
     ]
   }
 }
