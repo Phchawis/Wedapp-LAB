@@ -20,7 +20,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'tuh-qms-dev-secret-change-me';
 
 const PERMISSIONS = {
   creator: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
-  admin: ['users:manage', 'docs:create', 'docs:delete', 'docs:view', 'docs:export'],
+  admin: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
   user: ['docs:view', 'docs:export'],
 };
 const can = (role, action) => (PERMISSIONS[role] || []).includes(action);
