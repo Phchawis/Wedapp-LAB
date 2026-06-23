@@ -93,6 +93,14 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   };
 
   // อัปเดตไฟล์เป็นเวอร์ชันใหม่ — เลือกไฟล์ใหม่แทนที่ไฟล์เดิม (เพิ่มเลขแก้ไขอัตโนมัติ)
+  // สิทธิ์: Creator อัปเดตได้ทุกชนิด; Admin/User อัปเดตได้เฉพาะไฟล์ Excel
+  const isCreator = role === 'creator';
+  const EXCEL_EXT = ['xls', 'xlsx', 'xlsm', 'csv'];
+  const canUpdateFile = (att) => att.kind !== 'url' && onUpdateFile && (isCreator || att.kind === 'excel');
+  const acceptTypes = isCreator
+    ? '.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv'
+    : '.xls,.xlsx,.xlsm,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
+
   const fileInputRef = useRef(null);
   const pendingAttId = useRef(null);
   const [updatingId, setUpdatingId] = useState(null);
@@ -106,6 +114,14 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
     const attId = pendingAttId.current;
     e.target.value = '';
     if (!file || !attId || !onUpdateFile) return;
+    // Admin/User อัปโหลดได้เฉพาะ Excel — กันไว้ตั้งแต่ฝั่งหน้าเว็บ (backend ตรวจซ้ำอีกชั้น)
+    if (!isCreator) {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (!EXCEL_EXT.includes(ext)) {
+        window.alert('บทบาทของคุณอัปเดตได้เฉพาะไฟล์ Excel (.xlsx, .xls, .csv) เท่านั้น');
+        return;
+      }
+    }
     if (!window.confirm('แทนที่ไฟล์เดิมด้วยไฟล์ใหม่นี้? ระบบจะเพิ่มเลขแก้ไข (rev) และบันทึกประวัติให้อัตโนมัติ')) return;
     setUpdatingId(attId);
     try {
@@ -131,9 +147,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
       </button>
 
       {/* input ซ่อนสำหรับเลือกไฟล์ใหม่ตอนอัปเดตเวอร์ชัน */}
-      <input ref={fileInputRef} type="file" onChange={onFilePicked}
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-        style={{ display: 'none' }} />
+      <input ref={fileInputRef} type="file" onChange={onFilePicked} accept={acceptTypes} style={{ display: 'none' }} />
 
       {doc.status === 'review' && (
         <div style={{ marginBottom: 16 }}>
@@ -196,7 +210,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--teal-700)" />}>เปิดดู</Button>}
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์</Button>}
                             <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลด</Button>
-                            {canEdit && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--teal-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
+                            {canUpdateFile(att) && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--teal-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
                           </>
                         )}
                       </div>
