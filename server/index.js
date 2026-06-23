@@ -119,7 +119,8 @@ app.patch('/api/documents/:no', authMw, requirePerm('docs:edit'), wrap(async (re
 }));
 
 // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ — แทนที่ไฟล์เดิม + เพิ่มเลขแก้ไข (rev) + บันทึกประวัติ
-app.post('/api/documents/:no/attachments/:id/version', authMw, requirePerm('docs:edit'), upload.single('file'), wrap(async (req, res) => {
+// สิทธิ์: Creator อัปเดตได้ทุกชนิด; Admin/User อัปเดตได้เฉพาะไฟล์ Excel
+app.post('/api/documents/:no/attachments/:id/version', authMw, upload.single('file'), wrap(async (req, res) => {
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   const att = (doc.attachments || []).find((a) => a.id === req.params.id);
@@ -127,10 +128,16 @@ app.post('/api/documents/:no/attachments/:id/version', authMw, requirePerm('docs
   if (att.kind === 'url') return res.status(400).json({ error: 'อัปเดตได้เฉพาะไฟล์ที่อัปโหลด ไม่ใช่ลิงก์' });
   if (!req.file) return res.status(400).json({ error: 'กรุณาแนบไฟล์ใหม่' });
 
-  const storage = await store.saveFile(req.file);
   const name = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+  const newKind = kindFromFile(name, req.file.mimetype);
+  // ตรวจสิทธิ์ตามบทบาท — ไม่ใช่ Creator ต้องเป็น Excel ทั้งไฟล์เดิมและไฟล์ใหม่
+  if (req.user.role !== 'creator' && (att.kind !== 'excel' || newKind !== 'excel')) {
+    return res.status(403).json({ error: 'บทบาทของคุณอัปเดตได้เฉพาะไฟล์ Excel เท่านั้น' });
+  }
+
+  const storage = await store.saveFile(req.file);
   await store.updateAttachment(att.id, {
-    name, kind: kindFromFile(name, req.file.mimetype), mime: req.file.mimetype, size: req.file.size, storage,
+    name, kind: newKind, mime: req.file.mimetype, size: req.file.size, storage,
   });
 
   // เพิ่มเลขแก้ไข + ปรับวันที่ + ปรับชุดชนิดไฟล์ของเอกสาร
