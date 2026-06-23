@@ -59,6 +59,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
 
   // ไฟล์จริงที่อัปโหลด (ไม่นับลิงก์)
   const fileAtts = attachments.filter((a) => a.kind !== 'url');
+  // เฉพาะไฟล์ PDF — รองรับการพิมพ์ตรงจากระบบ
+  const pdfAtts = fileAtts.filter((a) => a.kind === 'pdf');
 
   // ดาวน์โหลดไฟล์เอกสารจริงทั้งหมด
   const downloadDoc = async () => {
@@ -71,13 +73,13 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
     }
   };
 
-  // พิมพ์เอกสาร — พิมพ์ไฟล์แรก (รองรับ PDF/Excel/Word/รูปภาพ)
+  // พิมพ์เอกสาร — พิมพ์เฉพาะไฟล์ PDF (ไฟล์แรก)
   const printDoc = async () => {
-    if (fileAtts.length === 0) {
-      window.alert('เอกสารนี้ยังไม่มีไฟล์ให้พิมพ์');
+    if (pdfAtts.length === 0) {
+      window.alert('เอกสารนี้ไม่มีไฟล์ PDF ให้พิมพ์');
       return;
     }
-    await printOne(fileAtts[0]);
+    await printOne(pdfAtts[0]);
   };
 
   const printOne = async (att) => {
@@ -161,7 +163,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
                         ) : (
                           <>
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--teal-700)" />}>เปิดดู</Button>}
-                            <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์</Button>
+                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์</Button>}
                             <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลด</Button>
                           </>
                         )}
@@ -222,7 +224,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
             <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>ดาวน์โหลด / พิมพ์</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <Button variant="secondary" block size="sm" onClick={downloadDoc} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลดเอกสาร</Button>
-              <Button variant="secondary" block size="sm" onClick={printDoc} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์เอกสาร</Button>
+              {pdfAtts.length > 0 && <Button variant="secondary" block size="sm" onClick={printDoc} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์เอกสาร</Button>}
             </div>
           </Card>
 
