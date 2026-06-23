@@ -93,7 +93,11 @@ export async function createSupabaseStore() {
     async getDocument(no) {
       const { data, error } = await sb.from('documents').select('*').eq('no', no).maybeSingle();
       must(error);
-      return data ? withAtt(docFromRow(data)) : null;
+      if (!data) return null;
+      const doc = await withAtt(docFromRow(data));
+      const { data: logs } = await sb.from('logs').select('ts,action,name').eq('target', no).order('ts', { ascending: false });
+      doc.history = (logs || []).map((l) => ({ ts: l.ts, action: l.action, by: l.name }));
+      return doc;
     },
     async documentExists(no) {
       const { data, error } = await sb.from('documents').select('no').ilike('no', no).maybeSingle();

@@ -4,11 +4,19 @@ import { FILE_META } from '../components/FileChip.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 import { can } from '../auth/users.js';
+import { LOG_ACTIONS } from '../auth/activityLog.js';
 import { api } from '../api.js';
 // printAttachment โหลดแบบ dynamic เฉพาะตอนสั่งพิมพ์ (xlsx/mammoth หนัก ไม่ดึงมาตอนเปิดแอป)
 
 const seal = '/lab-seal.png';
 const TODAY = '2026-06-22';
+
+function fmtTs(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso || '';
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 /* DocDetailScreen — controlled-document view: header band, attachments,
    revision history, and permission-gated workflow / export actions. */
@@ -21,6 +29,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
   const canEdit = can(role, 'docs:edit');
   const canDelete = can(role, 'docs:delete');
   const attachments = doc.attachments || [];
+  const history = doc.history || [];
 
   // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
   const publish = () => onUpdate(doc.no, { status: 'effective', updated: TODAY, action: 'doc:publish' });
@@ -178,22 +187,31 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
             )}
           </Card>
 
-          {/* Revision history */}
-          <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> ประวัติการแก้ไข</span>}>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {Q.REVISIONS.map((r, i) => (
-                <div key={r.rev} style={{ display: 'flex', gap: 14, paddingBottom: i === Q.REVISIONS.length - 1 ? 0 : 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--teal-700)' : 'var(--slate-100)', color: i === 0 ? '#fff' : 'var(--text-secondary)', display: 'grid', placeItems: 'center', font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', flexShrink: 0 }}>{String(r.rev).padStart(2, '0')}</span>
-                    {i !== Q.REVISIONS.length - 1 && <span style={{ width: 1.5, flex: 1, background: 'var(--border-default)', marginTop: 4 }} />}
-                  </div>
-                  <div style={{ paddingBottom: 4 }}>
-                    <div style={{ font: 'var(--fw-medium) var(--text-base)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{r.note}</div>
-                    <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>{r.date} · {r.by}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Activity history — สร้างจากบันทึกกิจกรรมจริงของเอกสารนี้ */}
+          <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> ประวัติการดำเนินการ</span>}>
+            {history.length === 0 ? (
+              <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>ยังไม่มีประวัติการดำเนินการสำหรับเอกสารนี้</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {history.map((h, i) => {
+                  const meta = LOG_ACTIONS[h.action] || { th: h.action, icon: 'History', c: 'var(--text-secondary)' };
+                  return (
+                    <div key={i} style={{ display: 'flex', gap: 14, paddingBottom: i === history.length - 1 ? 0 : 16 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--teal-700)' : 'var(--slate-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                          <Icon name={meta.icon} size={15} color={i === 0 ? '#fff' : 'var(--text-secondary)'} />
+                        </span>
+                        {i !== history.length - 1 && <span style={{ width: 1.5, flex: 1, background: 'var(--border-default)', marginTop: 4 }} />}
+                      </div>
+                      <div style={{ paddingBottom: 4 }}>
+                        <div style={{ font: 'var(--fw-medium) var(--text-base)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{meta.th}</div>
+                        <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTs(h.ts)} · {h.by}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         </div>
 

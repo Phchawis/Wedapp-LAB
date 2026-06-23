@@ -91,7 +91,9 @@ app.post('/api/documents', authMw, requirePerm('docs:create'), upload.array('fil
   const attachments = [];
   for (const f of req.files || []) {
     const storage = await store.saveFile(f);
-    attachments.push({ docNo: no, kind: kindFromFile(f.originalname, f.mimetype), name: f.originalname, mime: f.mimetype, size: f.size, storage });
+    // multer ตีความชื่อไฟล์เป็น latin1 → แปลงกลับเป็น UTF-8 เพื่อให้ชื่อไฟล์ภาษาไทยไม่เพี้ยน
+    const name = Buffer.from(f.originalname, 'latin1').toString('utf8');
+    attachments.push({ docNo: no, kind: kindFromFile(name, f.mimetype), name, mime: f.mimetype, size: f.size, storage });
   }
   for (const url of links) {
     if (url && url.trim()) attachments.push({ docNo: no, kind: 'url', name: url.trim(), url: url.trim() });
@@ -103,9 +105,9 @@ app.post('/api/documents', authMw, requirePerm('docs:create'), upload.array('fil
     updated: b.updated, owner: (b.owner || '').trim(), retention: parseInt(b.retention, 10) || 5,
     files: [...new Set(attachments.map((a) => a.kind))], createdAt: new Date().toISOString(),
   };
-  const created = await store.createDocument(doc, attachments);
+  await store.createDocument(doc, attachments);
   await logAction(req.user, 'doc:create', no);
-  res.status(201).json(created);
+  res.status(201).json(await store.getDocument(no)); // ส่งกลับพร้อมประวัติล่าสุด
 }));
 
 app.patch('/api/documents/:no', authMw, requirePerm('docs:edit'), wrap(async (req, res) => {
@@ -113,7 +115,7 @@ app.patch('/api/documents/:no', authMw, requirePerm('docs:edit'), wrap(async (re
   const updatedDoc = await store.updateDocument(req.params.no, { status, rev, updated });
   if (!updatedDoc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   await logAction(req.user, action || 'doc:edit', req.params.no);
-  res.json(updatedDoc);
+  res.json(await store.getDocument(req.params.no)); // ส่งกลับพร้อมประวัติล่าสุด
 }));
 
 app.delete('/api/documents/:no', authMw, requirePerm('docs:delete'), wrap(async (req, res) => {

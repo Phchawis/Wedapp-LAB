@@ -61,7 +61,12 @@ export const lowdbStore = {
   },
   async getDocument(no) {
     const d = db.data.documents.find((x) => x.no === no);
-    return d ? withAtt(d) : null;
+    if (!d) return null;
+    const doc = withAtt(d);
+    doc.history = db.data.logs
+      .filter((l) => l.target === no)
+      .map((l) => ({ ts: l.ts, action: l.action, by: l.name }));
+    return doc;
   },
   async documentExists(no) {
     return db.data.documents.some((d) => d.no.toLowerCase() === no.toLowerCase());

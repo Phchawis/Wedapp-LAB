@@ -9,6 +9,22 @@ const ROLE_TONE = {
   user: { fg: 'var(--slate-600)', bg: 'var(--slate-100)' },
 };
 
+// ตารางสิทธิ์ ทำได้/ทำไม่ได้ ของแต่ละระดับ
+const PERM_ROWS = [
+  { label: 'ดู / ดาวน์โหลด / พิมพ์เอกสาร', creator: true, admin: true, user: true },
+  { label: 'นำเข้า (ลงทะเบียน) เอกสาร', creator: true, admin: true, user: false },
+  { label: 'ลบเอกสาร', creator: true, admin: true, user: false },
+  { label: 'แก้ไข / Workflow เอกสาร (ประกาศใช้/แก้ไข/ยกเลิก)', creator: true, admin: false, user: false },
+  { label: 'เพิ่ม / ลบ ผู้ใช้งาน', creator: true, admin: true, user: false },
+  { label: 'ดูบันทึกกิจกรรม', creator: true, admin: true, user: false },
+];
+
+function Mark({ on }) {
+  return on
+    ? <span style={{ color: 'var(--green-700)', font: 'var(--fw-bold) var(--text-md)/1 var(--font-body)' }}>✓</span>
+    : <span style={{ color: 'var(--slate-300)', font: 'var(--fw-bold) var(--text-md)/1 var(--font-body)' }}>✕</span>;
+}
+
 function RoleBadge({ role }) {
   const t = ROLE_TONE[role] || ROLE_TONE.user;
   return (
@@ -66,7 +82,8 @@ export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
   };
 
   return (
-    <div className="qms-rise" style={{ maxWidth: 1000, display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
+    <div className="qms-rise" style={{ maxWidth: 1000, display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
       {/* User list */}
       <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Files" size={16} color="var(--text-secondary)" /> ผู้ใช้งานทั้งหมด ({users.length})</span>}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -110,15 +127,6 @@ export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
             prefix={<Icon name="Lock" size={16} color="var(--text-tertiary)" />} />
           <Select label="ระดับสิทธิ์" value={form.role} onChange={(e) => set('role', e.target.value)}
             options={assignableRoles.map((r) => ({ value: r, label: ROLES[r].short }))} />
-          {/* รายละเอียดสิทธิ์แต่ละระดับ — แยกออกมานอก dropdown */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'var(--slate-50)', border: '1px solid var(--border-subtle)' }}>
-            {assignableRoles.map((r) => (
-              <div key={r} style={{ display: 'flex', gap: 8, font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>
-                <span style={{ flex: '0 0 56px', font: 'var(--fw-semibold) var(--text-xs)/1.4 var(--font-body)', color: form.role === r ? 'var(--brand-700)' : 'var(--text-primary)' }}>{ROLES[r].short}</span>
-                <span>{ROLES[r].desc}</span>
-              </div>
-            ))}
-          </div>
           {submitError && <div style={{ font: 'var(--type-caption)', color: 'var(--red-600)' }}>{submitError}</div>}
           <Button type="submit" block disabled={busy} iconLeft={<Icon name="Check" size={16} color="#fff" />}>{busy ? 'กำลังเพิ่ม…' : 'เพิ่มผู้ใช้งาน'}</Button>
           {!isCreator && (
@@ -128,6 +136,30 @@ export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
           )}
         </form>
       </Card>
+    </div>
+
+    {/* ตารางสิทธิ์ ทำได้/ทำไม่ได้ ของแต่ละระดับ */}
+    <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="UserCog" size={16} color="var(--text-secondary)" /> สิทธิ์การใช้งานแต่ละระดับ</span>}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ background: 'var(--slate-50)', borderBottom: '1px solid var(--border-subtle)' }}>
+            {['ความสามารถ', 'Creator', 'Admin', 'User'].map((h, i) => (
+              <th key={i} style={{ textAlign: i === 0 ? 'left' : 'center', padding: '11px 16px', font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em', width: i === 0 ? 'auto' : 110 }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {PERM_ROWS.map((r, i) => (
+            <tr key={i} style={{ borderBottom: i === PERM_ROWS.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
+              <td style={{ padding: '11px 16px', font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{r.label}</td>
+              <td style={{ padding: '11px 16px', textAlign: 'center' }}><Mark on={r.creator} /></td>
+              <td style={{ padding: '11px 16px', textAlign: 'center' }}><Mark on={r.admin} /></td>
+              <td style={{ padding: '11px 16px', textAlign: 'center' }}><Mark on={r.user} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
     </div>
   );
 }

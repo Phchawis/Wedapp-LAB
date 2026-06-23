@@ -54,6 +54,7 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
           {can(user.role, 'users:manage') && <NavItem id="users" icon="UserCog" label="จัดการผู้ใช้งาน" />}
           {can(user.role, 'users:manage') && <NavItem id="log" icon="History" label="บันทึกกิจกรรม" />}
 
+          <div style={{ font: 'var(--text-2xs)/1 var(--font-body)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', padding: '14px 12px 6px' }}>หน่วยงาน</div>
           <button onClick={() => onCat('LAB')} title="งานห้องปฏิบัติการเทคนิคการแพทย์" style={{
             display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
             padding: '9px 12px', marginTop: 6, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
