@@ -14,9 +14,10 @@ const PERM_ROWS = [
   { label: 'ดู / ดาวน์โหลด / พิมพ์เอกสาร', creator: true, admin: true, user: true },
   { label: 'นำเข้า (ลงทะเบียน) เอกสาร', creator: true, admin: true, user: false },
   { label: 'ลบเอกสาร', creator: true, admin: true, user: false },
-  { label: 'แก้ไข / Workflow เอกสาร (ประกาศใช้/แก้ไข/ยกเลิก)', creator: true, admin: false, user: false },
+  { label: 'แก้ไข / Workflow เอกสาร (ประกาศใช้/แก้ไข/ยกเลิก)', creator: true, admin: true, user: false },
   { label: 'เพิ่ม / ลบ ผู้ใช้งาน', creator: true, admin: true, user: false },
   { label: 'ดูบันทึกกิจกรรม', creator: true, admin: true, user: false },
+  { label: 'แก้ไข WebApp (โค้ด/โครงสร้าง/ตั้งค่าระบบ)', creator: true, admin: false, user: false },
 ];
 
 function Mark({ on }) {
