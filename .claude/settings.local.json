@@ -30,7 +30,10 @@
       "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"พิมพ์เอกสารได้ทุกชนิด \\(PDF/Excel/Word/รูปภาพ\\) + ปุ่มพิมพ์รายไฟล์\")",
       "Bash(node --env-file=.env -e \"import\\('jsonwebtoken'\\).then\\(j=>{console.log\\(j.default.sign\\({username:'gpharkp',name:'ภาคย์ชวิศ',role:'creator'},process.env.JWT_SECRET,{expiresIn:'2h'}\\)\\)}\\)\")",
       "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"แก้ชื่อไฟล์ไทยเพี้ยน, ประวัติการดำเนินการจากกิจกรรมจริง, ตารางสิทธิ์, เพิ่มหัวข้อหน่วยงาน\")",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git ls-remote *)",
+      "Bash(echo \"origin HEAD: $\\(git ls-remote origin -h refs/heads/master)",
+      "Bash(gh api *)"
     ]
   }
 }
