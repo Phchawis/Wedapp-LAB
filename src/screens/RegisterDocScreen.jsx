@@ -12,14 +12,14 @@ function fmtSize(bytes) {
 }
 
 /* RegisterDocScreen — นำเข้าเอกสารคุณภาพเข้าสู่ระบบ
-   เลขที่เอกสาร: ประเภท-เลขเอกสาร(4หลัก)-รหัสเอกสาร(5หลัก) เช่น SP-0014-00123
+   เลขที่เอกสาร: ประเภท-รหัสเอกสาร เช่น SP-0014-00123 (รหัสพิมพ์ได้อิสระ ตัวเลข/ตัวอักษรกี่ตัวก็ได้)
    แนบไฟล์จริง (Word/PDF) อัปโหลด + แนบลิงก์ภายนอก (URL) — ส่งเป็น FormData ไป backend */
 export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const Q = QMS;
   const fileRef = useRef(null);
 
   const [form, setForm] = useState({
-    type: '', docNum: '', docCode: '',
+    type: '', docId: '',
     cat: '', th: '', owner: '',
     rev: '1', status: 'draft', updated: TODAY, retention: '5',
   });
@@ -30,7 +30,6 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const [submitError, setSubmitError] = useState('');
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const setDigits = (k, v, len) => set(k, v.replace(/\D/g, '').slice(0, len));
 
   const addFiles = (list) => setFiles((prev) => [...prev, ...Array.from(list)]);
   const removeFile = (i) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
@@ -38,15 +37,15 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const addLinkRow = () => setLinks((prev) => [...prev, '']);
   const removeLink = (i) => setLinks((prev) => (prev.length === 1 ? [''] : prev.filter((_, idx) => idx !== i)));
 
-  const noComposed = form.type && form.docNum && form.docCode ? `${form.type}-${form.docNum}-${form.docCode}` : '';
+  const docId = form.docId.trim();
+  const noComposed = form.type && docId ? `${form.type}-${docId}` : '';
   const duplicate = noComposed && docs.some((d) => d.no.toLowerCase() === noComposed.toLowerCase());
   const cleanLinks = links.map((l) => l.trim()).filter(Boolean);
   const attachmentCount = files.length + cleanLinks.length;
 
   const errors = {
     type: !form.type ? 'เลือกประเภทเอกสาร' : '',
-    docNum: !/^\d{4}$/.test(form.docNum) ? 'เลขเอกสารต้องเป็นตัวเลข 4 หลัก' : '',
-    docCode: !/^\d{5}$/.test(form.docCode) ? 'รหัสเอกสารต้องเป็นตัวเลข 5 หลัก' : '',
+    docId: !docId ? 'กรุณาระบุเลขที่เอกสาร' : '',
     duplicate: duplicate ? 'เลขที่เอกสารนี้มีอยู่แล้วในทะเบียน' : '',
     cat: !form.cat ? 'กรุณาเลือกหมวดงาน' : '',
     th: !form.th.trim() ? 'กรุณาระบุชื่อเอกสาร' : '',
@@ -54,7 +53,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
     attach: attachmentCount === 0 ? 'แนบไฟล์หรือลิงก์อย่างน้อย 1 รายการ' : '',
   };
   const valid = !Object.values(errors).some(Boolean);
-  const noError = errors.type || errors.docNum || errors.docCode || errors.duplicate;
+  const noError = errors.type || errors.docId || errors.duplicate;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,12 +113,8 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
                   <Icon name="ChevronRight" size={14} color="var(--text-tertiary)" style={{ transform: 'rotate(90deg)', position: 'absolute', right: 8, pointerEvents: 'none' }} />
                 </div>
                 <span style={dash}>-</span>
-                <div style={{ ...segBox(touched && errors.docNum), flex: 1 }}>
-                  <input inputMode="numeric" placeholder="0014" value={form.docNum} onChange={(e) => setDigits('docNum', e.target.value, 4)} style={segInput} aria-label="เลขเอกสาร 4 หลัก" />
-                </div>
-                <span style={dash}>-</span>
-                <div style={{ ...segBox(touched && errors.docCode), flex: 1.3 }}>
-                  <input inputMode="numeric" placeholder="00123" value={form.docCode} onChange={(e) => setDigits('docCode', e.target.value, 5)} style={segInput} aria-label="รหัสเอกสาร 5 หลัก" />
+                <div style={{ ...segBox(touched && errors.docId), flex: 1 }}>
+                  <input placeholder="0014-00123" value={form.docId} onChange={(e) => set('docId', e.target.value.replace(/\s/g, ''))} style={segInput} aria-label="เลขที่เอกสาร" />
                 </div>
               </div>
               {touched && noError && <span style={{ font: 'var(--type-caption)', color: 'var(--red-600)' }}>{noError}</span>}
