@@ -118,6 +118,29 @@ app.patch('/api/documents/:no', authMw, requirePerm('docs:edit'), wrap(async (re
   res.json(await store.getDocument(req.params.no)); // ส่งกลับพร้อมประวัติล่าสุด
 }));
 
+// อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ — แทนที่ไฟล์เดิม + เพิ่มเลขแก้ไข (rev) + บันทึกประวัติ
+app.post('/api/documents/:no/attachments/:id/version', authMw, requirePerm('docs:edit'), upload.single('file'), wrap(async (req, res) => {
+  const doc = await store.getDocument(req.params.no);
+  if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
+  const att = (doc.attachments || []).find((a) => a.id === req.params.id);
+  if (!att) return res.status(404).json({ error: 'ไม่พบไฟล์แนบ' });
+  if (att.kind === 'url') return res.status(400).json({ error: 'อัปเดตได้เฉพาะไฟล์ที่อัปโหลด ไม่ใช่ลิงก์' });
+  if (!req.file) return res.status(400).json({ error: 'กรุณาแนบไฟล์ใหม่' });
+
+  const storage = await store.saveFile(req.file);
+  const name = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+  await store.updateAttachment(att.id, {
+    name, kind: kindFromFile(name, req.file.mimetype), mime: req.file.mimetype, size: req.file.size, storage,
+  });
+
+  // เพิ่มเลขแก้ไข + ปรับวันที่ + ปรับชุดชนิดไฟล์ของเอกสาร
+  const fresh = await store.getDocument(req.params.no);
+  const kinds = [...new Set((fresh.attachments || []).map((a) => a.kind))];
+  await store.updateDocument(req.params.no, { rev: (doc.rev || 1) + 1, updated: new Date().toISOString().slice(0, 10), files: kinds });
+  await logAction(req.user, 'doc:file-update', req.params.no);
+  res.json(await store.getDocument(req.params.no));
+}));
+
 app.delete('/api/documents/:no', authMw, requirePerm('docs:delete'), wrap(async (req, res) => {
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
