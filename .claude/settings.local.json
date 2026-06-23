@@ -29,7 +29,8 @@
       "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"แก้ปุ่มดาวน์โหลด/พิมพ์เอกสารให้ทำงานกับไฟล์จริงที่อัปโหลด\")",
       "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"พิมพ์เอกสารได้ทุกชนิด \\(PDF/Excel/Word/รูปภาพ\\) + ปุ่มพิมพ์รายไฟล์\")",
       "Bash(node --env-file=.env -e \"import\\('jsonwebtoken'\\).then\\(j=>{console.log\\(j.default.sign\\({username:'gpharkp',name:'ภาคย์ชวิศ',role:'creator'},process.env.JWT_SECRET,{expiresIn:'2h'}\\)\\)}\\)\")",
-      "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"แก้ชื่อไฟล์ไทยเพี้ยน, ประวัติการดำเนินการจากกิจกรรมจริง, ตารางสิทธิ์, เพิ่มหัวข้อหน่วยงาน\")"
+      "Bash(git -c user.email=\"lab@tuh.local\" -c user.name=\"TUH Lab QMS\" commit -q -m \"แก้ชื่อไฟล์ไทยเพี้ยน, ประวัติการดำเนินการจากกิจกรรมจริง, ตารางสิทธิ์, เพิ่มหัวข้อหน่วยงาน\")",
+      "WebSearch"
     ]
   }
 }
