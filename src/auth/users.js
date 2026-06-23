@@ -8,7 +8,7 @@ export const USERS_KEY = 'tuh-qms-users-v1';
 // 3 ระดับสิทธิ์
 export const ROLES = {
   creator: { th: 'ผู้ดูแลสูงสุด', short: 'Creator', desc: 'แก้ไขได้ทุกอย่าง' },
-  admin: { th: 'ผู้ดูแลระบบ', short: 'Admin', desc: 'จัดการผู้ใช้ · นำเข้า/ลบเอกสาร' },
+  admin: { th: 'ผู้ดูแลระบบ', short: 'Admin', desc: 'จัดการผู้ใช้ · นำเข้า/ลบ · workflow เอกสาร' },
   user: { th: 'ผู้ใช้งาน', short: 'User', desc: 'ดู ดาวน์โหลด และพิมพ์เอกสาร' },
 };
 
@@ -17,7 +17,7 @@ export const ROLE_ORDER = ['creator', 'admin', 'user'];
 // สิทธิ์การทำงานแยกตามระดับ
 const PERMISSIONS = {
   creator: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
-  admin: ['users:manage', 'docs:create', 'docs:delete', 'docs:view', 'docs:export'],
+  admin: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
   user: ['docs:view', 'docs:export'],
 };
 
