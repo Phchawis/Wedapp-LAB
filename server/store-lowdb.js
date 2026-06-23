@@ -98,6 +98,18 @@ export const lowdbStore = {
   async getAttachment(id) {
     return db.data.attachments.find((a) => a.id === id) || null;
   },
+  // แทนที่ไฟล์แนบเดิมด้วยไฟล์ใหม่ (อัปเดตเวอร์ชัน) — ลบไฟล์เก่าออกจากดิสก์ด้วย
+  async updateAttachment(id, patch) {
+    const a = db.data.attachments.find((x) => x.id === id);
+    if (!a) return null;
+    const oldStorage = a.storage;
+    Object.assign(a, patch);
+    await db.write();
+    if (patch.storage && oldStorage && oldStorage !== patch.storage) {
+      try { fs.unlinkSync(path.join(UPLOAD_DIR, oldStorage)); } catch { /* ignore */ }
+    }
+    return a;
+  },
   async readAttachmentData(att) {
     const filePath = path.join(UPLOAD_DIR, att.storage);
     if (!fs.existsSync(filePath)) return null;
