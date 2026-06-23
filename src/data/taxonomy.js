@@ -16,6 +16,7 @@ export const DOC_TYPES = [
 
 // Work CATEGORIES (หมวดงาน). `code` is the section segment of the doc number.
 export const WORK_CATEGORIES = [
+  { code: 'LAB', th: 'งานห้องปฏิบัติการเทคนิคการแพทย์', en: 'Medical Technology Laboratory' },
   { code: 'OUT', th: 'รับสิ่งส่งตรวจและห้องปฏิบัติการส่งต่อ', en: 'Specimen Receiving & Referral' },
   { code: 'HEM', th: 'โลหิตวิทยา', en: 'Hematology' },
   { code: 'MIC', th: 'จุลทรรศนศาสตร์และปรสิตวิทยา', en: 'Microscopy & Parasitology' },
