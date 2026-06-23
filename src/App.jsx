@@ -106,6 +106,13 @@ export default function App() {
     } catch (e) { handleAuthError(e); }
   };
 
+  // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ — โยน error กลับให้หน้าจอแสดงเอง
+  const updateDocFile = async (no, attId, file) => {
+    const updated = await api.updateAttachmentFile(no, attId, file);
+    setDoc(updated);
+    await refreshAll(role);
+  };
+
   const deleteDoc = async (target) => {
     try {
       await api.deleteDocument(target.no);
@@ -143,7 +150,7 @@ export default function App() {
   else if (view === 'create' && can(role, 'docs:create')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
   else if (view === 'users' && isManager) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onDelete={deleteUser} />;
   else if (view === 'log' && isManager) body = <LogScreen logs={logs} />;
-  else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
+  else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
   else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} />;
 
   const shellView = (view === 'detail' || view === 'create')
