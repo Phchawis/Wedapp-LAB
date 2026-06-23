@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { Button, StatusBadge, DocTypeTag, Card, Alert } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { FILE_META } from '../components/FileChip.jsx';
@@ -20,7 +21,7 @@ function fmtTs(iso) {
 
 /* DocDetailScreen — controlled-document view: header band, attachments,
    revision history, and permission-gated workflow / export actions. */
-export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
+export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onDelete }) {
   const Q = QMS;
   const catObj = Q.WORK_CATEGORIES.find((c) => c.code === doc.cat);
   const typeObj = Q.DOC_TYPES.find((t) => t.code === doc.type);
@@ -91,6 +92,31 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
     }
   };
 
+  // อัปเดตไฟล์เป็นเวอร์ชันใหม่ — เลือกไฟล์ใหม่แทนที่ไฟล์เดิม (เพิ่มเลขแก้ไขอัตโนมัติ)
+  const fileInputRef = useRef(null);
+  const pendingAttId = useRef(null);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  const askUpdateFile = (att) => {
+    pendingAttId.current = att.id;
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+  const onFilePicked = async (e) => {
+    const file = e.target.files?.[0];
+    const attId = pendingAttId.current;
+    e.target.value = '';
+    if (!file || !attId || !onUpdateFile) return;
+    if (!window.confirm('แทนที่ไฟล์เดิมด้วยไฟล์ใหม่นี้? ระบบจะเพิ่มเลขแก้ไข (rev) และบันทึกประวัติให้อัตโนมัติ')) return;
+    setUpdatingId(attId);
+    try {
+      await onUpdateFile(doc.no, attId, file);
+    } catch (err) {
+      window.alert(err.message || 'อัปเดตไฟล์ไม่สำเร็จ');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const Field = ({ k, v }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <span style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{k}</span>
@@ -103,6 +129,11 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
       <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: 0, marginBottom: 16 }}>
         <Icon name="ArrowLeft" size={16} /> กลับสู่ทะเบียนเอกสาร
       </button>
+
+      {/* input ซ่อนสำหรับเลือกไฟล์ใหม่ตอนอัปเดตเวอร์ชัน */}
+      <input ref={fileInputRef} type="file" onChange={onFilePicked}
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+        style={{ display: 'none' }} />
 
       {doc.status === 'review' && (
         <div style={{ marginBottom: 16 }}>
@@ -165,6 +196,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--teal-700)" />}>เปิดดู</Button>}
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์</Button>}
                             <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลด</Button>
+                            {canEdit && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--teal-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
                           </>
                         )}
                       </div>
