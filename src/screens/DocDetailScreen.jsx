@@ -5,6 +5,7 @@ import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 import { can } from '../auth/users.js';
 import { api } from '../api.js';
+// printAttachment โหลดแบบ dynamic เฉพาะตอนสั่งพิมพ์ (xlsx/mammoth หนัก ไม่ดึงมาตอนเปิดแอป)
 
 const seal = '/lab-seal.png';
 const TODAY = '2026-06-22';
@@ -47,9 +48,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
     }
   };
 
-  // ไฟล์จริงที่อัปโหลด (ไม่นับลิงก์) และไฟล์ PDF สำหรับสั่งพิมพ์
+  // ไฟล์จริงที่อัปโหลด (ไม่นับลิงก์)
   const fileAtts = attachments.filter((a) => a.kind !== 'url');
-  const printablePdf = fileAtts.find((a) => a.kind === 'pdf');
 
   // ดาวน์โหลดไฟล์เอกสารจริงทั้งหมด
   const downloadDoc = async () => {
@@ -62,30 +62,21 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
     }
   };
 
-  // พิมพ์เอกสาร — เปิดไฟล์ PDF แล้วสั่งพิมพ์ (เบราว์เซอร์พิมพ์ตรงได้เฉพาะ PDF)
+  // พิมพ์เอกสาร — พิมพ์ไฟล์แรก (รองรับ PDF/Excel/Word/รูปภาพ)
   const printDoc = async () => {
-    if (!printablePdf) {
-      window.alert('พิมพ์ตรงจากระบบได้เฉพาะไฟล์ PDF\nเอกสารนี้ไม่มีไฟล์ PDF — กรุณาดาวน์โหลดไฟล์แล้วสั่งพิมพ์จากโปรแกรม (เช่น Word/Excel)');
+    if (fileAtts.length === 0) {
+      window.alert('เอกสารนี้ยังไม่มีไฟล์ให้พิมพ์');
       return;
     }
+    await printOne(fileAtts[0]);
+  };
+
+  const printOne = async (att) => {
     try {
-      const blob = await api.downloadAttachment(printablePdf.id);
-      const url = URL.createObjectURL(blob);
-      // พิมพ์ผ่าน iframe ที่ซ่อนไว้ ถ้าไม่ได้ค่อยเปิดแท็บใหม่ให้พิมพ์เอง
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = url;
-      iframe.onload = () => {
-        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
-        catch { window.open(url, '_blank', 'noopener'); }
-      };
-      document.body.appendChild(iframe);
-      setTimeout(() => { URL.revokeObjectURL(url); iframe.remove(); }, 60000);
+      const { printAttachment } = await import('../print.js');
+      await printAttachment(att);
     } catch (e) {
-      window.alert(e.message || 'พิมพ์เอกสารไม่สำเร็จ');
+      window.alert(e.message || 'พิมพ์ไม่สำเร็จ');
     }
   };
 
@@ -161,6 +152,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onDelete }) {
                         ) : (
                           <>
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--teal-700)" />}>เปิดดู</Button>}
+                            <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์</Button>
                             <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลด</Button>
                           </>
                         )}
