@@ -53,7 +53,8 @@
       "Bash(rm -f /tmp/qms-test.log)",
       "Bash(kill 77954)",
       "Bash(node -e \"console.log\\('@aws-sdk/client-s3:', require\\('./package.json'\\).dependencies['@aws-sdk/client-s3']\\)\")",
-      "Bash(node -e \"import\\('@aws-sdk/client-s3'\\).then\\(m=>console.log\\('✓ โหลดโมดูลได้, มี S3Client:', !!m.S3Client\\)\\)\")"
+      "Bash(node -e \"import\\('@aws-sdk/client-s3'\\).then\\(m=>console.log\\('✓ โหลดโมดูลได้, มี S3Client:', !!m.S3Client\\)\\)\")",
+      "Bash(kill 19208)"
     ]
   }
 }
