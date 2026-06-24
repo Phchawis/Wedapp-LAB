@@ -1,5 +1,7 @@
-/** Card — the default surface for grouped content. Optional header / footer. */
-export function Card({ padding = 'md', interactive = false, header, footer, children, style, ...rest }) {
+/** Card — the default surface for grouped content. Optional header / footer.
+   header แสดงเป็น heading เชิงความหมาย (ระดับ headingLevel ค่าเริ่มต้น 2) ให้ screen
+   reader นำทางตาม section ได้ — ส่ง headingLevel={null} เพื่อปิดเมื่อ header ไม่ใช่หัวข้อ */
+export function Card({ padding = 'md', interactive = false, header, footer, headingLevel = 2, children, style, ...rest }) {
   const pad = { none: 0, sm: 'var(--space-4)', md: 'var(--space-6)', lg: 'var(--space-8)' }[padding];
   return (
     <div
@@ -14,7 +16,10 @@ export function Card({ padding = 'md', interactive = false, header, footer, chil
       {...rest}
     >
       {header && (
-        <div style={{ padding: 'var(--space-4) var(--space-6)', borderBottom: '1px solid var(--border-subtle)', font: 'var(--type-card-title)' }}>
+        <div
+          {...(headingLevel ? { role: 'heading', 'aria-level': headingLevel } : {})}
+          style={{ padding: 'var(--space-4) var(--space-6)', borderBottom: '1px solid var(--border-subtle)', font: 'var(--type-card-title)' }}
+        >
           {header}
         </div>
       )}
