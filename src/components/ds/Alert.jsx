@@ -11,7 +11,7 @@ export function Alert({ tone = 'info', title, icon = null, children, style }) {
   return (
     <div role="status" style={{
       display: 'flex', gap: 12, background: t.bg, borderRadius: 'var(--radius-md)',
-      borderLeft: '3px solid ' + t.bar, padding: 'var(--space-4) var(--space-5)',
+      border: '1px solid ' + t.bd, padding: 'var(--space-4) var(--space-5)',
       color: 'var(--text-primary)', ...style,
     }}>
       {icon && <span style={{ color: t.fg, flexShrink: 0, display: 'flex', marginTop: 2 }}>{icon}</span>}
