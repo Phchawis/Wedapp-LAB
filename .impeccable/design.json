@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-24T00:00:00.000Z",
+  "title": "Design System: TUH Lab QMS",
+  "extensions": {
+    "colorMeta": {
+      "institutional-indigo": {
+        "role": "primary",
+        "displayName": "Institutional Indigo",
+        "canonical": "#343E9B",
+        "tonalRamp": ["#1B2152", "#262E73", "#343E9B", "#4250BC", "#5E6CD6", "#8893E3", "#B4BBEE", "#F1F2FC"]
+      },
+      "seal-coral": {
+        "role": "secondary",
+        "displayName": "Seal Coral",
+        "canonical": "#EC6647",
+        "tonalRamp": ["#9A3320", "#C2422A", "#DD5236", "#EC6647", "#F2876E", "#F7AE9C", "#FBE2DA", "#FDF0EC"]
+      },
+      "sky-info": {
+        "role": "tertiary",
+        "displayName": "Sky Info",
+        "canonical": "#2374AE",
+        "tonalRamp": ["#103A57", "#1B5E8F", "#2374AE", "#3E92CC", "#71B2DD", "#A6CFE9", "#DEEDF7", "#EFF6FB"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink (Blue-Slate)",
+        "canonical": "#181B2A",
+        "tonalRamp": ["#11131F", "#181B2A", "#262A3D", "#3A3F55", "#54596F", "#70758C", "#C4C8D6", "#F6F7FB"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Anuphan)", "purpose": "Page titles only — one per screen." },
+      "headline": { "displayName": "Headline (Anuphan)", "purpose": "Section headers and document titles." },
+      "title": { "displayName": "Title (Anuphan)", "purpose": "Card titles and grouped-content headers." },
+      "body": { "displayName": "Body (Sarabun)", "purpose": "All reading text; cap prose at 65-75ch." },
+      "label": { "displayName": "Label (Sarabun)", "purpose": "UI labels, button text, form labels, table headers." },
+      "code": { "displayName": "Code (IBM Plex Mono)", "purpose": "Document numbers, revisions, dates, counts." }
+    },
+    "shadows": [
+      { "name": "resting-card", "value": "0 1px 3px rgba(15,26,30,.08), 0 1px 2px rgba(15,26,30,.05)", "purpose": "Default for cards, tables, panels at rest." },
+      { "name": "lifted-hover", "value": "0 4px 10px -2px rgba(15,26,30,.10), 0 2px 4px -2px rgba(15,26,30,.06)", "purpose": "Interactive cards on hover; popovers." },
+      { "name": "overlay", "value": "0 12px 24px -6px rgba(15,26,30,.14), 0 4px 8px -4px rgba(15,26,30,.08)", "purpose": "Menus and elevated overlays." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(94,108,214,.35)", "purpose": "Indigo focus halo on inputs, selects, focusable controls." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.2, 0, 0.13, 1)", "purpose": "Default easing for state transitions (no bounce)." },
+      { "name": "ease-out", "value": "cubic-bezier(0, 0, 0.2, 1)", "purpose": "Enter/reveal easing." },
+      { "name": "dur-fast", "value": "120ms", "purpose": "Buttons, hovers, color shifts." },
+      { "name": "dur-base", "value": "180ms", "purpose": "Card elevation, most transitions." },
+      { "name": "dur-slow", "value": "260ms", "purpose": "Larger surface changes." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "900px", "purpose": "Sidebar collapses; detail view stacks to one column." },
+      { "name": "container-max", "value": "1320px", "purpose": "Max content width." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action per context — Institutional Indigo fill.",
+      "html": "<button class=\"ds-btn-primary\">บันทึกลงทะเบียน</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;font:600 .9375rem/1 'Sarabun',system-ui,sans-serif;color:#fff;background:var(--brand-700,#343E9B);border:1px solid var(--brand-700,#343E9B);border-radius:8px;cursor:pointer;transition:filter 120ms cubic-bezier(.2,0,.13,1);}.ds-btn-primary:hover{filter:brightness(.94);}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(94,108,214,.35);}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The common neutral action — white fill, indigo text, gray border.",
+      "html": "<button class=\"ds-btn-secondary\">ดาวน์โหลดเอกสาร</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;font:600 .9375rem/1 'Sarabun',system-ui,sans-serif;color:var(--brand-700,#343E9B);background:#fff;border:1px solid var(--border-default,#C4C8D6);border-radius:8px;cursor:pointer;transition:filter 120ms cubic-bezier(.2,0,.13,1);}.ds-btn-secondary:hover{filter:brightness(.97);background:#FAFBFE;}.ds-btn-secondary:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(94,108,214,.35);}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive only — delete document.",
+      "html": "<button class=\"ds-btn-danger\">ลบเอกสารออกจากทะเบียน</button>",
+      "css": ".ds-btn-danger{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;font:600 .9375rem/1 'Sarabun',system-ui,sans-serif;color:#fff;background:var(--red-600,#C42330);border:1px solid var(--red-600,#C42330);border-radius:8px;cursor:pointer;transition:filter 120ms cubic-bezier(.2,0,.13,1);}.ds-btn-danger:hover{filter:brightness(.94);}.ds-btn-danger:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(196,35,48,.30);}"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled field with focus halo; red border on error.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">ชื่อเอกสาร<i>*</i></span><span class=\"ds-input-wrap\"><input class=\"ds-input\" placeholder=\"เช่น การควบคุมคุณภาพการตรวจเคมีคลินิก\"/></span></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;max-width:420px;}.ds-field-label{font:500 .8125rem/1.4 'Sarabun',system-ui,sans-serif;color:var(--slate-600,#54596F);}.ds-field-label i{color:var(--red-600,#C42330);margin-left:2px;font-style:normal;}.ds-input-wrap{display:flex;align-items:center;height:40px;padding:0 12px;background:#fff;border:1px solid var(--border-default,#C4C8D6);border-radius:8px;transition:border-color 120ms,box-shadow 120ms;}.ds-input-wrap:focus-within{border-color:var(--brand-600,#4250BC);box-shadow:0 0 0 3px rgba(94,108,214,.35);}.ds-input{flex:1;min-width:0;border:none;outline:none;background:transparent;font:400 .9375rem/1.6 'Sarabun',system-ui,sans-serif;color:var(--text-primary,#181B2A);}"
+    },
+    {
+      "name": "Select",
+      "kind": "input",
+      "refersTo": "select",
+      "description": "Native select restyled to match Input, with custom chevron.",
+      "html": "<span class=\"ds-select-wrap\"><select class=\"ds-select\"><option>LAB · งานห้องปฏิบัติการเทคนิคการแพทย์</option><option>HEM · โลหิตวิทยา</option></select><svg class=\"ds-select-chevron\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"><path d=\"M6 9l6 6 6-6\"/></svg></span>",
+      "css": ".ds-select-wrap{position:relative;display:inline-flex;min-width:280px;}.ds-select{appearance:none;-webkit-appearance:none;width:100%;height:40px;padding:0 36px 0 12px;background:#fff;border:1px solid var(--border-default,#C4C8D6);border-radius:8px;font:400 .9375rem/1.6 'Sarabun',system-ui,sans-serif;color:var(--text-primary,#181B2A);cursor:pointer;outline:none;}.ds-select:focus{border-color:var(--brand-600,#4250BC);box-shadow:0 0 0 3px rgba(94,108,214,.35);}.ds-select-chevron{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-tertiary,#70758C);}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Document-control state — fixed vocabulary, pill with leading dot. Shown: Effective.",
+      "html": "<span class=\"ds-badge\"><span class=\"ds-badge-dot\"></span>ประกาศใช้</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;background:var(--green-100,#DCF0E2);color:var(--green-700,#1B7A36);font:600 .75rem/1 'Sarabun',system-ui,sans-serif;white-space:nowrap;}.ds-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green-600,#259544);flex-shrink:0;}"
+    },
+    {
+      "name": "Document-Type Tag",
+      "kind": "chip",
+      "refersTo": "doc-type-tag",
+      "description": "2-letter mono code chip, color-coded by document family. Shown: FM (form).",
+      "html": "<span class=\"ds-doctype\"><span class=\"ds-doctype-code\">FM</span><span class=\"ds-doctype-name\">แบบฟอร์มบันทึก</span></span>",
+      "css": ".ds-doctype{display:inline-flex;align-items:center;gap:8px;}.ds-doctype-code{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 6px;border-radius:5px;background:var(--violet-600,#6E4FC4);color:#fff;font:700 .75rem/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.02em;}.ds-doctype-name{font:500 .8125rem/1.4 'Sarabun',system-ui,sans-serif;color:var(--text-secondary,#54596F);}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default content surface — white on slate page, soft resting shadow, optional header.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">ไฟล์แนบเอกสาร</div><div class=\"ds-card-body\">เนื้อหาในการ์ด — ตารางหรือฟอร์ม</div></div>",
+      "css": ".ds-card{background:#fff;border:1px solid var(--border-subtle,#E0E2EC);border-radius:8px;box-shadow:0 1px 3px rgba(15,26,30,.08),0 1px 2px rgba(15,26,30,.05);overflow:hidden;max-width:420px;transition:box-shadow 180ms cubic-bezier(.2,0,.13,1);}.ds-card-header{padding:16px 24px;border-bottom:1px solid var(--border-subtle,#E0E2EC);font:600 1.25rem/1.4 'Anuphan','Sarabun',system-ui,sans-serif;color:var(--text-primary,#181B2A);}.ds-card-body{padding:24px;font:400 .9375rem/1.6 'Sarabun',system-ui,sans-serif;color:var(--text-secondary,#54596F);}"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Underline tabs for switching register views; active = indigo underline + label, with mono count chip.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab--active\">ทั้งหมด<span class=\"ds-tab-count ds-tab-count--active\">12</span></button><button class=\"ds-tab\">ประกาศใช้<span class=\"ds-tab-count\">8</span></button><button class=\"ds-tab\">รอทบทวน<span class=\"ds-tab-count\">3</span></button></div>",
+      "css": ".ds-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border-subtle,#E0E2EC);}.ds-tab{display:inline-flex;align-items:center;gap:7px;background:transparent;border:none;cursor:pointer;padding:10px 14px;margin-bottom:-1px;border-bottom:2px solid transparent;color:var(--text-secondary,#54596F);font:500 .9375rem/1 'Sarabun',system-ui,sans-serif;transition:color 120ms,border-color 120ms;}.ds-tab:hover{color:var(--text-primary,#181B2A);}.ds-tab--active{border-bottom-color:var(--brand-700,#343E9B);color:var(--brand-700,#343E9B);font-weight:600;}.ds-tab-count{font:600 .6875rem/1 'IBM Plex Mono',ui-monospace,monospace;background:var(--slate-100,#EEEFF5);color:var(--text-tertiary,#70758C);padding:2px 6px;border-radius:999px;}.ds-tab-count--active{background:var(--brand-100,#E3E6F9);color:var(--brand-700,#343E9B);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Controlled Register (ทะเบียนควบคุม)",
+    "overview": "The interface of a controlled document register, not a marketing surface. Every screen behaves like a well-kept ISO 15189 logbook: precise, legible, traceable — each document carries a control number, status, revision count, and visible history. Identity comes from the hospital seal: an Institutional Indigo ring carries brand and primary action, a Seal Coral warms it for rare emphasis. Surfaces are soft and lightly dimensional — white cards lift off a cool slate page on quiet shadows. The tool disappears into the task.",
+    "keyCharacteristics": [
+      "Indigo-and-coral identity drawn directly from the hospital laboratory seal.",
+      "Document-control vocabulary (status, revision, owner, history) always visible and consistent.",
+      "Fixed type scale, Thai-first fonts (Anuphan + Sarabun), mono for codes.",
+      "Cool slate neutrals; white cards on a slate page with soft, functional shadows.",
+      "High contrast and tablet-ready by default — legibility is non-negotiable."
+    ],
+    "rules": [
+      { "name": "The Coral Restraint Rule", "body": "Seal Coral appears on ≤10% of any screen and never on a default action. If a coral button and an indigo button sit side by side as equals, one is wrong — indigo is the system's voice, coral is the exception.", "section": "colors" },
+      { "name": "The Status-Is-Sacred Rule", "body": "The six document-control colors are a fixed vocabulary, not a palette to borrow from. A colored pill in this system always means a controlled state; never reuse status tints for decoration.", "section": "colors" },
+      { "name": "The Mono-for-Machines Rule", "body": "Anything the system generates or controls — document numbers, revisions, dates, counts — is set in IBM Plex Mono. Human-authored content is Sarabun.", "section": "typography" },
+      { "name": "The Fixed-Scale Rule", "body": "This is product UI, not a landing page. Type sizes are fixed rem, never fluid clamp(); a heading must not shrink when it lands in a sidebar.", "section": "typography" },
+      { "name": "The Lift-On-Intent Rule", "body": "Surfaces rest on the resting-card shadow and rise only as a response to intent (hover, focus, open). A card elevated at rest with no interaction is over-shadowed.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Institutional Indigo (#343E9B) as the one primary-action voice; keep Seal Coral to ≤10% of any screen for genuine emphasis only.",
+      "Do set body text in Ink (#181B2A) and reserve Slate Tertiary (#70758C) for captions on white only — keep body contrast at WCAG AA (≥4.5:1).",
+      "Do keep the six document-control status colors as a sacred, fixed vocabulary; a colored pill always means a controlled state.",
+      "Do set all system-generated data (document numbers, revisions, dates, counts) in IBM Plex Mono so it reads as machine data.",
+      "Do rest surfaces on the soft resting-card shadow and lift only on intent (hover/focus/open).",
+      "Do keep the same control vocabulary on every screen and design responsively for lab tablets (collapse the sidebar, let tables scroll)."
+    ],
+    "donts": [
+      "Don't make it look like an old government web system — no dated dense tables without hierarchy, no raw system fonts, no muddy color.",
+      "Don't let it feel toy-like or unserious; this is an official document register.",
+      "Don't cram every field into one view without hierarchy — clutter erodes trust and findability.",
+      "Don't import marketing-SaaS tropes: no loud gradients as decoration, no big hero-metric cards, no ad-like exuberance.",
+      "Don't use gradient text, decorative glassmorphism, or border-left/border-right colored side-stripes on cards, alerts, or list items.",
+      "Don't reuse status tints for non-status decoration, and don't swap a button's color on hover — darken with brightness instead.",
+      "Don't use fluid clamp() heading sizes or nest cards inside cards."
+    ]
+  }
+}
