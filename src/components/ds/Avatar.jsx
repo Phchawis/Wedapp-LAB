@@ -7,7 +7,7 @@ export function Avatar({ name = '', src, size = 'md', style }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       width: dim, height: dim, borderRadius: '50%', overflow: 'hidden',
-      background: 'var(--teal-100)', color: 'var(--teal-800)',
+      background: 'var(--brand-100)', color: 'var(--brand-800)',
       font: 'var(--fw-semibold) ' + fontSize + ' / 1 var(--font-display)',
       flexShrink: 0, userSelect: 'none', ...style,
     }}>
