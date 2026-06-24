@@ -4,6 +4,7 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import { newId, SEED_USERS, SEED_DOCS } from './seed.js';
+import { R2_ENABLED, isR2Ref, r2Upload, r2Download, r2Delete } from './r2.js';
 
 const BUCKET = process.env.SUPABASE_BUCKET || 'qms-files';
 
@@ -133,7 +134,11 @@ export async function createSupabaseStore() {
     async deleteDocument(no) {
       const atts = await attsFor([no]);
       const paths = atts.filter((a) => a.storage).map((a) => a.storage);
-      if (paths.length) await sb.storage.from(BUCKET).remove(paths);
+      // แยกลบ: ไฟล์ R2 ผ่าน r2Delete, ไฟล์เดิมผ่าน Supabase Storage
+      const r2Paths = paths.filter(isR2Ref);
+      const sbPaths = paths.filter((p) => !isR2Ref(p));
+      if (r2Paths.length) await r2Delete(r2Paths);
+      if (sbPaths.length) await sb.storage.from(BUCKET).remove(sbPaths);
       // attachments ลบอัตโนมัติด้วย ON DELETE CASCADE
       const { error } = await sb.from('documents').delete().eq('no', no);
       must(error);
@@ -155,12 +160,16 @@ export async function createSupabaseStore() {
       if (patch.storage != null) row.storage_path = patch.storage;
       const { data, error } = await sb.from('attachments').update(row).eq('id', id).select().maybeSingle();
       must(error);
+      // ลบไฟล์เก่า — เลือกช่องทางตามชนิด ref (R2 หรือ Supabase Storage)
       if (patch.storage && cur?.storage_path && cur.storage_path !== patch.storage) {
-        await sb.storage.from(BUCKET).remove([cur.storage_path]);
+        if (isR2Ref(cur.storage_path)) await r2Delete(cur.storage_path);
+        else await sb.storage.from(BUCKET).remove([cur.storage_path]);
       }
       return data ? attFromRow(data) : null;
     },
     async readAttachmentData(att) {
+      // ไฟล์ที่เก็บบน R2 → อ่านจาก R2; ของเก่าบน Supabase Storage → อ่านแบบเดิม
+      if (isR2Ref(att.storage)) return r2Download(att.storage);
       // retry ครั้งหนึ่งเผื่อ read-after-write ของ Storage ยังไม่พร้อม
       for (let i = 0; i < 2; i++) {
         const { data, error } = await sb.storage.from(BUCKET).download(att.storage);
@@ -170,6 +179,8 @@ export async function createSupabaseStore() {
       return null;
     },
     async saveFile(file) {
+      // ถ้าตั้งค่า R2 ครบ → เก็บไฟล์ใหม่บน R2 (ความจุเยอะกว่า)
+      if (R2_ENABLED) return r2Upload(file);
       const ext = (file.originalname.match(/\.[^.]+$/) || [''])[0];
       const key = `${newId()}${ext}`;
       const { error } = await sb.storage.from(BUCKET).upload(key, file.buffer, {
