@@ -67,7 +67,12 @@
       "Bash(sed -n '/First-time setup/,/## /p' reference/live.md)",
       "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/detect-csp.mjs)",
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('.impeccable/design.json','utf8'\\)\\); console.log\\('✓ design.json เป็น JSON ที่ถูกต้อง'\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(lsof -ti:3001)",
+      "Bash(xargs kill)",
+      "Bash(unset SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET)",
+      "Bash(QMS_API_PORT=3001 node server/index.js)",
+      "Bash(echo \"lowdb api pid $!\")"
     ]
   }
 }
