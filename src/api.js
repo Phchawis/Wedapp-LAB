@@ -4,8 +4,13 @@
 
 const TOKEN_KEY = 'tuh-qms-token';
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-export const setToken = (t) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
+// เก็บ token ใน sessionStorage → ปิดแท็บ/เบราว์เซอร์เมื่อไหร่ ระบบ logout อัตโนมัติ
+// (refresh หน้าเดิมยังคง login อยู่ เพราะ sessionStorage อยู่ตลอดอายุแท็บ)
+// ลบ token เก่าที่อาจค้างใน localStorage จากเวอร์ชันก่อนหน้าทิ้งด้วย
+try { localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ }
+
+export const getToken = () => sessionStorage.getItem(TOKEN_KEY);
+export const setToken = (t) => (t ? sessionStorage.setItem(TOKEN_KEY, t) : sessionStorage.removeItem(TOKEN_KEY));
 
 // ถอด base64url เป็นข้อความ UTF-8 (รองรับอักขระไทยใน payload)
 function b64urlToUtf8(str) {
