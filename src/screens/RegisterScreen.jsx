@@ -42,8 +42,8 @@ export function RegisterScreen({ docs = QMS.DOCS, cat, onOpen }) {
             <button key={t.code} onClick={() => setType(t.code)} style={{
               display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px',
               borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-              border: '1px solid ' + (active ? 'var(--teal-700)' : 'var(--border-default)'),
-              background: active ? 'var(--teal-700)' : 'var(--white)',
+              border: '1px solid ' + (active ? 'var(--brand-700)' : 'var(--border-default)'),
+              background: active ? 'var(--brand-700)' : 'var(--white)',
               color: active ? '#fff' : 'var(--text-secondary)',
               font: 'var(--fw-medium) var(--text-xs)/1 var(--font-body)',
             }}>
