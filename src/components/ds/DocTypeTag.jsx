@@ -5,10 +5,10 @@ const TYPES = {
   WI: { th: 'วิธีปฏิบัติ', c: 'var(--blue-600)' },
   WS: { th: 'แบบบันทึกการปฏิบัติงาน', c: 'var(--violet-700)' },
   FM: { th: 'แบบฟอร์มบันทึก', c: 'var(--violet-600)' },
-  EF: { th: 'บันทึกอิเล็กทรอนิกส์', c: '#0E8A8A' },
-  ED: { th: 'เอกสารอิเล็กทรอนิกส์', c: '#0A6E6E' },
+  EF: { th: 'บันทึกอิเล็กทรอนิกส์', c: 'var(--doc-type-ef)' },
+  ED: { th: 'เอกสารอิเล็กทรอนิกส์', c: 'var(--doc-type-ed)' },
   SD: { th: 'เอกสารสนับสนุน', c: 'var(--slate-600)' },
-  RF: { th: 'เอกสารอ้างอิง', c: 'var(--gold-500)' },
+  RF: { th: 'เอกสารอ้างอิง', c: 'var(--accent-500)' },
 };
 
 /** DocTypeTag — the 2-letter document-type code chip. */
