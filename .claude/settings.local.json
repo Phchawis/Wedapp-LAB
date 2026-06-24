@@ -56,7 +56,11 @@
       "Bash(node -e \"import\\('@aws-sdk/client-s3'\\).then\\(m=>console.log\\('✓ โหลดโมดูลได้, มี S3Client:', !!m.S3Client\\)\\)\")",
       "Bash(kill 19208)",
       "Bash(node --env-file=.env -e ' *)",
-      "Bash(node --env-file=.env -e \"for\\(const k of ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','JWT_SECRET','R2_ACCOUNT_ID','R2_BUCKET']\\){console.log\\(\\(process.env[k]?'✓ ตั้งแล้ว':'✗ ว่าง'\\)+'  '+k\\)}\")"
+      "Bash(node --env-file=.env -e \"for\\(const k of ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','JWT_SECRET','R2_ACCOUNT_ID','R2_BUCKET']\\){console.log\\(\\(process.env[k]?'✓ ตั้งแล้ว':'✗ ว่าง'\\)+'  '+k\\)}\")",
+      "Bash(node --env-file=.env -e \"for\\(const k of ['R2_ACCOUNT_ID','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_BUCKET']\\){console.log\\(\\(process.env[k]?'✓':'✗'\\)+' '+k+\\(process.env[k]?'':' \\(ว่าง\\)'\\)}; console.log\\('R2_BUCKET =', process.env.R2_BUCKET||'\\(ว่าง\\)'\\)\")",
+      "Bash(open -e .env)",
+      "Bash(node .claude/skills/impeccable/scripts/context.mjs)",
+      "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/context.mjs)"
     ]
   }
 }
