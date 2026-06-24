@@ -53,10 +53,33 @@ export default function App() {
     return () => { alive = false; };
   }, [refreshAll, handleAuthError]);
 
+  // คีย์บอร์ดคีย์ลัดสำหรับนำทางระบบเอกสาร (Alt + d/r/u/l/c)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!currentUser) return;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+      if (e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'd' || key === 'ด') { e.preventDefault(); setView('dashboard'); setCat(null); }
+        else if (key === 'r' || key === 'ท') { e.preventDefault(); setView('register'); setCat(null); }
+        else if ((key === 'u' || key === 'จ') && isManager) { e.preventDefault(); setView('users'); setCat(null); }
+        else if ((key === 'l' || key === 'บ') && isManager) { e.preventDefault(); setView('log'); setCat(null); }
+        else if ((key === 'c' || key === 'ล') && can(role, 'docs:create')) { e.preventDefault(); setCat(null); setView('create'); window.scrollTo(0, 0); }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentUser, isManager, role]);
+
   if (booting) {
     return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--text-tertiary)', font: 'var(--type-body)' }}>
-        กำลังโหลด…
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--surface-page)' }}>
+        <div className="qms-rise" style={{ background: 'var(--surface-card)', padding: '32px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-subtle)', textAlign: 'center', maxWidth: 320, width: '100%' }}>
+          <div className="qms-spin" style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid var(--brand-100)', borderTopColor: 'var(--brand-700)', margin: '0 auto 16px' }} />
+          <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.3 var(--font-display)', color: 'var(--text-primary)' }}>กำลังโหลดระบบข้อมูล...</div>
+          <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginTop: 6 }}>หน่วยงานทะเบียนและควบคุมเอกสาร TUH</div>
+        </div>
       </div>
     );
   }
