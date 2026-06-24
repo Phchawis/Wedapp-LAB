@@ -52,6 +52,13 @@ code, kbd, samp { font-family: var(--font-mono); }
 .qms-stagger > *:nth-child(3) { animation-delay: 100ms; }
 .qms-stagger > *:nth-child(4) { animation-delay: 150ms; }
 
+@keyframes qms-spin {
+  to { transform: rotate(360deg); }
+}
+.qms-spin {
+  animation: qms-spin 1s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .qms-rise, .qms-stagger > * { animation: none !important; }
+  .qms-rise, .qms-stagger > *, .qms-spin { animation: none !important; }
 }
