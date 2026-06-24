@@ -62,7 +62,10 @@
       "Bash(node .claude/skills/impeccable/scripts/context.mjs)",
       "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/context.mjs)",
       "Bash(ls index.html public/index.html)",
-      "Bash(ls .impeccable/live/config.json)"
+      "Bash(ls .impeccable/live/config.json)",
+      "Read(//Users/gpharkchawisp/.claude/skills/impeccable/**)",
+      "Bash(sed -n '/First-time setup/,/## /p' reference/live.md)",
+      "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/detect-csp.mjs)"
     ]
   }
 }
