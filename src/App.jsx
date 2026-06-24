@@ -145,13 +145,13 @@ export default function App() {
   ) : null;
 
   let body;
-  if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} />;
+  if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'docs:create') ? openCreate : undefined} />;
   else if (view === 'register') body = <RegisterScreen docs={docs} cat={cat} onOpen={openDoc} />;
   else if (view === 'create' && can(role, 'docs:create')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
   else if (view === 'users' && isManager) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onDelete={deleteUser} />;
   else if (view === 'log' && isManager) body = <LogScreen logs={logs} />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
-  else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} />;
+  else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'docs:create') ? openCreate : undefined} />;
 
   const shellView = (view === 'detail' || view === 'create')
     ? (cat ? 'register' : 'dashboard')
