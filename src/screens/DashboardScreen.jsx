@@ -4,7 +4,7 @@ import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 
 /* DashboardScreen — "แผงควบคุมงานเอกสาร": register health, an action queue of
-   documents that need attention, then category mix + recent activity.
+   documents that need attention, compliance/quality warnings, then category mix + recent activity.
    North Star: The Controlled Register — help the user decide what to do next. */
 
 // สีเม็ดสถานะ (คำศัพท์ตายตัวตามกฎ Status-Is-Sacred); ใช้กับแถบสัดส่วนและ legend
@@ -33,6 +33,55 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
     .filter((d) => d.status === 'review' || d.status === 'draft')
     .sort((a, b) => (a.status !== b.status ? (a.status === 'review' ? -1 : 1) : b.updated.localeCompare(a.updated)));
   const actionShown = actionDocs.slice(0, 6);
+
+  // ตรวจสอบการทบทวนรายปีและวันหมดอายุจัดเก็บ (Compliance warning engine)
+  const checkAlerts = (doc) => {
+    const alerts = [];
+    if (doc.status === 'effective') {
+      const updatedDate = new Date(doc.updated);
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      if (updatedDate < oneYearAgo) {
+        alerts.push({ type: 'danger', text: 'เกินกำหนดทบทวนประจำปี', icon: 'AlertTriangle' });
+      } else {
+        const elevenMonthsAgo = new Date();
+        elevenMonthsAgo.setMonth(elevenMonthsAgo.getMonth() - 11);
+        if (updatedDate < elevenMonthsAgo) {
+          alerts.push({ type: 'warning', text: 'ใกล้ครบกำหนดทบทวนประจำปี', icon: 'Clock' });
+        }
+      }
+    }
+
+    if (doc.status !== 'obsolete' && doc.retention) {
+      const updatedDate = new Date(doc.updated);
+      const expiryDate = new Date(updatedDate);
+      expiryDate.setFullYear(expiryDate.getFullYear() + parseInt(doc.retention, 10));
+      
+      const now = new Date();
+      const ninetyDaysFromNow = new Date();
+      ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
+
+      if (now > expiryDate) {
+        alerts.push({ type: 'danger', text: 'หมดอายุจัดเก็บ', icon: 'Ban' });
+      } else if (expiryDate < ninetyDaysFromNow) {
+        alerts.push({ type: 'warning', text: 'ใกล้หมดอายุจัดเก็บ', icon: 'Clock' });
+      }
+    }
+
+    return alerts;
+  };
+
+  // ค้นหารายการเอกสารที่มีประเด็นคุณภาพ (แจ้งเตือน)
+  const alertDocs = docs
+    .map(d => ({ doc: d, alerts: checkAlerts(d) }))
+    .filter(item => item.alerts.length > 0)
+    .sort((a, b) => {
+      const aHasDanger = a.alerts.some(al => al.type === 'danger');
+      const bHasDanger = b.alerts.some(al => al.type === 'danger');
+      if (aHasDanger !== bHasDanger) return aHasDanger ? -1 : 1;
+      return b.doc.updated.localeCompare(a.doc.updated);
+    });
 
   // สัดส่วนตามหมวดงาน
   const byCat = Q.WORK_CATEGORIES
@@ -163,6 +212,64 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
           actionShown.map((d, i) => <DocRow key={d.no} d={d} last={i === actionShown.length - 1} meta="owner" />)
         )}
       </Card>
+
+      {/* ── ระบบเตือนและแจ้งเตือนคุณภาพ (ISO 15189 Quality Alerts) ── */}
+      {alertDocs.length > 0 && (
+        <Card
+          padding="none"
+          header={(
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="ShieldAlert" size={16} color="var(--accent-700)" />
+              <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>ระบบเตือนและแจ้งเตือนคุณภาพ</span>
+              <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--accent-700)', background: 'var(--accent-100)', padding: '3px 8px', borderRadius: 'var(--radius-pill)' }}>{alertDocs.length}</span>
+            </div>
+          )}
+        >
+          {alertDocs.slice(0, 5).map(({ doc: d, alerts: al }, idx) => {
+            const hasDanger = al.some(x => x.type === 'danger');
+            const alertText = al.map(x => x.text).join(' · ');
+            return (
+              <div
+                key={d.no}
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpen(d)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(d); } }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
+                  borderBottom: idx === Math.min(alertDocs.length, 5) - 1 ? 'none' : '1px solid var(--border-subtle)', cursor: 'pointer',
+                  transition: 'background var(--dur-fast) var(--ease-standard)',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--slate-50)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <DocTypeTag type={d.type} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div title={d.th} style={{ font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.th}</div>
+                  <div style={{ font: 'var(--text-2xs)/1.3 var(--font-mono)', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{d.no} · {d.owner}</div>
+                </div>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px', borderRadius: 'var(--radius-pill)',
+                  background: hasDanger ? 'var(--red-100)' : 'var(--amber-100)',
+                  color: hasDanger ? 'var(--red-700)' : 'var(--amber-700)',
+                  font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <Icon name={hasDanger ? "AlertTriangle" : "Clock"} size={12} color={hasDanger ? 'var(--red-700)' : 'var(--amber-700)'} />
+                  {alertText}
+                </span>
+                <Icon name="ChevronRight" size={16} color="var(--text-tertiary)" />
+              </div>
+            );
+          })}
+          {alertDocs.length > 5 && (
+            <div style={{ padding: '12px 18px', textAlign: 'center', borderTop: '1px solid var(--border-subtle)', font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>
+              และอีก {alertDocs.length - 5} ฉบับที่อยู่ในเกณฑ์ตรวจสอบคุณภาพ (ดูรายละเอียดเพิ่มเติมในหน้ารายละเอียดเอกสาร)
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* ── หมวดงาน + ปรับปรุงล่าสุด ── */}
       <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 1.25fr', gap: 20, alignItems: 'start' }}>
