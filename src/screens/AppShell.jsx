@@ -74,59 +74,21 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
           tabIndex={0}
           onClick={() => onNav('dashboard')}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav('dashboard'); } }}
-          style={{
-            padding: '16px 18px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            borderBottom: '1px solid var(--border-subtle)',
-            cursor: 'pointer',
-            transition: 'background var(--dur-base) var(--ease-standard)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--slate-50)';
-            const imgBox = e.currentTarget.querySelector('.logo-box');
-            if (imgBox) {
-              imgBox.style.transform = 'translateY(-2px)';
-              imgBox.style.boxShadow = 'var(--shadow-md)';
-              imgBox.style.borderColor = 'var(--brand-300)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            const imgBox = e.currentTarget.querySelector('.logo-box');
-            if (imgBox) {
-              imgBox.style.transform = 'none';
-              imgBox.style.boxShadow = 'none';
-              imgBox.style.borderColor = 'var(--brand-100)';
-            }
-          }}
+          className="sidebar-logo-header"
         >
-          <div
-            className="logo-box"
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--brand-50)',
-              display: 'grid',
-              placeItems: 'center',
-              flexShrink: 0,
-              border: '1.5px solid var(--brand-100)',
-              transition: 'transform var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard)',
-            }}
-          >
-            <img src={seal} alt="ตรา รพธ." style={{ width: 34, height: 34, objectFit: 'contain' }} />
+          <div className="logo-box-modern">
+            <img src={seal} alt="ตรา รพธ." />
           </div>
           <div style={{ lineHeight: 1.2 }}>
-            <div style={{ font: 'var(--fw-bold) var(--text-sm)/1.2 var(--font-display)', color: 'var(--brand-900)' }}>
-              งานเทคนิคการแพทย์
+            <div className="logo-text-title">
+              ห้องปฏิบัติการ<br />เทคนิคการแพทย์
             </div>
-            <div style={{ font: 'var(--fw-medium) var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-secondary)', marginTop: 2 }}>
+            <div className="logo-text-subtitle">
               รพ.ธรรมศาสตร์เฉลิมพระเกียรติ
             </div>
           </div>
         </div>
+
 
         <div style={{ padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', flex: 1 }}>
           <NavItem id="dashboard" icon="LayoutDashboard" label="แดชบอร์ด" />
