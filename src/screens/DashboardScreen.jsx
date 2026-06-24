@@ -173,7 +173,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
               <div key={c.code} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ width: 46, flexShrink: 0, font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-secondary)' }}>{c.code}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{c.th}</div>
+                  <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{c.th}</div>
                   <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--slate-100)', overflow: 'hidden' }}>
                     <div style={{ width: (c.n / maxCat * 100) + '%', height: '100%', background: 'var(--brand-600)', borderRadius: 'var(--radius-pill)' }} />
                   </div>
