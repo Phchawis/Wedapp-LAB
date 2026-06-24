@@ -12,8 +12,8 @@ export function Button({
     lg: { padding: '0 22px', height: 46, fontSize: 'var(--text-md)', gap: 8 },
   };
   const variants = {
-    primary: { background: 'var(--teal-700)', color: 'var(--white)', border: '1px solid var(--teal-700)' },
-    secondary: { background: 'var(--white)', color: 'var(--teal-700)', border: '1px solid var(--border-default)' },
+    primary: { background: 'var(--brand-700)', color: 'var(--white)', border: '1px solid var(--brand-700)' },
+    secondary: { background: 'var(--white)', color: 'var(--brand-700)', border: '1px solid var(--border-default)' },
     ghost: { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid transparent' },
     danger: { background: 'var(--red-600)', color: 'var(--white)', border: '1px solid var(--red-600)' },
     institutional: { background: 'var(--brand-800)', color: 'var(--white)', border: '1px solid var(--brand-800)' },
