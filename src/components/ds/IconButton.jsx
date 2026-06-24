@@ -4,7 +4,7 @@ export function IconButton({ size = 'md', variant = 'ghost', disabled = false, l
   const variants = {
     ghost: { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid transparent' },
     outline: { background: 'var(--white)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' },
-    soft: { background: 'var(--teal-50)', color: 'var(--teal-700)', border: '1px solid transparent' },
+    soft: { background: 'var(--brand-50)', color: 'var(--brand-700)', border: '1px solid transparent' },
   };
   return (
     <button
