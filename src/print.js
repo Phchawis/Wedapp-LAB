@@ -18,10 +18,10 @@ function openPrintWindow(title, innerHtml) {
   }
   w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
   <style>
-    *{box-sizing:border-box} body{font-family:'Sarabun',system-ui,sans-serif;color:#15233b;margin:0;padding:28px}
+    *{box-sizing:border-box} body{font-family:'Sarabun',system-ui,sans-serif;color:#181B2A;margin:0;padding:28px}
     h1{font-size:18px;margin:0 0 12px} h2{font-size:14px;margin:18px 0 6px}
     table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px}
-    td,th{border:1px solid #bbb;padding:5px 8px;text-align:left;vertical-align:top}
+    td,th{border:1px solid #C4C8D6;padding:5px 8px;text-align:left;vertical-align:top}
     img{max-width:100%} p{margin:0 0 8px;line-height:1.6}
     @media print{body{padding:0}}
   </style></head><body>${innerHtml}
