@@ -75,10 +75,10 @@ export default function App() {
   if (booting) {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--surface-page)' }}>
-        <div className="qms-rise" style={{ background: 'var(--surface-card)', padding: '32px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-subtle)', textAlign: 'center', maxWidth: 320, width: '100%' }}>
-          <div className="qms-spin" style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid var(--brand-100)', borderTopColor: 'var(--brand-700)', margin: '0 auto 16px' }} />
+        <div className="qms-rise" style={{ background: 'var(--surface-card)', padding: 'var(--space-8)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-subtle)', textAlign: 'center', maxWidth: 320, width: '100%' }}>
+          <div className="qms-spin" style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid var(--brand-100)', borderTopColor: 'var(--brand-700)', margin: '0 auto var(--space-4)' }} />
           <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.3 var(--font-display)', color: 'var(--text-primary)' }}>กำลังโหลดระบบข้อมูล...</div>
-          <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginTop: 6 }}>หน่วยงานทะเบียนและควบคุมเอกสาร TUH</div>
+          <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginTop: 'var(--space-2)' }}>หน่วยงานทะเบียนและควบคุมเอกสาร TUH</div>
         </div>
       </div>
     );
