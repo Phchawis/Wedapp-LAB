@@ -16,16 +16,16 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
       <button onClick={() => onNav(id)} style={{
         display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
         padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-        background: active ? 'var(--teal-50)' : 'transparent',
-        color: active ? 'var(--teal-800)' : 'var(--text-secondary)',
+        background: active ? 'var(--brand-50)' : 'transparent',
+        color: active ? 'var(--brand-800)' : 'var(--text-secondary)',
         font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-sm)/1 var(--font-body)',
         transition: 'background var(--dur-fast)',
       }}
         onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--slate-100)'; }}
         onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
-        <Icon name={icon} size={17} color={active ? 'var(--teal-700)' : 'var(--text-tertiary)'} />
+        <Icon name={icon} size={17} color={active ? 'var(--brand-700)' : 'var(--text-tertiary)'} />
         <span style={{ flex: 1 }}>{label}</span>
-        {count != null && <span style={{ font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', color: active ? 'var(--teal-700)' : 'var(--text-tertiary)' }}>{count}</span>}
+        {count != null && <span style={{ font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', color: active ? 'var(--brand-700)' : 'var(--text-tertiary)' }}>{count}</span>}
       </button>
     );
   };
