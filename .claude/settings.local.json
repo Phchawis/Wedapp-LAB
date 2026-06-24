@@ -65,7 +65,9 @@
       "Bash(ls .impeccable/live/config.json)",
       "Read(//Users/gpharkchawisp/.claude/skills/impeccable/**)",
       "Bash(sed -n '/First-time setup/,/## /p' reference/live.md)",
-      "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/detect-csp.mjs)"
+      "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/detect-csp.mjs)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('.impeccable/design.json','utf8'\\)\\); console.log\\('✓ design.json เป็น JSON ที่ถูกต้อง'\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }
