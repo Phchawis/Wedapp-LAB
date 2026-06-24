@@ -10,13 +10,23 @@ import { api } from '../api.js';
 // printAttachment โหลดแบบ dynamic เฉพาะตอนสั่งพิมพ์ (xlsx/mammoth หนัก ไม่ดึงมาตอนเปิดแอป)
 
 const seal = '/lab-seal.png';
-const TODAY = '2026-06-22';
+const today = () => new Date().toISOString().slice(0, 10); // วันที่จริงตอนดำเนินการ workflow
 
 function fmtTs(iso) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso || '';
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// ป้าย/ค่าในแถบหัวเอกสารควบคุม — label ใช้ secondary ให้คอนทราสต์ผ่าน AA บนพื้น slate-50
+function Field({ k, v }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <span style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{k}</span>
+      <span style={{ font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{v}</span>
+    </div>
+  );
 }
 
 /* DocDetailScreen — controlled-document view: header band, attachments,
@@ -33,9 +43,9 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   const history = doc.history || [];
 
   // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
-  const publish = () => onUpdate(doc.no, { status: 'effective', updated: TODAY, action: 'doc:publish' });
-  const recordEdit = () => onUpdate(doc.no, { rev: doc.rev + 1, status: 'review', updated: TODAY, action: 'doc:edit' });
-  const obsolete = () => onUpdate(doc.no, { status: 'obsolete', updated: TODAY, action: 'doc:obsolete' });
+  const publish = () => onUpdate(doc.no, { status: 'effective', updated: today(), action: 'doc:publish' });
+  const recordEdit = () => onUpdate(doc.no, { rev: doc.rev + 1, status: 'review', updated: today(), action: 'doc:edit' });
+  const obsolete = () => onUpdate(doc.no, { status: 'obsolete', updated: today(), action: 'doc:obsolete' });
   const removeDoc = () => {
     if (window.confirm(`ยืนยันการลบเอกสาร ${doc.no} ออกจากทะเบียน?`)) onDelete(doc);
   };
@@ -133,21 +143,14 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
     }
   };
 
-  const Field = ({ k, v }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <span style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{k}</span>
-      <span style={{ font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{v}</span>
-    </div>
-  );
-
   return (
     <div className="qms-rise" style={{ maxWidth: 1080 }}>
-      <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: 0, marginBottom: 16 }}>
+      <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: '6px 8px', margin: '0 -8px 12px', minHeight: 40 }}>
         <Icon name="ArrowLeft" size={16} /> กลับสู่ทะเบียนเอกสาร
       </button>
 
       {/* input ซ่อนสำหรับเลือกไฟล์ใหม่ตอนอัปเดตเวอร์ชัน */}
-      <input ref={fileInputRef} type="file" onChange={onFilePicked} accept={acceptTypes} style={{ display: 'none' }} />
+      <input ref={fileInputRef} type="file" onChange={onFilePicked} accept={acceptTypes} aria-hidden="true" tabIndex={-1} style={{ display: 'none' }} />
 
       {doc.status === 'review' && (
         <div style={{ marginBottom: 16 }}>
@@ -161,7 +164,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
         {/* Main column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Controlled-document header band */}
-          <div style={{ background: '#fff', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr', borderBottom: '1.5px solid var(--brand-700)' }}>
               <div style={{ background: 'var(--brand-50)', display: 'grid', placeItems: 'center', borderRight: '1px solid var(--border-subtle)' }}>
                 <img src={seal} alt="ตราโรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ" style={{ width: 46, height: 46, objectFit: 'contain' }} />
@@ -202,15 +205,15 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                           {isUrl ? 'ลิงก์ภายนอก' : `${m.label}${att.size ? ' · ' + (att.size / 1024).toFixed(0) + ' KB' : ''}`}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         {isUrl ? (
-                          <Button variant="secondary" size="sm" onClick={() => openAttachment(att)} iconLeft={<Icon name="ExternalLink" size={15} color="var(--teal-700)" />}>เปิดลิงก์</Button>
+                          <Button variant="secondary" size="sm" onClick={() => openAttachment(att)} iconLeft={<Icon name="ExternalLink" size={15} color="var(--brand-700)" />}>เปิดลิงก์</Button>
                         ) : (
                           <>
-                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--teal-700)" />}>เปิดดู</Button>}
-                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์</Button>}
-                            <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลด</Button>
-                            {canUpdateFile(att) && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--teal-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
+                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--brand-700)" />}>เปิดดู</Button>}
+                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--brand-700)" />}>พิมพ์</Button>}
+                            <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}>ดาวน์โหลด</Button>
+                            {canUpdateFile(att) && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--brand-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
                           </>
                         )}
                       </div>
@@ -246,8 +249,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                   return (
                     <div key={i} style={{ display: 'flex', gap: 14, paddingBottom: i === history.length - 1 ? 0 : 16 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--teal-700)' : 'var(--slate-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                          <Icon name={meta.icon} size={15} color={i === 0 ? '#fff' : 'var(--text-secondary)'} />
+                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--brand-700)' : 'var(--slate-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                          <Icon name={meta.icon} size={15} color={i === 0 ? 'var(--white)' : 'var(--text-secondary)'} />
                         </span>
                         {i !== history.length - 1 && <span style={{ width: 1.5, flex: 1, background: 'var(--border-default)', marginTop: 4 }} />}
                       </div>
@@ -267,21 +270,21 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 'calc(var(--topbar-height) + 16px)' }}>
           {/* Export — available to every role */}
           <Card padding="md">
-            <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>ดาวน์โหลด / พิมพ์</div>
+            <div role="heading" aria-level={2} style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>ดาวน์โหลด / พิมพ์</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Button variant="secondary" block size="sm" onClick={downloadDoc} iconLeft={<Icon name="Download" size={15} color="var(--teal-700)" />}>ดาวน์โหลดเอกสาร</Button>
-              {pdfAtts.length > 0 && <Button variant="secondary" block size="sm" onClick={printDoc} iconLeft={<Icon name="Printer" size={15} color="var(--teal-700)" />}>พิมพ์เอกสาร</Button>}
+              <Button variant="secondary" block size="md" onClick={downloadDoc} iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}>ดาวน์โหลดเอกสาร</Button>
+              {pdfAtts.length > 0 && <Button variant="secondary" block size="md" onClick={printDoc} iconLeft={<Icon name="Printer" size={15} color="var(--brand-700)" />}>พิมพ์เอกสาร</Button>}
             </div>
           </Card>
 
           {/* Workflow — Creator (docs:edit) only */}
           {canEdit && (
             <Card padding="md">
-              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>การดำเนินการ (Workflow)</div>
+              <div role="heading" aria-level={2} style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>การดำเนินการ (Workflow)</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Button variant="secondary" block size="sm" onClick={publish} disabled={doc.status === 'effective'} iconLeft={<Icon name="Megaphone" size={15} color="var(--teal-700)" />}>บันทึกประกาศใช้</Button>
-                <Button variant="secondary" block size="sm" onClick={recordEdit} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="PencilLine" size={15} color="var(--teal-700)" />}>บันทึกแก้ไข</Button>
-                <Button variant="secondary" block size="sm" onClick={obsolete} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="Ban" size={15} color="var(--teal-700)" />}>ยกเลิกการใช้งาน</Button>
+                <Button variant="secondary" block size="md" onClick={publish} disabled={doc.status === 'effective'} iconLeft={<Icon name="Megaphone" size={15} color="var(--brand-700)" />}>บันทึกประกาศใช้</Button>
+                <Button variant="secondary" block size="md" onClick={recordEdit} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="PencilLine" size={15} color="var(--brand-700)" />}>บันทึกแก้ไข</Button>
+                <Button variant="secondary" block size="md" onClick={obsolete} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="Ban" size={15} color="var(--brand-700)" />}>ยกเลิกการใช้งาน</Button>
               </div>
             </Card>
           )}
@@ -289,8 +292,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
           {/* Delete — Creator & Admin (docs:delete) */}
           {canDelete && (
             <Card padding="md">
-              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>จัดการเอกสาร</div>
-              <Button variant="danger" block size="sm" onClick={removeDoc} iconLeft={<Icon name="Trash2" size={15} color="#fff" />}>ลบเอกสารออกจากทะเบียน</Button>
+              <div role="heading" aria-level={2} style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>จัดการเอกสาร</div>
+              <Button variant="danger" block size="md" onClick={removeDoc} iconLeft={<Icon name="Trash2" size={15} color="#fff" />}>ลบเอกสารออกจากทะเบียน</Button>
             </Card>
           )}
         </div>
