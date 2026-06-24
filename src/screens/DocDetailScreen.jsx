@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, StatusBadge, DocTypeTag, Card, Alert } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { FILE_META } from '../components/FileChip.jsx';
@@ -7,7 +7,6 @@ import { QMS } from '../data/taxonomy.js';
 import { can } from '../auth/users.js';
 import { LOG_ACTIONS } from '../auth/activityLog.js';
 import { api } from '../api.js';
-// printAttachment โหลดแบบ dynamic เฉพาะตอนสั่งพิมพ์ (xlsx/mammoth หนัก ไม่ดึงมาตอนเปิดแอป)
 
 const seal = '/lab-seal.png';
 const today = () => new Date().toISOString().slice(0, 10); // วันที่จริงตอนดำเนินการ workflow
@@ -42,6 +41,19 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   const attachments = doc.attachments || [];
   const history = doc.history || [];
 
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewName, setPreviewName] = useState('');
+  const [loadingPreviewId, setLoadingPreviewId] = useState(null);
+
+  // Clean up preview Object URL on close and unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
   const publish = () => onUpdate(doc.no, { status: 'effective', updated: today(), action: 'doc:publish' });
   const recordEdit = () => onUpdate(doc.no, { rev: doc.rev + 1, status: 'review', updated: today(), action: 'doc:edit' });
@@ -53,6 +65,27 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   // เปิด/ดาวน์โหลดไฟล์แนบจริงจาก backend
   const openAttachment = async (att, download) => {
     if (att.kind === 'url') { window.open(att.url, '_blank', 'noopener'); return; }
+
+    const isPdf = att.kind === 'pdf';
+    if (!download && isPdf) {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+      setLoadingPreviewId(att.id);
+      try {
+        const blob = await api.downloadAttachment(att.id);
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+        setPreviewName(att.name);
+      } catch (e) {
+        window.alert(e.message || 'โหลดตัวอย่างไฟล์ไม่สำเร็จ');
+      } finally {
+        setLoadingPreviewId(null);
+      }
+      return;
+    }
+
     try {
       const blob = await api.downloadAttachment(att.id);
       const url = URL.createObjectURL(blob);
@@ -143,6 +176,64 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
     }
   };
 
+  // คำนวณการแจ้งเตือนคุณภาพระบบควบคุมเอกสาร (ISO 15189 compliance audit warnings)
+  const alerts = [];
+  if (doc.status === 'effective') {
+    const updatedDate = new Date(doc.updated);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    
+    if (updatedDate < oneYearAgo) {
+      alerts.push({
+        id: 'review-overdue',
+        tone: 'danger',
+        title: 'เกินกำหนดทบทวนประจำปี (ISO 15189 Overdue)',
+        desc: `เอกสารนี้ประกาศใช้หรือทบทวนครั้งล่าสุดเมื่อ ${doc.updated} ซึ่งเกินกำหนดระยะเวลาทบทวนคุณภาพครบรอบ 1 ปีแล้ว กรุณาทำการทบทวนและปรับปรุงเวอร์ชัน`,
+        icon: 'AlertTriangle',
+      });
+    } else {
+      const elevenMonthsAgo = new Date();
+      elevenMonthsAgo.setMonth(elevenMonthsAgo.getMonth() - 11);
+      if (updatedDate < elevenMonthsAgo) {
+        alerts.push({
+          id: 'review-approaching',
+          tone: 'warning',
+          title: 'ใกล้ครบกำหนดทบทวนประจำปี',
+          desc: 'เอกสารกำลังจะครบกำหนด 1 ปีที่ต้องทำการทบทวนประจำรอบปีเพื่อรักษาคุณภาพมาตรฐานห้องปฏิบัติการ',
+          icon: 'Clock',
+        });
+      }
+    }
+  }
+
+  if (doc.status !== 'obsolete' && doc.retention) {
+    const updatedDate = new Date(doc.updated);
+    const expiryDate = new Date(updatedDate);
+    expiryDate.setFullYear(expiryDate.getFullYear() + parseInt(doc.retention, 10));
+    
+    const now = new Date();
+    const ninetyDaysFromNow = new Date();
+    ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
+
+    if (now > expiryDate) {
+      alerts.push({
+        id: 'retention-expired',
+        tone: 'danger',
+        title: 'เอกสารหมดอายุระยะเวลาจัดเก็บ (Expired)',
+        desc: `เอกสารนี้หมดอายุระยะเวลาจัดเก็บขั้นต่ำที่ระบุไว้คือ ${doc.retention} ปี (หมดอายุวันที่ ${expiryDate.toISOString().slice(0, 10)}) กรุณาดำเนินการเก็บถาวรหรือทำลายตามระเบียบ`,
+        icon: 'Ban',
+      });
+    } else if (expiryDate < ninetyDaysFromNow) {
+      alerts.push({
+        id: 'retention-approaching',
+        tone: 'warning',
+        title: 'ใกล้ครบกำหนดสิ้นสุดระยะเวลาจัดเก็บ',
+        desc: `เอกสารนี้จะครบกำหนดระยะจัดเก็บ ${doc.retention} ปี ในวันที่ ${expiryDate.toISOString().slice(0, 10)} (เหลือน้อยกว่า 90 วัน)`,
+        icon: 'Clock',
+      });
+    }
+  }
+
   return (
     <div className="qms-rise" style={{ maxWidth: 1080 }}>
       <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: '6px 8px', margin: '0 -8px 12px', minHeight: 40 }}>
@@ -152,13 +243,18 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
       {/* input ซ่อนสำหรับเลือกไฟล์ใหม่ตอนอัปเดตเวอร์ชัน */}
       <input ref={fileInputRef} type="file" onChange={onFilePicked} accept={acceptTypes} aria-hidden="true" tabIndex={-1} style={{ display: 'none' }} />
 
-      {doc.status === 'review' && (
-        <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+        {doc.status === 'review' && (
           <Alert tone="warning" title="เอกสารฉบับนี้อยู่ระหว่างทบทวน" icon={<Icon name="AlertTriangle" size={18} color="var(--amber-700)" />}>
             กรุณาใช้เอกสารฉบับที่ประกาศใช้ล่าสุดจนกว่าการทบทวนจะแล้วเสร็จ
           </Alert>
-        </div>
-      )}
+        )}
+        {alerts.map((al) => (
+          <Alert key={al.id} tone={al.tone} title={al.title} icon={<Icon name={al.icon} size={18} color={al.tone === 'danger' ? 'var(--red-700)' : 'var(--amber-700)'} />}>
+            {al.desc}
+          </Alert>
+        ))}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24, alignItems: 'start' }}>
         {/* Main column */}
@@ -187,6 +283,51 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
             </div>
           </div>
 
+          {/* Inline PDF Viewer */}
+          {previewUrl && (
+            <Card
+              padding="none"
+              header={
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <Icon name="FileText" size={16} color="var(--brand-700)" />
+                    <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>แสดงเอกสาร: {previewName}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      URL.revokeObjectURL(previewUrl);
+                      setPreviewUrl(null);
+                      setPreviewName('');
+                    }}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      padding: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'var(--text-secondary)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--slate-100)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <Icon name="X" size={18} />
+                  </button>
+                </div>
+              }
+            >
+              <div style={{ background: 'var(--slate-100)', display: 'grid', placeItems: 'center', height: 600 }}>
+                <iframe
+                  src={`${previewUrl}#toolbar=0`}
+                  title={previewName}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                />
+              </div>
+            </Card>
+          )}
+
           {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
           <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>
             {attachments.length > 0 ? (
@@ -210,7 +351,17 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                           <Button variant="secondary" size="sm" onClick={() => openAttachment(att)} iconLeft={<Icon name="ExternalLink" size={15} color="var(--brand-700)" />}>เปิดลิงก์</Button>
                         ) : (
                           <>
-                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => openAttachment(att, false)} iconLeft={<Icon name="Eye" size={15} color="var(--brand-700)" />}>เปิดดู</Button>}
+                            {att.kind === 'pdf' && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                disabled={loadingPreviewId === att.id}
+                                onClick={() => openAttachment(att, false)}
+                                iconLeft={<Icon name={loadingPreviewId === att.id ? "Loader2" : "Eye"} size={15} color="var(--brand-700)" className={loadingPreviewId === att.id ? "qms-spin" : ""} />}
+                              >
+                                {loadingPreviewId === att.id ? 'กำลังโหลด…' : 'เปิดดู'}
+                              </Button>
+                            )}
                             {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--brand-700)" />}>พิมพ์</Button>}
                             <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}>ดาวน์โหลด</Button>
                             {canUpdateFile(att) && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--brand-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
