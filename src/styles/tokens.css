@@ -108,10 +108,14 @@
   --status-controlled-fg:var(--violet-700);
   --status-controlled-bg:var(--violet-100);
 
+  /* Document-type category colors */
+  --doc-type-ef:         #0E8A8A;
+  --doc-type-ed:         #0A6E6E;
+
   /* Modern effect tokens (gradients / glow / glass) */
   --grad-brand:       linear-gradient(135deg, #4250BC 0%, #343E9B 55%, #262E73 100%);
   --grad-brand-vivid: linear-gradient(140deg, #5E6CD6 0%, #343E9B 52%, #1B2152 100%);
-  --grad-hero:        linear-gradient(135deg, #4250BC 0%, #5A4FB8 42%, #C2422A 100%);
+  --grad-hero:        linear-gradient(135deg, #4250BC 0%, #5E6CD6 42%, #C2422A 100%);
   --grad-accent:      linear-gradient(135deg, #F2876E 0%, #EC6647 50%, #C2422A 100%);
   --grad-sheen:       linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
   --glow-brand:       0 10px 30px -8px rgba(52,62,155,.45);
@@ -189,7 +193,7 @@
   --shadow-sm: 0 1px 3px rgba(15, 26, 30, 0.08), 0 1px 2px rgba(15, 26, 30, 0.05);
   --shadow-md: 0 4px 10px -2px rgba(15, 26, 30, 0.10), 0 2px 4px -2px rgba(15, 26, 30, 0.06);
   --shadow-lg: 0 12px 24px -6px rgba(15, 26, 30, 0.14), 0 4px 8px -4px rgba(15, 26, 30, 0.08);
-  --shadow-focus: 0 0 0 3px rgba(30, 158, 146, 0.35);
+  --shadow-focus: 0 0 0 3px rgba(94, 108, 214, 0.35);
 
   --ease-standard: cubic-bezier(0.2, 0, 0.13, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
