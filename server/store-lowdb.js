@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SEED_USERS, SEED_DOCS, newId } from './seed.js';
+import { R2_ENABLED, isR2Ref, r2Upload, r2Download, r2Delete } from './r2.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, 'data');
@@ -87,8 +88,9 @@ export const lowdbStore = {
   },
   async deleteDocument(no) {
     const atts = db.data.attachments.filter((a) => a.docNo === no);
+    await r2Delete(atts.map((a) => a.storage).filter(Boolean)); // ลบไฟล์ R2 (ถ้ามี)
     for (const a of atts) {
-      if (a.storage) { try { fs.unlinkSync(path.join(UPLOAD_DIR, a.storage)); } catch { /* ignore */ } }
+      if (a.storage && !isR2Ref(a.storage)) { try { fs.unlinkSync(path.join(UPLOAD_DIR, a.storage)); } catch { /* ignore */ } }
     }
     db.data.attachments = db.data.attachments.filter((a) => a.docNo !== no);
     db.data.documents = db.data.documents.filter((d) => d.no !== no);
@@ -106,17 +108,20 @@ export const lowdbStore = {
     Object.assign(a, patch);
     await db.write();
     if (patch.storage && oldStorage && oldStorage !== patch.storage) {
-      try { fs.unlinkSync(path.join(UPLOAD_DIR, oldStorage)); } catch { /* ignore */ }
+      if (isR2Ref(oldStorage)) await r2Delete(oldStorage);
+      else { try { fs.unlinkSync(path.join(UPLOAD_DIR, oldStorage)); } catch { /* ignore */ } }
     }
     return a;
   },
   async readAttachmentData(att) {
+    if (isR2Ref(att.storage)) return r2Download(att.storage);
     const filePath = path.join(UPLOAD_DIR, att.storage);
     if (!fs.existsSync(filePath)) return null;
     return fs.readFileSync(filePath);
   },
-  // บันทึกไฟล์ลงดิสก์ คืน storage ref
+  // บันทึกไฟล์ — ถ้าตั้งค่า R2 ครบ เก็บบน R2, ไม่งั้นเก็บลงดิสก์
   async saveFile(file) {
+    if (R2_ENABLED) return r2Upload(file);
     const safe = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${path.extname(file.originalname)}`;
     fs.writeFileSync(path.join(UPLOAD_DIR, safe), file.buffer);
     return safe;
