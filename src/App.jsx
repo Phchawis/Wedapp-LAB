@@ -11,6 +11,7 @@ import { DocDetailScreen } from './screens/DocDetailScreen.jsx';
 import { RegisterDocScreen } from './screens/RegisterDocScreen.jsx';
 import { UsersScreen } from './screens/UsersScreen.jsx';
 import { LogScreen } from './screens/LogScreen.jsx';
+import { HelpScreen } from './screens/HelpScreen.jsx';
 
 export default function App() {
   const [view, setView] = useState('dashboard');
@@ -65,6 +66,7 @@ export default function App() {
         else if (key === 'r' || key === 'ท') { e.preventDefault(); setView('register'); setCat(null); }
         else if ((key === 'u' || key === 'จ') && isManager) { e.preventDefault(); setView('users'); setCat(null); }
         else if ((key === 'l' || key === 'บ') && isManager) { e.preventDefault(); setView('log'); setCat(null); }
+        else if (key === 'h' || key === 'อ') { e.preventDefault(); setView('help'); setCat(null); }
         else if ((key === 'c' || key === 'ล') && can(role, 'docs:create')) { e.preventDefault(); setCat(null); setView('create'); window.scrollTo(0, 0); }
       }
     };
@@ -158,6 +160,7 @@ export default function App() {
     users: { t: 'จัดการผู้ใช้งาน', s: 'เพิ่ม ลบ และกำหนดสิทธิ์ผู้ใช้งานระบบ' },
     log: { t: 'บันทึกกิจกรรม', s: 'ประวัติการทำงานของผู้ใช้งานในระบบ' },
     detail: { t: 'รายละเอียดเอกสาร', s: doc ? doc.no : '' },
+    help: { t: 'คู่มือการใช้งาน', s: 'คู่มือการควบคุมเอกสารตามมาตรฐาน ISO 15189' },
   };
   const head = titles[view] || titles.dashboard;
 
@@ -173,6 +176,7 @@ export default function App() {
   else if (view === 'create' && can(role, 'docs:create')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
   else if (view === 'users' && isManager) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onDelete={deleteUser} />;
   else if (view === 'log' && isManager) body = <LogScreen logs={logs} />;
+  else if (view === 'help') body = <HelpScreen />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
   else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'docs:create') ? openCreate : undefined} />;
 
