@@ -60,7 +60,9 @@
       "Bash(node --env-file=.env -e \"for\\(const k of ['R2_ACCOUNT_ID','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_BUCKET']\\){console.log\\(\\(process.env[k]?'✓':'✗'\\)+' '+k+\\(process.env[k]?'':' \\(ว่าง\\)'\\)}; console.log\\('R2_BUCKET =', process.env.R2_BUCKET||'\\(ว่าง\\)'\\)\")",
       "Bash(open -e .env)",
       "Bash(node .claude/skills/impeccable/scripts/context.mjs)",
-      "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/context.mjs)"
+      "Bash(node /Users/gpharkchawisp/.claude/skills/impeccable/scripts/context.mjs)",
+      "Bash(ls index.html public/index.html)",
+      "Bash(ls .impeccable/live/config.json)"
     ]
   }
 }
