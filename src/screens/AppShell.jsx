@@ -1,25 +1,30 @@
-import { Avatar } from '../components/ds/index.js';
+import { useState } from 'react';
+import { Avatar, IconButton } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { QMS } from '../data/taxonomy.js';
 import { ROLES, can } from '../auth/users.js';
+import { useNarrow } from '../hooks/useNarrow.js';
 
 const seal = '/lab-seal.png';
 
-/* AppShell — sidebar + topbar chrome wrapping every signed-in screen. */
+/* AppShell — sidebar + topbar chrome wrapping every signed-in screen.
+   Responsive drawer: Collapses into a toggleable slide-out panel on viewport width < 900px. */
 export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subtitle, actions, children, docCount }) {
   const Q = QMS;
   const registerCount = docCount != null ? docCount : Q.DOCS.length;
+  const narrow = useNarrow(900);
+  const [open, setOpen] = useState(false);
 
   const NavItem = ({ id, icon, label, count }) => {
     const active = view === id;
     return (
-      <button onClick={() => onNav(id)} style={{
+      <button onClick={() => { onNav(id); setOpen(false); }} style={{
         display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
         padding: '9px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
         background: active ? 'var(--brand-50)' : 'transparent',
         color: active ? 'var(--brand-800)' : 'var(--text-secondary)',
         font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-sm)/1 var(--font-body)',
-        transition: 'background var(--dur-fast)',
+        transition: 'background var(--dur-fast) var(--ease-standard)',
       }}
         onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--slate-100)'; }}
         onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
@@ -32,11 +37,37 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--surface-page)' }}>
+      {/* Backdrop overlay for drawer in narrow viewports */}
+      {narrow && open && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(24, 27, 42, 0.4)',
+            backdropFilter: 'blur(1.5px)',
+            zIndex: 90,
+            transition: 'opacity var(--dur-base) var(--ease-out)',
+          }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside style={{
-        width: 'var(--sidebar-width)', flexShrink: 0, background: 'var(--white)',
-        borderRight: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 0, height: '100vh',
+        width: 'var(--sidebar-width)',
+        flexShrink: 0,
+        background: 'var(--white)',
+        borderRight: '1px solid var(--border-subtle)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: narrow ? 'fixed' : 'sticky',
+        top: 0,
+        left: 0,
+        height: '100vh',
+        zIndex: narrow ? 100 : 1,
+        transform: narrow ? (open ? 'none' : 'translateX(-100%)') : 'none',
+        transition: 'transform var(--dur-base) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard)',
+        boxShadow: narrow && open ? 'var(--shadow-lg)' : 'none',
       }}>
         <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 11, borderBottom: '1px solid var(--border-subtle)' }}>
           <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--brand-50)', display: 'grid', placeItems: 'center', flexShrink: 0, border: '1px solid var(--brand-100)' }}>
@@ -55,13 +86,13 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
           {can(user.role, 'users:manage') && <NavItem id="log" icon="History" label="บันทึกกิจกรรม" />}
 
           <div style={{ font: 'var(--text-2xs)/1 var(--font-body)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', padding: '14px 12px 6px' }}>หน่วยงาน</div>
-          <button onClick={() => onCat('LAB')} title="งานห้องปฏิบัติการเทคนิคการแพทย์" style={{
+          <button onClick={() => { onCat('LAB'); setOpen(false); }} title="งานห้องปฏิบัติการเทคนิคการแพทย์" style={{
             display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
             padding: '9px 12px', marginTop: 6, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
             background: (cat === 'LAB' && view === 'register') ? 'var(--brand-700)' : 'var(--brand-50)',
             color: (cat === 'LAB' && view === 'register') ? '#fff' : 'var(--brand-700)',
             font: 'var(--fw-semibold) var(--text-sm)/1.2 var(--font-body)',
-            transition: 'background var(--dur-fast)',
+            transition: 'background var(--dur-fast) var(--ease-standard)',
           }}>
             <Icon name="FlaskConical" size={17} color={(cat === 'LAB' && view === 'register') ? '#fff' : 'var(--brand-600)'} />
             <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>งานห้องปฏิบัติการเทคนิคการแพทย์</span>
@@ -71,12 +102,13 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
           {Q.WORK_CATEGORIES.map((c) => {
             const active = cat === c.code && view === 'register';
             return (
-              <button key={c.code} onClick={() => onCat(c.code)} title={c.th} style={{
+              <button key={c.code} onClick={() => { onCat(c.code); setOpen(false); }} title={c.th} style={{
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
                 padding: '7px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
                 background: active ? 'var(--brand-50)' : 'transparent',
                 color: active ? 'var(--brand-800)' : 'var(--text-secondary)',
                 font: (active ? 'var(--fw-semibold) ' : 'var(--fw-regular) ') + 'var(--text-xs)/1.3 var(--font-body)',
+                transition: 'background var(--dur-fast) var(--ease-standard)',
               }}
                 onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--slate-100)'; }}
                 onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
@@ -99,13 +131,18 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main content area */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <header style={{
           height: 'var(--topbar-height)', flexShrink: 0, background: 'var(--white)',
           borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center',
           gap: 16, padding: '0 var(--page-gutter)', position: 'sticky', top: 0, zIndex: 5,
         }}>
+          {narrow && (
+            <IconButton label="เปิดเมนู" onClick={() => setOpen(true)} variant="ghost">
+              <Icon name="Menu" size={20} color="var(--text-secondary)" />
+            </IconButton>
+          )}
           <div style={{ minWidth: 0 }}>
             <div style={{ font: 'var(--fw-bold) var(--text-lg)/1.1 var(--font-display)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
             {subtitle && <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-tertiary)' }}>{subtitle}</div>}
