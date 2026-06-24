@@ -29,7 +29,7 @@ a:hover { text-decoration: underline; }
 
 code, kbd, samp { font-family: var(--font-mono); }
 
-::selection { background: var(--teal-100); color: var(--teal-900); }
+::selection { background: var(--brand-100); color: var(--brand-900); }
 
 :focus-visible {
   outline: 2px solid var(--focus-ring);
