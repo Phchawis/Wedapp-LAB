@@ -39,7 +39,7 @@ export function LogScreen({ logs }) {
               {logs.map((e, i) => {
                 const a = LOG_ACTIONS[e.action] || { th: e.action, icon: 'FileText', c: 'var(--slate-600)' };
                 return (
-                  <tr key={e.id} style={{ borderBottom: i === logs.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
+                  <tr key={e.id} className="qms-rise-stagger" style={{ borderBottom: i === logs.length - 1 ? 'none' : '1px solid var(--border-subtle)', '--i': i }}>
                     <td style={{ padding: '11px 16px', font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>{formatTs(e.ts)}</td>
                     <td style={{ padding: '11px 16px' }}>
                       <div style={{ font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.name}</div>
