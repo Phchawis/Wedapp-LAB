@@ -107,17 +107,27 @@ export default function App() {
   }
 
 
-  const openDoc = (d) => { setDoc(d); setView('detail'); window.scrollTo(0, 0); };
-  const nav = (v) => { setView(v); setCat(null); };
-  const pickCat = (c) => { setCat(c); setView('register'); };
-  const openCreate = () => { setCat(null); setView('create'); window.scrollTo(0, 0); };
+  const transitionTo = (fn) => {
+    if (document.startViewTransition) {
+      document.startViewTransition(fn);
+    } else {
+      fn();
+    }
+  };
+
+  const openDoc = (d) => transitionTo(() => { setDoc(d); setView('detail'); window.scrollTo(0, 0); });
+  const nav = (v) => transitionTo(() => { setView(v); setCat(null); });
+  const pickCat = (c) => transitionTo(() => { setCat(c); setView('register'); });
+  const openCreate = () => transitionTo(() => { setCat(null); setView('create'); window.scrollTo(0, 0); });
 
   const logout = async () => {
     await api.logout();
     setToken(null);
     setCurrentUser(null);
-    setView('dashboard'); setCat(null); setDoc(null);
-    setDocs([]); setUsers([]); setLogs([]);
+    transitionTo(() => {
+      setView('dashboard'); setCat(null); setDoc(null);
+      setDocs([]); setUsers([]); setLogs([]);
+    });
   };
 
   // นำเข้าเอกสาร (FormData พร้อมไฟล์/ลิงก์) — โยน error กลับให้ฟอร์มจัดการ
