@@ -157,6 +157,12 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
     const attId = pendingAttId.current;
     e.target.value = '';
     if (!file || !attId || !onUpdateFile) return;
+    
+    if (file.size > 25 * 1024 * 1024) {
+      window.alert('ขนาดไฟล์เกินกำหนด (สูงสุด 25 MB ต่อไฟล์)');
+      return;
+    }
+
     // Admin/User อัปโหลดได้เฉพาะ Excel — กันไว้ตั้งแต่ฝั่งหน้าเว็บ (backend ตรวจซ้ำอีกชั้น)
     if (!isCreator) {
       const ext = (file.name.split('.').pop() || '').toLowerCase();
