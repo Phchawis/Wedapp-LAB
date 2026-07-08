@@ -90,9 +90,7 @@ export function RegisterScreen({ docs = QMS.DOCS, cat, onOpen }) {
             </thead>
             <tbody>
               {rows.map((d, idx) => (
-                <tr key={d.no} onClick={() => onOpen(d)} style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--border-subtle)', cursor: 'pointer', transition: 'background var(--dur-fast)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--slate-50)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
+                <tr key={d.no} onClick={() => onOpen(d)} className="qms-table-row" style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
                   <td style={{ padding: '12px 16px' }}><DocTypeTag type={d.type} /></td>
                   <td style={{ padding: '12px 16px', minWidth: 0 }}>
                     <div style={{ font: 'var(--fw-medium) var(--text-base)/1.35 var(--font-body)', color: 'var(--text-primary)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{d.th}</div>
