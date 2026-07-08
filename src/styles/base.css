@@ -224,6 +224,12 @@ code, kbd, samp { font-family: var(--font-mono); }
   height: 100%;
 }
 
+/* Tabular numbers utility for numbers and dates alignment */
+.qms-numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
 
 
 
