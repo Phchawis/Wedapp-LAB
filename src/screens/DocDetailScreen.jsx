@@ -399,138 +399,364 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
             </div>
           </div>
 
-          {/* Inline PDF Viewer */}
-          {previewUrl && (
-            <Card
-              padding="none"
-              header={
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <Icon name="FileText" size={16} color="var(--brand-700)" />
-                    <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>แสดงเอกสาร: {previewName}</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      URL.revokeObjectURL(previewUrl);
-                      setPreviewUrl(null);
-                      setPreviewName('');
-                    }}
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      padding: 4,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'var(--text-secondary)',
-                      borderRadius: 'var(--radius-sm)',
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--slate-100)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <Icon name="X" size={18} />
-                  </button>
+          {/* Inline Tab bar */}
+          <div style={{ marginBottom: 4 }}>
+            <Tabs
+              active={activeTab}
+              onChange={setActiveTab}
+              items={[
+                { code: 'detail', label: 'ข้อมูลและประวัติ' },
+                { code: 'diff', label: 'เปรียบเทียบเวอร์ชัน' },
+                { code: 'training', label: `การฝึกอบรม & รับทราบ (${acks.length})` },
+              ]}
+            />
+          </div>
+
+          {activeTab === 'detail' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Inline PDF Viewer */}
+              {previewUrl && (
+                <Card
+                  padding="none"
+                  header={
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                        <Icon name="FileText" size={16} color="var(--brand-700)" />
+                        <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>แสดงเอกสาร: {previewName}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          URL.revokeObjectURL(previewUrl);
+                          setPreviewUrl(null);
+                          setPreviewName('');
+                        }}
+                        style={{
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          padding: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: 'var(--text-secondary)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--slate-100)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <Icon name="X" size={18} />
+                      </button>
+                    </div>
+                  }
+                >
+                  <div style={{ background: 'var(--slate-100)', display: 'grid', placeItems: 'center', height: 600 }}>
+                    <iframe
+                      src={`${previewUrl}#toolbar=0`}
+                      title={previewName}
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                    />
+                  </div>
+                </Card>
+              )}
+
+              {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
+              <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>
+                {attachments.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {attachments.map((att) => {
+                      const m = FILE_META[att.kind] || { label: 'ไฟล์', icon: 'FileText', c: 'var(--slate-600)', bg: 'var(--slate-100)' };
+                      const isUrl = att.kind === 'url';
+                      return (
+                        <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+                          <span style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', background: m.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                            <Icon name={m.icon} size={19} color={m.c} sw={2} />
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.2 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.name}</div>
+                            <div style={{ font: 'var(--text-2xs)/1.3 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>
+                              {isUrl ? 'ลิงก์ภายนอก' : `${m.label}${att.size ? ' · ' + (att.size / 1024).toFixed(0) + ' KB' : ''}`}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            {isUrl ? (
+                              <Button variant="secondary" size="sm" onClick={() => openAttachment(att)} iconLeft={<Icon name="ExternalLink" size={15} color="var(--brand-700)" />}>เปิดลิงก์</Button>
+                            ) : (
+                              <>
+                                {att.kind === 'pdf' && (
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={loadingPreviewId === att.id}
+                                    onClick={() => openAttachment(att, false)}
+                                    iconLeft={<Icon name={loadingPreviewId === att.id ? "Loader2" : "Eye"} size={15} color="var(--brand-700)" className={loadingPreviewId === att.id ? "qms-spin" : ""} />}
+                                  >
+                                    {loadingPreviewId === att.id ? 'กำลังโหลด…' : 'เปิดดู'}
+                                  </Button>
+                                )}
+                                {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--brand-700)" />}>พิมพ์</Button>}
+                                <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}>ดาวน์โหลด</Button>
+                                {canUpdateFile(att) && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--brand-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                      {(doc.files || []).map((f) => {
+                        const m = FILE_META[f] || { label: f, c: 'var(--slate-600)', bg: 'var(--slate-100)', icon: 'FileText' };
+                        return (
+                          <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-sm)', background: m.bg, color: m.c, font: 'var(--fw-semibold) var(--text-xs)/1 var(--font-body)' }}>
+                            <Icon name={m.icon} size={14} color={m.c} sw={2.2} /> {m.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>เอกสารตัวอย่าง — ยังไม่มีไฟล์จริงในระบบ (ลงทะเบียนใหม่เพื่อแนบไฟล์)</div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Activity history — สร้างจากบันทึกกิจกรรมจริงของเอกสารนี้ */}
+              <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> ประวัติการดำเนินการ</span>}>
+                {history.length === 0 ? (
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>ยังไม่มีประวัติการดำเนินการสำหรับเอกสารนี้</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {history.map((h, i) => {
+                      const meta = LOG_ACTIONS[h.action] || { th: h.action, icon: 'History', c: 'var(--text-secondary)' };
+                      return (
+                        <div key={i} style={{ display: 'flex', gap: 14, paddingBottom: i === history.length - 1 ? 0 : 16 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--brand-700)' : 'var(--slate-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                              <Icon name={meta.icon} size={15} color={i === 0 ? 'var(--white)' : 'var(--text-secondary)'} />
+                            </span>
+                            {i !== history.length - 1 && <span style={{ width: 1.5, flex: 1, background: 'var(--border-default)', marginTop: 4 }} />}
+                          </div>
+                          <div style={{ paddingBottom: 4 }}>
+                            <div style={{ font: 'var(--fw-medium) var(--text-base)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{meta.th}</div>
+                            <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTs(h.ts)} · {h.by}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'diff' && (
+            <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> เปรียบเทียบสองเวอร์ชัน (Version Diff)</span>}>
+              {historyList.length <= 1 ? (
+                <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                  <Icon name="AlertCircle" size={28} color="var(--slate-300)" style={{ margin: '0 auto 10px' }} />
+                  <div style={{ font: 'var(--type-body)' }}>เอกสารอยู่ในรุ่นแรก (ไม่มีเวอร์ชันอื่นสำหรับเปรียบเทียบ)</div>
                 </div>
-              }
-            >
-              <div style={{ background: 'var(--slate-100)', display: 'grid', placeItems: 'center', height: 600 }}>
-                <iframe
-                  src={`${previewUrl}#toolbar=0`}
-                  title={previewName}
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                />
-              </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Selectors */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>เปรียบเทียบ:</span>
+                      <select
+                        value={leftRev}
+                        onChange={(e) => setLeftRev(e.target.value)}
+                        style={{ padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)', font: 'var(--text-xs) var(--font-mono)' }}
+                      >
+                        {historyList.map(h => (
+                          <option key={h.rev} value={h.rev}>Rev {String(h.rev).padStart(2, '0')} ({h.updated})</option>
+                        ))}
+                      </select>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>กับ</span>
+                      <select
+                        value={rightRev}
+                        onChange={(e) => setRightRev(e.target.value)}
+                        style={{ padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)', font: 'var(--text-xs) var(--font-mono)' }}
+                      >
+                        {historyList.map(h => (
+                          <option key={h.rev} value={h.rev}>Rev {String(h.rev).padStart(2, '0')} ({h.updated})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <Button
+                        size="sm"
+                        variant={diffMode === 'unified' ? 'primary' : 'secondary'}
+                        onClick={() => setDiffMode('unified')}
+                      >
+                        Unified
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={diffMode === 'split' ? 'primary' : 'secondary'}
+                        onClick={() => setDiffMode('split')}
+                      >
+                        Split (เคียงข้าง)
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Render Diff Tree */}
+                  {(() => {
+                    const leftDoc = historyList.find(h => String(h.rev) === leftRev);
+                    const rightDoc = historyList.find(h => String(h.rev) === rightRev);
+                    if (!leftDoc || !rightDoc) return null;
+                    const diffTree = diffLines(leftDoc.content, rightDoc.content);
+
+                    if (diffMode === 'unified') {
+                      return (
+                        <div className="qms-numeric" style={{ font: '12px/1.6 var(--font-mono)', background: 'var(--slate-900)', color: 'var(--slate-200)', padding: 14, borderRadius: 'var(--radius-md)', overflowX: 'auto', whiteSpace: 'pre-wrap', maxHeight: 500 }}>
+                          {diffTree.map((line, idx) => {
+                            let bg = 'transparent';
+                            let cl = 'inherit';
+                            let prefix = '  ';
+                            if (line.type === 'add') { bg = '#163625'; cl = '#4ade80'; prefix = '+ '; }
+                            else if (line.type === 'del') { bg = '#4c1d24'; cl = '#f87171'; prefix = '- '; }
+                            return (
+                              <div key={idx} style={{ background: bg, color: cl, padding: '2px 6px', borderRadius: 2 }}>
+                                {prefix}{line.text}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                          <div style={{ font: '11px/1.5 var(--font-mono)', background: 'var(--slate-50)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', overflowX: 'auto', maxHeight: 500 }}>
+                            <div style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 8, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 4 }}>ฉบับ Rev {String(leftRev).padStart(2, '0')}</div>
+                            {diffTree.map((line, idx) => {
+                              if (line.type === 'add') return <div key={idx} style={{ height: 18, background: 'var(--slate-100)' }} />;
+                              return (
+                                <div key={idx} style={{ color: line.type === 'del' ? 'var(--red-700)' : 'var(--text-primary)', background: line.type === 'del' ? 'var(--red-50)' : 'transparent', padding: '1px 4px' }}>
+                                  {line.text || ' '}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div style={{ font: '11px/1.5 var(--font-mono)', background: 'var(--slate-50)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', overflowX: 'auto', maxHeight: 500 }}>
+                            <div style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 8, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 4 }}>ฉบับ Rev {String(rightRev).padStart(2, '0')}</div>
+                            {diffTree.map((line, idx) => {
+                              if (line.type === 'del') return <div key={idx} style={{ height: 18, background: 'var(--slate-100)' }} />;
+                              return (
+                                <div key={idx} style={{ color: line.type === 'add' ? 'var(--green-700)' : 'var(--text-primary)', background: line.type === 'add' ? 'var(--green-50)' : 'transparent', padding: '1px 4px' }}>
+                                  {line.text || ' '}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+              )}
             </Card>
           )}
 
-          {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
-          <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>
-            {attachments.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {attachments.map((att) => {
-                  const m = FILE_META[att.kind] || { label: 'ไฟล์', icon: 'FileText', c: 'var(--slate-600)', bg: 'var(--slate-100)' };
-                  const isUrl = att.kind === 'url';
-                  return (
-                    <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
-                      <span style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', background: m.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                        <Icon name={m.icon} size={19} color={m.c} sw={2} />
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.2 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{att.name}</div>
-                        <div style={{ font: 'var(--text-2xs)/1.3 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>
-                          {isUrl ? 'ลิงก์ภายนอก' : `${m.label}${att.size ? ' · ' + (att.size / 1024).toFixed(0) + ' KB' : ''}`}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {isUrl ? (
-                          <Button variant="secondary" size="sm" onClick={() => openAttachment(att)} iconLeft={<Icon name="ExternalLink" size={15} color="var(--brand-700)" />}>เปิดลิงก์</Button>
-                        ) : (
-                          <>
-                            {att.kind === 'pdf' && (
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                disabled={loadingPreviewId === att.id}
-                                onClick={() => openAttachment(att, false)}
-                                iconLeft={<Icon name={loadingPreviewId === att.id ? "Loader2" : "Eye"} size={15} color="var(--brand-700)" className={loadingPreviewId === att.id ? "qms-spin" : ""} />}
-                              >
-                                {loadingPreviewId === att.id ? 'กำลังโหลด…' : 'เปิดดู'}
-                              </Button>
-                            )}
-                            {att.kind === 'pdf' && <Button variant="secondary" size="sm" onClick={() => printOne(att)} iconLeft={<Icon name="Printer" size={15} color="var(--brand-700)" />}>พิมพ์</Button>}
-                            <Button variant="secondary" size="sm" onClick={() => openAttachment(att, true)} iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}>ดาวน์โหลด</Button>
-                            {canUpdateFile(att) && <Button variant="secondary" size="sm" disabled={updatingId === att.id} onClick={() => askUpdateFile(att)} iconLeft={<Icon name="Upload" size={15} color="var(--brand-700)" />}>{updatingId === att.id ? 'กำลังอัปเดต…' : 'อัปเดตไฟล์'}</Button>}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                  {(doc.files || []).map((f) => {
-                    const m = FILE_META[f] || { label: f, c: 'var(--slate-600)', bg: 'var(--slate-100)', icon: 'FileText' };
+          {activeTab === 'training' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Training Form / Compliance State */}
+              <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="ShieldCheck" size={16} color="var(--brand-700)" /> ลงชื่อยอมรับเพื่อฝึกอบรม (SOP Training Sign-off)</span>}>
+                {(() => {
+                  const currentUser = api.decodeToken();
+                  const alreadySigned = acks.some(a => a.username === currentUser?.username && a.version === String(doc.rev));
+                  
+                  if (alreadySigned) {
+                    const myAck = acks.find(a => a.username === currentUser?.username && a.version === String(doc.rev));
                     return (
-                      <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-sm)', background: m.bg, color: m.c, font: 'var(--fw-semibold) var(--text-xs)/1 var(--font-body)' }}>
-                        <Icon name={m.icon} size={14} color={m.c} sw={2.2} /> {m.label}
-                      </span>
+                      <Alert tone="success" title="คุณได้ลงชื่อรับทราบเอกสารเวอร์ชันนี้แล้ว" icon={<Icon name="CircleCheck" size={18} color="var(--green-700)" />}>
+                        ลงนามเมื่อ: {fmtTs(myAck.ts)} (สำหรับรุ่นแก้ไขครั้งที่ {myAck.version})
+                      </Alert>
                     );
-                  })}
-                </div>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>เอกสารตัวอย่าง — ยังไม่มีไฟล์จริงในระบบ (ลงทะเบียนใหม่เพื่อแนบไฟล์)</div>
-              </div>
-            )}
-          </Card>
+                  }
 
-          {/* Activity history — สร้างจากบันทึกกิจกรรมจริงของเอกสารนี้ */}
-          <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> ประวัติการดำเนินการ</span>}>
-            {history.length === 0 ? (
-              <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>ยังไม่มีประวัติการดำเนินการสำหรับเอกสารนี้</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {history.map((h, i) => {
-                  const meta = LOG_ACTIONS[h.action] || { th: h.action, icon: 'History', c: 'var(--text-secondary)' };
                   return (
-                    <div key={i} style={{ display: 'flex', gap: 14, paddingBottom: i === history.length - 1 ? 0 : 16 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={{ width: 30, height: 30, borderRadius: '50%', background: i === 0 ? 'var(--brand-700)' : 'var(--slate-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                          <Icon name={meta.icon} size={15} color={i === 0 ? 'var(--white)' : 'var(--text-secondary)'} />
-                        </span>
-                        {i !== history.length - 1 && <span style={{ width: 1.5, flex: 1, background: 'var(--border-default)', marginTop: 4 }} />}
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!ackChecked) { setAckError('กรุณาคลิกเลือกยอมรับข้อตกลงเพื่อยืนยัน'); return; }
+                        if (!ackPassword) { setAckError('กรุณากรอกรหัสผ่านเพื่อลงนาม'); return; }
+                        setAckError('');
+                        try {
+                          const updatedAcks = await api.acknowledgeDocument(doc.no, ackPassword);
+                          setAcks(updatedAcks);
+                          setAckSuccess(true);
+                          setAckPassword('');
+                          setAckChecked(false);
+                          setTimeout(() => setAckSuccess(false), 3000);
+                        } catch (err) {
+                          setAckError(err.message || 'รหัสผ่านยืนยันไม่ถูกต้อง');
+                        }
+                      }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                    >
+                      {ackError && <Alert tone="danger" title="ข้อผิดพลาดในการลงนาม" icon={<Icon name="AlertTriangle" size={18} color="var(--red-700)" />}>{ackError}</Alert>}
+                      {ackSuccess && <Alert tone="success" title="ลงนามสำเร็จ" icon={<Icon name="CircleCheck" size={18} color="var(--green-700)" />}>ระบบได้บันทึกประวัติการฝึกอบรมของคุณเรียบร้อยแล้ว</Alert>}
+
+                      <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-primary)' }}>
+                        <input
+                          type="checkbox"
+                          checked={ackChecked}
+                          onChange={(e) => setAckChecked(e.target.checked)}
+                          style={{ marginTop: 3 }}
+                        />
+                        <span>ข้าพเจ้าขอรับรองว่าได้อ่าน ทำความเข้าใจ และผ่านการฝึกอบรมขั้นตอนตามวิธีปฏิบัติงานฉบับนี้แล้ว และตกลงที่จะปฏิบัติตามมาตรฐานงานเทคนิคการแพทย์อย่างเคร่งครัด</span>
+                      </label>
+
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 200, flex: 1 }}>
+                          <span style={{ font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)' }}>ยืนยันรหัสผ่านเพื่อบันทึกลายมือชื่ออิเล็กทรอนิกส์</span>
+                          <input
+                            type="password"
+                            placeholder="กรอกรหัสผ่านของคุณ"
+                            value={ackPassword}
+                            onChange={(e) => setAckPassword(e.target.value)}
+                            style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)', font: 'var(--text-sm)' }}
+                          />
+                        </div>
+                        <Button type="submit" variant="primary">บันทึกการรับทราบ</Button>
                       </div>
-                      <div style={{ paddingBottom: 4 }}>
-                        <div style={{ font: 'var(--fw-medium) var(--text-base)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{meta.th}</div>
-                        <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTs(h.ts)} · {h.by}</div>
-                      </div>
-                    </div>
+                    </form>
                   );
-                })}
-              </div>
-            )}
-          </Card>
+                })()}
+              </Card>
+
+              {/* Logs Table */}
+              <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="List" size={16} color="var(--text-secondary)" /> รายนามผู้ลงชื่อรับทราบ (Acknowledgment Log)</span>}>
+                {acks.length === 0 ? (
+                  <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-tertiary)', font: 'var(--type-body)' }}>
+                    ยังไม่มีบุคลากรลงชื่อรับทราบเอกสารรุ่นปัจจุบัน
+                  </div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--slate-50)', borderBottom: '1px solid var(--border-subtle)' }}>
+                        {['เวลาลงนาม', 'ชื่อ-นามสกุล', 'บทบาท/แผนก', 'เวอร์ชัน'].map((h, i) => (
+                          <th key={i} style={{ textAlign: 'left', padding: '10px 16px', font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {acks.map((a) => (
+                        <tr key={a.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                          <td className="qms-numeric" style={{ padding: '10px 16px', font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{fmtTs(a.ts)}</td>
+                          <td style={{ padding: '10px 16px', font: 'var(--fw-medium) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)' }}>{a.name}</td>
+                          <td style={{ padding: '10px 16px', font: 'var(--text-xs)/1 var(--font-body)', color: 'var(--text-secondary)' }}>{a.role}</td>
+                          <td style={{ padding: '10px 16px', font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-secondary)' }}>v{a.version}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Right rail */}
