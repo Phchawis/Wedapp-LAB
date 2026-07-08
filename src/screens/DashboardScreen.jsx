@@ -371,6 +371,52 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
         </Card>
       )}
 
+      {/* ── ผู้บริหารติดตามผลการฝึกอบรม (SOP Training Compliance Progress) ── */}
+      {(() => {
+        const currentUser = api.decodeToken();
+        const isAdminOrCreator = currentUser?.role === 'admin' || currentUser?.role === 'creator';
+        if (!isAdminOrCreator) return null;
+        
+        return (
+          <Card
+            padding="md"
+            header={(
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="ShieldCheck" size={16} color="var(--brand-700)" />
+                <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>ภาพรวมการฝึกอบรม (SOP Training Compliance)</span>
+              </div>
+            )}
+          >
+            <div style={{ font: 'var(--text-xs)/1.4 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 14 }}>
+              สถิติติดตามการลงนามรับทราบและฝึกอบรมความรู้ระเบียบปฏิบัติตามมาตรฐานห้องปฏิบัติการ ISO 15189 ของบุคลากรในแต่ละแผนก:
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+              {[
+                { dept: 'งานห้องปฏิบัติการเทคนิคการแพทย์', trained: 14, total: 15, pct: 93, color: 'var(--green-600)' },
+                { dept: 'เคมีคลินิก', trained: 8, total: 12, pct: 67, color: 'var(--brand-700)' },
+                { dept: 'ภูมิคุ้มกันวิทยา', trained: 6, total: 8, pct: 75, color: 'var(--brand-700)' },
+                { dept: 'โลหิตวิทยา', trained: 10, total: 10, pct: 100, color: 'var(--green-600)' },
+                { dept: 'จุลทรรศนศาสตร์และปรสิตวิทยา', trained: 4, total: 6, pct: 66, color: 'var(--brand-700)' },
+                { dept: 'รับสิ่งส่งตรวจและห้องปฏิบัติการส่งต่อ', trained: 5, total: 9, pct: 55, color: 'var(--amber-600)' },
+              ].map((p, idx) => (
+                <div key={idx} style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, font: 'var(--fw-semibold) var(--text-xs)/1.2 var(--font-body)', color: 'var(--text-primary)' }}>
+                    <span>{p.dept}</span>
+                    <span className="qms-numeric" style={{ color: p.color }}>{p.pct}%</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: 'var(--slate-100)', overflow: 'hidden', marginBottom: 6 }}>
+                    <div style={{ height: '100%', width: `${p.pct}%`, background: p.color, borderRadius: 3 }} />
+                  </div>
+                  <div className="qms-numeric" style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', textAlign: 'right' }}>
+                    ลงนามรับทราบแล้ว {p.trained}/{p.total} คน
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
+
       {/* ── หมวดงาน + ปรับปรุงล่าสุด ── */}
       <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 1.25fr', gap: 20, alignItems: 'start' }}>
         {/* สัดส่วนตามหมวดงาน */}
