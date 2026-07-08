@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DocTypeTag, StatusBadge, IconButton, Tabs, Input } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { FileChip } from '../components/FileChip.jsx';
@@ -11,19 +11,90 @@ export function RegisterScreen({ docs = QMS.DOCS, cat, onOpen }) {
   const [type, setType] = useState('all');
   const [tab, setTab] = useState('all');
   const [q, setQ] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const workerRef = useRef(null);
 
   const LAB = { code: 'LAB', th: 'งานห้องปฏิบัติการเทคนิคการแพทย์' };
   const isLab = cat === 'LAB';
   const catObj = isLab ? LAB : Q.WORK_CATEGORIES.find((c) => c.code === cat);
 
-  let rows = docs.slice();
-  if (cat && !isLab) rows = rows.filter((d) => d.cat === cat);
-  if (type !== 'all') rows = rows.filter((d) => d.type === type);
-  if (tab !== 'all') rows = rows.filter((d) => d.status === tab);
-  if (q.trim()) rows = rows.filter((d) => (d.no + d.th).toLowerCase().includes(q.trim().toLowerCase()));
-
   const base = (cat && !isLab) ? docs.filter((d) => d.cat === cat) : docs;
   const count = (s) => base.filter((d) => d.status === s).length;
+
+  useEffect(() => {
+    const workerCode = `
+      let baseDocs = [];
+      self.onmessage = (e) => {
+        const { action, payload } = e.data;
+        if (action === 'init') {
+          baseDocs = payload;
+        } else if (action === 'search') {
+          const { q, type, tab } = payload;
+          
+          let filtered = baseDocs;
+          if (type !== 'all') filtered = filtered.filter(d => d.type === type);
+          if (tab !== 'all') filtered = filtered.filter(d => d.status === tab);
+          
+          const query = q.toLowerCase().trim();
+          if (!query) {
+            self.postMessage({ results: filtered });
+            return;
+          }
+          
+          const results = filtered.map(d => {
+            let score = 0;
+            const no = d.no.toLowerCase();
+            const th = d.th.toLowerCase();
+            const owner = d.owner.toLowerCase();
+            
+            if (no === query || th === query) score += 100;
+            else if (no.startsWith(query)) score += 50;
+            else if (th.includes(query)) score += 30;
+            else if (no.includes(query)) score += 20;
+            else if (owner.includes(query)) score += 10;
+            
+            let matchIdx = 0;
+            for (let i = 0; i < th.length && matchIdx < query.length; i++) {
+              if (th[i] === query[matchIdx]) matchIdx++;
+            }
+            if (matchIdx === query.length) score += 15;
+            
+            return { doc: d, score };
+          })
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(item => item.doc);
+          
+          self.postMessage({ results });
+        }
+      };
+    `;
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    workerRef.current = worker;
+
+    worker.onmessage = (e) => {
+      setSearchResults(e.data.results);
+    };
+
+    worker.postMessage({ action: 'init', payload: base });
+    worker.postMessage({ action: 'search', payload: { q, type, tab } });
+
+    return () => {
+      worker.terminate();
+      URL.revokeObjectURL(url);
+    };
+  }, [base]);
+
+  useEffect(() => {
+    if (workerRef.current) {
+      workerRef.current.postMessage({ action: 'search', payload: { q, type, tab } });
+    }
+  }, [q, type, tab]);
+
+  const rows = searchResults;
 
   return (
     <div className="qms-rise" style={{ maxWidth: 'var(--container-max)' }}>
