@@ -1,17 +1,31 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { Button } from './components/ds/index.js';
 import { Icon } from './components/Icon.jsx';
 import { can } from './auth/users.js';
 import { api, decodeToken, setToken } from './api.js';
-import { LoginScreen } from './screens/LoginScreen.jsx';
-import { AppShell } from './screens/AppShell.jsx';
-import { DashboardScreen } from './screens/DashboardScreen.jsx';
-import { RegisterScreen } from './screens/RegisterScreen.jsx';
-import { DocDetailScreen } from './screens/DocDetailScreen.jsx';
-import { RegisterDocScreen } from './screens/RegisterDocScreen.jsx';
-import { UsersScreen } from './screens/UsersScreen.jsx';
-import { LogScreen } from './screens/LogScreen.jsx';
-import { HelpScreen } from './screens/HelpScreen.jsx';
+
+const LoginScreen = lazy(() => import('./screens/LoginScreen.jsx'));
+const AppShell = lazy(() => import('./screens/AppShell.jsx'));
+const DashboardScreen = lazy(() => import('./screens/DashboardScreen.jsx'));
+const RegisterScreen = lazy(() => import('./screens/RegisterScreen.jsx'));
+const DocDetailScreen = lazy(() => import('./screens/DocDetailScreen.jsx'));
+const RegisterDocScreen = lazy(() => import('./screens/RegisterDocScreen.jsx'));
+const UsersScreen = lazy(() => import('./screens/UsersScreen.jsx'));
+const LogScreen = lazy(() => import('./screens/LogScreen.jsx'));
+const HelpScreen = lazy(() => import('./screens/HelpScreen.jsx'));
+
+function Loader({ text = 'กำลังโหลดข้อมูล...' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--surface-page)', padding: 20 }}>
+      <div className="qms-rise" style={{ background: 'var(--surface-card)', padding: '24px 32px', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-subtle)', textAlign: 'center', maxWidth: 320, width: '100%' }}>
+        <div className="qms-spin" style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid var(--brand-100)', borderTopColor: 'var(--brand-700)', margin: '0 auto 16px' }} />
+        <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.3 var(--font-display)', color: 'var(--text-primary)' }}>{text}</div>
+        <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginTop: 8 }}>หน่วยงานทะเบียนและควบคุมเอกสาร TUH</div>
+      </div>
+    </div>
+  );
+}
+
 
 export default function App() {
   const [view, setView] = useState('dashboard');
@@ -74,31 +88,24 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentUser, isManager, role]);
 
-  if (booting) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--surface-page)' }}>
-        <div className="qms-rise" style={{ background: 'var(--surface-card)', padding: 'var(--space-8)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-subtle)', textAlign: 'center', maxWidth: 320, width: '100%' }}>
-          <div className="qms-spin" style={{ width: 48, height: 48, borderRadius: '50%', border: '3px solid var(--brand-100)', borderTopColor: 'var(--brand-700)', margin: '0 auto var(--space-4)' }} />
-          <div style={{ font: 'var(--fw-semibold) var(--text-base)/1.3 var(--font-display)', color: 'var(--text-primary)' }}>กำลังโหลดระบบข้อมูล...</div>
-          <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginTop: 'var(--space-2)' }}>หน่วยงานทะเบียนและควบคุมเอกสาร TUH</div>
-        </div>
-      </div>
-    );
-  }
+  if (booting) return <Loader text="กำลังโหลดระบบข้อมูล..." />;
 
   if (!currentUser) {
     return (
-      <LoginScreen
-        onSubmit={async (username, password) => {
-          const { token, user } = await api.login(username, password);
-          setToken(token);
-          setCurrentUser(user);
-          setView('dashboard');
-          await refreshAll(user.role);
-        }}
-      />
+      <Suspense fallback={<Loader text="กำลังเตรียมหน้าจอ..." />}>
+        <LoginScreen
+          onSubmit={async (username, password) => {
+            const { token, user } = await api.login(username, password);
+            setToken(token);
+            setCurrentUser(user);
+            setView('dashboard');
+            await refreshAll(user.role);
+          }}
+        />
+      </Suspense>
     );
   }
+
 
   const openDoc = (d) => { setDoc(d); setView('detail'); window.scrollTo(0, 0); };
   const nav = (v) => { setView(v); setCat(null); };
@@ -185,19 +192,22 @@ export default function App() {
     : view;
 
   return (
-    <AppShell
-      view={shellView}
-      onNav={nav}
-      cat={cat}
-      onCat={pickCat}
-      onLogout={logout}
-      user={currentUser}
-      title={head.t}
-      subtitle={head.s}
-      docCount={docs.length}
-      actions={['dashboard', 'register'].includes(view) ? RegisterBtn : null}
-    >
-      {body}
-    </AppShell>
+    <Suspense fallback={<Loader text="กำลังดาวน์โหลดหน้าจอระบบ..." />}>
+      <AppShell
+        view={shellView}
+        onNav={nav}
+        cat={cat}
+        onCat={pickCat}
+        onLogout={logout}
+        user={currentUser}
+        title={head.t}
+        subtitle={head.s}
+        docCount={docs.length}
+        actions={['dashboard', 'register'].includes(view) ? RegisterBtn : null}
+      >
+        {body}
+      </AppShell>
+    </Suspense>
   );
+
 }
