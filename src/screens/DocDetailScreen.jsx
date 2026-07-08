@@ -55,9 +55,23 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   }, [previewUrl]);
 
   // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
-  const publish = () => onUpdate(doc.no, { status: 'effective', updated: today(), action: 'doc:publish' });
-  const recordEdit = () => onUpdate(doc.no, { rev: doc.rev + 1, status: 'review', updated: today(), action: 'doc:edit' });
-  const obsolete = () => onUpdate(doc.no, { status: 'obsolete', updated: today(), action: 'doc:obsolete' });
+  // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
+  const publish = () => {
+    if (window.confirm('ยืนยันการประกาศใช้เอกสารคุณภาพนี้เป็นทางการ? ระบบจะเปิดให้เจ้าหน้าที่ปฏิบัติงานทุกคนเข้าถึงได้ในเครื่องทันที')) {
+      onUpdate(doc.no, { status: 'effective', updated: today(), action: 'doc:publish' });
+    }
+  };
+  const recordEdit = () => {
+    if (window.confirm('ยืนยันการเริ่มขั้นตอนทบทวน/แก้ไขเอกสารนี้? ระบบจะเพิ่มรุ่นแก้ไข (revision) และสลับสถานะเป็น "รอทบทวน"')) {
+      onUpdate(doc.no, { rev: doc.rev + 1, status: 'review', updated: today(), action: 'doc:edit' });
+    }
+  };
+  const obsolete = () => {
+    if (window.confirm('คำเตือนความปลอดภัย: ยืนยันการยกเลิกการใช้งานเอกสารฉบับนี้? เจ้าหน้าที่จะไม่สามารถเข้าถึงสำหรับปฏิบัติงานจริงได้ และจะเปลี่ยนสถานะเป็นยกเลิกถาวร')) {
+      onUpdate(doc.no, { status: 'obsolete', updated: today(), action: 'doc:obsolete' });
+    }
+  };
+
   const removeDoc = () => {
     if (window.confirm(`ยืนยันการลบเอกสาร ${doc.no} ออกจากทะเบียน?`)) onDelete(doc);
   };
