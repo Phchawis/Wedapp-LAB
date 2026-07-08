@@ -9,6 +9,7 @@ export function IconButton({ size = 'md', variant = 'ghost', disabled = false, l
   return (
     <button
       type="button"
+      className="qms-btn-hit-target"
       aria-label={label}
       title={label}
       disabled={disabled}
