@@ -233,7 +233,7 @@ Components are clinical and restrained: small radii (8px is the workhorse), quic
 - **Never nest cards.**
 
 ### Navigation
-- **Sidebar:** Fixed 264px rail; section groups labelled with small slate eyebrows ("หน่วยงาน", "หมวดงาน"); active item carries indigo. Collapses on narrow (~900px) and tablet widths.
+- **Sidebar:** Fixed 264px rail; active item carries indigo. Collapses into a sliding drawer on viewport widths < 900px, complete with blur backdrop overlay.
 - **Tabs:** Underline style — 2px indigo underline + indigo semibold label on the active tab; inactive is Slate Secondary, darkening to Ink on hover. Optional mono count chip per tab.
 
 ### Status Badge (signature component)
@@ -241,6 +241,19 @@ Components are clinical and restrained: small radii (8px is the workhorse), quic
 
 ### Document-Type Tag (signature component)
 - A 2-letter mono code (e.g. `QM`, `FM`, `WI`) in a small solid color chip (5px radius), color-coded by document family. Optionally followed by the Thai type name. Lets staff scan a register by type instantly.
+
+### Sidebar Header (signature component)
+- **Shape:** Square logo-box container, enlarged to 48px × 48px (`--radius-md`).
+- **Title:** "ห้องปฏิบัติการเทคนิคการแพทย์" split into two lines using `<br />` for syllable-breaking, styled in `15px` bold typography using a custom text-gradient from deep brand color to brand-medium.
+- **Animations & Hover Effects:**
+  - **Logo Box Lift:** Elevates by 2px with brand glow shadow (`--glow-brand-soft`) and transition.
+  - **Seal Micro-rotation:** The seal logo image scales to 1.08x and rotates slightly by 5 degrees.
+  - **Gradient Shift:** Title text gradient transitions dynamically from indigo to brand-to-coral.
+  - **Underline Glow:** Bottom line slide-in glow indicator lights up.
+
+### Inline PDF Viewer (signature component)
+- **Structure:** Content card wrapper housing an `iframe` that dynamically loads secure document blob Object URLs.
+- **Cleanup:** Explicitly revokes Object URLs on close and on component unmounting to prevent client memory leaks.
 
 ## 6. Do's and Don'ts
 
@@ -251,12 +264,16 @@ Components are clinical and restrained: small radii (8px is the workhorse), quic
 - **Do** set all system-generated data (document numbers, revisions, dates, counts) in IBM Plex Mono so it reads as machine data.
 - **Do** rest surfaces on the soft resting-card shadow and lift only on intent (hover/focus/open).
 - **Do** keep the same control vocabulary on every screen — one button shape, one input style, one badge — and design responsively for lab tablets (collapse the sidebar, let tables scroll).
+- **Do** split long Thai titles like 'ห้องปฏิบัติการเทคนิคการแพทย์' using `<br />` to ensure predictable syllable-breaking in narrow sidebars.
+- **Do** revoke temporary attachment Object URLs on close or unmount to avoid memory leaks.
 
 ### Don't:
 - **Don't** make it look like an old government web system — no dated dense tables without hierarchy, no raw system fonts, no muddy color.
 - **Don't** let it feel toy-like or unserious; this is an official document register, not a playful app.
 - **Don't** cram every field into one view without hierarchy — clutter erodes trust and findability.
 - **Don't** import marketing-SaaS tropes: no loud gradients as decoration, no big hero-metric cards, no ad-like exuberance.
-- **Don't** use gradient text, decorative glassmorphism, or `border-left`/`border-right` colored side-stripes on cards, alerts, or list items.
+- **Don't** use gradient text on content fields, decorative glassmorphism, or `border-left`/`border-right` colored side-stripes on cards, alerts, or list items.
 - **Don't** reuse status tints (green/amber/violet/red) for non-status decoration, and don't swap a button's color on hover — darken with brightness instead.
 - **Don't** use fluid `clamp()` heading sizes or nest cards inside cards.
+- **Don't** load PDF files by forcing an external tab redirect when inline streaming within a Card-iframe is possible.
+
