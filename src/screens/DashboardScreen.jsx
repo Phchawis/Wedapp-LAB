@@ -3,6 +3,7 @@ import { Card, DocTypeTag, StatusBadge, Button } from '../components/ds/index.js
 import { Icon } from '../components/Icon.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
+import { api } from '../api.js';
 
 /* DashboardScreen — "แผงควบคุมงานเอกสาร": register health, an action queue of
    documents that need attention, compliance/quality warnings, then category mix + recent activity.
@@ -28,10 +29,30 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
     return localStorage.getItem('tuh-qms-onboarding-dismissed') !== 'true';
   });
 
+  const [exporting, setExporting] = useState(false);
+
   const dismissOnboarding = () => {
     localStorage.setItem('tuh-qms-onboarding-dismissed', 'true');
     setOnboardingVisible(false);
   };
+
+  const handleExportEmergencyKit = async () => {
+    setExporting(true);
+    try {
+      const blob = await api.downloadEmergencyKit();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TUH-QMS-Emergency-Kit.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      window.alert(e.message || 'ไม่สามารถดาวน์โหลดชุดสำรองฉุกเฉินได้');
+    } finally {
+      setExporting(false);
+    }
+  };
+
 
 
   // นับตามสถานะ
@@ -224,9 +245,20 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
 
       {/* ── ภาพรวมทะเบียน: จำนวนรวม + แถบสัดส่วนตามสถานะ + legend ── */}
       <Card padding="md">
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: 14, flexWrap: 'wrap' }}>
-          <span style={{ font: 'var(--fw-bold) var(--text-3xl)/1 var(--font-mono)', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{total}</span>
-          <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)' }}>ฉบับในทะเบียนเอกสาร</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
+            <span style={{ font: 'var(--fw-bold) var(--text-3xl)/1 var(--font-mono)', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{total}</span>
+            <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)' }}>ฉบับในทะเบียนเอกสาร</span>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleExportEmergencyKit}
+            disabled={exporting}
+            iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}
+          >
+            {exporting ? 'กำลังบีบอัดไฟล์…' : 'ชุดกู้ชีพออฟไลน์ (Emergency ZIP)'}
+          </Button>
         </div>
 
         {/* แถบสัดส่วนตามสถานะ (segmented) */}
