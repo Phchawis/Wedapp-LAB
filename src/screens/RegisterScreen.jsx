@@ -90,7 +90,7 @@ export function RegisterScreen({ docs = QMS.DOCS, cat, onOpen }) {
             </thead>
             <tbody>
               {rows.map((d, idx) => (
-                <tr key={d.no} onClick={() => onOpen(d)} className="qms-table-row" style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
+                <tr key={d.no} onClick={() => onOpen(d)} className="qms-table-row qms-rise-stagger" style={{ borderBottom: idx === rows.length - 1 ? 'none' : '1px solid var(--border-subtle)', '--i': idx }}>
                   <td style={{ padding: '12px 16px' }}><DocTypeTag type={d.type} /></td>
                   <td style={{ padding: '12px 16px', minWidth: 0 }}>
                     <div style={{ font: 'var(--fw-medium) var(--text-base)/1.35 var(--font-body)', color: 'var(--text-primary)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{d.th}</div>
