@@ -93,5 +93,9 @@ export const api = {
     if (!res.ok) throw new Error('ไม่สามารถดาวน์โหลดชุดสำรองฉุกเฉินได้');
     return res.blob();
   },
+
+  getDocumentHistory: (no) => req('/documents/' + encodeURIComponent(no) + '/history'),
+  getDocumentAcknowledgments: (no) => req('/documents/' + encodeURIComponent(no) + '/acknowledgments'),
+  acknowledgeDocument: (no, password) => req('/documents/' + encodeURIComponent(no) + '/acknowledge', { method: 'POST', body: { password } }),
 };
 
