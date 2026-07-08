@@ -31,7 +31,16 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const addFiles = (list) => setFiles((prev) => [...prev, ...Array.from(list)]);
+  const addFiles = (list) => {
+    const validFiles = Array.from(list).filter((f) => {
+      if (f.size > 25 * 1024 * 1024) {
+        window.alert(`ไฟล์ "${f.name}" มีขนาดเกิน 25 MB และจะไม่ถูกนำเข้าระบบ`);
+        return false;
+      }
+      return true;
+    });
+    setFiles((prev) => [...prev, ...validFiles]);
+  };
   const removeFile = (i) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
   const setLink = (i, v) => setLinks((prev) => prev.map((l, idx) => (idx === i ? v : l)));
   const addLinkRow = () => setLinks((prev) => [...prev, '']);
@@ -43,6 +52,15 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const cleanLinks = links.map((l) => l.trim()).filter(Boolean);
   const attachmentCount = files.length + cleanLinks.length;
 
+  const invalidLinksCount = cleanLinks.filter((l) => {
+    try {
+      const url = new URL(l);
+      return url.protocol !== 'http:' && url.protocol !== 'https:';
+    } catch (e) {
+      return true;
+    }
+  }).length;
+
   const errors = {
     type: !form.type ? 'เลือกประเภทเอกสาร' : '',
     docId: !docId ? 'กรุณาระบุเลขที่เอกสาร' : '',
@@ -51,9 +69,11 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
     th: !form.th.trim() ? 'กรุณาระบุชื่อเอกสาร' : '',
     owner: !form.owner.trim() ? 'กรุณาระบุผู้รับผิดชอบ' : '',
     attach: attachmentCount === 0 ? 'แนบไฟล์หรือลิงก์อย่างน้อย 1 รายการ' : '',
+    links: invalidLinksCount > 0 ? 'กรุณาระบุ URL ที่ถูกต้อง (เริ่มต้นด้วย http:// หรือ https://)' : '',
   };
   const valid = !Object.values(errors).some(Boolean);
   const noError = errors.type || errors.docId || errors.duplicate;
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -194,6 +214,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
           </button>
 
           {touched && errors.attach && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.attach}</div>}
+          {touched && errors.links && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.links}</div>}
         </Card>
 
         {submitError && <Alert tone="danger" icon={<Icon name="AlertTriangle" size={18} color="var(--red-700)" />}>{submitError}</Alert>}
