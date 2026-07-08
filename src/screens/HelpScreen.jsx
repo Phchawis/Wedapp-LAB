@@ -34,9 +34,9 @@ export function HelpScreen() {
       </Card>
 
       {/* 2. Coding Standards & Lifecycle Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
         {/* Coding Standards */}
-        <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FileCode" size={16} color="var(--text-secondary)" /> รหัสรหัสเอกสารควบคุม (Coding Standards)</span>}>
+        <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FileCode" size={16} color="var(--text-secondary)" /> ข้อกำหนดรหัสเอกสารควบคุม (Coding Standards)</span>}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ font: 'var(--type-ui)', color: 'var(--text-secondary)', marginBottom: 4 }}>
               เลขควบคุมเอกสารมีรูปแบบมาตรฐานคือ <code style={{ font: 'var(--type-code)', color: 'var(--brand-700)', background: 'var(--brand-50)', padding: '2px 6px', borderRadius: 'var(--radius-xs)' }}>ประเภท-หมวดงาน-ลำดับ</code> เช่น <code style={{ font: 'var(--type-code)' }}>QM-CMTL-001</code>
@@ -118,7 +118,7 @@ export function HelpScreen() {
       </Card>
 
       {/* 4. Keyboard Shortcuts */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
         <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Keyboard" size={16} color="var(--text-secondary)" /> คีย์ลัดนำทางด่วน (Keyboard Shortcuts)</span>}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <ShortcutKey keys={['Alt', 'D']} desc="เปิดหน้า แผงควบคุม (Dashboard)" />
