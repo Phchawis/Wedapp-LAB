@@ -256,9 +256,9 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
             variant="secondary"
             onClick={handleExportEmergencyKit}
             disabled={exporting}
-            iconLeft={<Icon name="Download" size={15} color="var(--brand-700)" />}
+            iconLeft={<Icon name={exporting ? "Loader2" : "Download"} size={15} color="var(--brand-700)" className={exporting ? "qms-spin" : ""} />}
           >
-            {exporting ? 'กำลังบีบอัดไฟล์…' : 'ชุดกู้ชีพออฟไลน์ (Emergency ZIP)'}
+            {exporting ? 'กำลังสร้างชุดกู้ชีพ…' : 'ชุดกู้ชีพออฟไลน์ (Emergency ZIP)'}
           </Button>
         </div>
 
