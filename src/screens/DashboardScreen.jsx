@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, DocTypeTag, StatusBadge, Button } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
@@ -401,6 +401,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
             </div>
           )}
         >
+          {recent.map((d, i) => <DocRow key={d.no} d={d} last={i === recent.length - 1} meta="updated" index={i} />)}
           {recent.map((d, i) => <DocRow key={d.no} d={d} last={i === recent.length - 1} meta="updated" index={i} />)}
         </Card>
       </div>
