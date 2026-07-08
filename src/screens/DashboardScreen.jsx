@@ -109,15 +109,12 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
     <div
       role="button"
       tabIndex={0}
+      className="qms-doc-row"
       onClick={() => onOpen(d)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(d); } }}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
-        borderBottom: last ? 'none' : '1px solid var(--border-subtle)', cursor: 'pointer',
-        transition: 'background var(--dur-fast) var(--ease-standard)',
+        borderBottom: last ? 'none' : '1px solid var(--border-subtle)',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--slate-50)'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
     >
       <DocTypeTag type={d.type} />
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -305,15 +302,12 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
                 key={d.no}
                 role="button"
                 tabIndex={0}
+                className="qms-doc-row"
                 onClick={() => onOpen(d)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(d); } }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px',
-                  borderBottom: idx === Math.min(alertDocs.length, 5) - 1 ? 'none' : '1px solid var(--border-subtle)', cursor: 'pointer',
-                  transition: 'background var(--dur-fast) var(--ease-standard)',
+                  borderBottom: idx === Math.min(alertDocs.length, 5) - 1 ? 'none' : '1px solid var(--border-subtle)',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--slate-50)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
               >
                 <DocTypeTag type={d.type} />
                 <div style={{ flex: 1, minWidth: 0 }}>
