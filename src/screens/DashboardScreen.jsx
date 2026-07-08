@@ -126,15 +126,16 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
   const recent = docs.slice().sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 5);
 
   // แถวเอกสารที่คลิกเปิดได้ (ใช้ทั้งคิวงานและล่าสุด) — รองรับคีย์บอร์ด
-  const DocRow = ({ d, last, meta }) => (
+  const DocRow = ({ d, last, meta, index }) => (
     <div
       role="button"
       tabIndex={0}
-      className="qms-doc-row"
+      className="qms-doc-row qms-rise-stagger"
       onClick={() => onOpen(d)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(d); } }}
       style={{
         borderBottom: last ? 'none' : '1px solid var(--border-subtle)',
+        '--i': index,
       }}
     >
       <DocTypeTag type={d.type} />
@@ -310,7 +311,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
             </div>
           </div>
         ) : (
-          actionShown.map((d, i) => <DocRow key={d.no} d={d} last={i === actionShown.length - 1} meta="owner" />)
+          actionShown.map((d, i) => <DocRow key={d.no} d={d} last={i === actionShown.length - 1} meta="owner" index={i} />)
         )}
       </Card>
 
@@ -334,11 +335,12 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
                 key={d.no}
                 role="button"
                 tabIndex={0}
-                className="qms-doc-row"
+                className="qms-doc-row qms-rise-stagger"
                 onClick={() => onOpen(d)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(d); } }}
                 style={{
                   borderBottom: idx === Math.min(alertDocs.length, 5) - 1 ? 'none' : '1px solid var(--border-subtle)',
+                  '--i': idx,
                 }}
               >
                 <DocTypeTag type={d.type} />
@@ -363,7 +365,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
           })}
           {alertDocs.length > 5 && (
             <div style={{ padding: '12px 18px', textAlign: 'center', borderTop: '1px solid var(--border-subtle)', font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>
-              และอีก {alertDocs.length - 5} ฉบับที่อยู่ในเกณฑ์ตรวจสอบคุณภาพ (ดูรายละเอียดเพิ่มเติมในหน้ารายละเอียดเอกสาร)
+              พบประเด็นคุณภาพอีก {alertDocs.length - 5} ฉบับ (กรุณาคลิกเลือกตรวจสอบในหน้าระเบียน เพื่อพิจารณาดำเนินการแก้ไขหรือทบทวนเวอร์ชัน)
             </div>
           )}
         </Card>
@@ -399,7 +401,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
             </div>
           )}
         >
-          {recent.map((d, i) => <DocRow key={d.no} d={d} last={i === recent.length - 1} meta="updated" />)}
+          {recent.map((d, i) => <DocRow key={d.no} d={d} last={i === recent.length - 1} meta="updated" index={i} />)}
         </Card>
       </div>
     </div>
