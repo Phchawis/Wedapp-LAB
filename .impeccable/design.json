@@ -127,6 +127,22 @@
       "description": "Underline tabs for switching register views; active = indigo underline + label, with mono count chip.",
       "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab--active\">ทั้งหมด<span class=\"ds-tab-count ds-tab-count--active\">12</span></button><button class=\"ds-tab\">ประกาศใช้<span class=\"ds-tab-count\">8</span></button><button class=\"ds-tab\">รอทบทวน<span class=\"ds-tab-count\">3</span></button></div>",
       "css": ".ds-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border-subtle,#E0E2EC);}.ds-tab{display:inline-flex;align-items:center;gap:7px;background:transparent;border:none;cursor:pointer;padding:10px 14px;margin-bottom:-1px;border-bottom:2px solid transparent;color:var(--text-secondary,#54596F);font:500 .9375rem/1 'Sarabun',system-ui,sans-serif;transition:color 120ms,border-color 120ms;}.ds-tab:hover{color:var(--text-primary,#181B2A);}.ds-tab--active{border-bottom-color:var(--brand-700,#343E9B);color:var(--brand-700,#343E9B);font-weight:600;}.ds-tab-count{font:600 .6875rem/1 'IBM Plex Mono',ui-monospace,monospace;background:var(--slate-100,#EEEFF5);color:var(--text-tertiary,#70758C);padding:2px 6px;border-radius:999px;}.ds-tab-count--active{background:var(--brand-100,#E3E6F9);color:var(--brand-700,#343E9B);}"
+    },
+    {
+      "name": "Sidebar Header",
+      "kind": "custom",
+      "refersTo": "sidebar-logo-header",
+      "description": "Modernized top-left sidebar header with responsive layout, bottom border-light glow, logo hover elevation, seal micro-rotation, and dynamic text-gradient color shift.",
+      "html": "<div class=\"ds-sidebar-logo-header\"><div class=\"ds-logo-box-modern\"><img src=\"/lab-seal.png\" alt=\"ตรา รพธ.\" /></div><div style=\"line-height: 1.2;\"><div class=\"ds-logo-text-title\">ห้องปฏิบัติการ<br />เทคนิคการแพทย์</div><div class=\"ds-logo-text-subtitle\">รพ.ธรรมศาสตร์เฉลิมพระเกียรติ</div></div></div>",
+      "css": ".ds-sidebar-logo-header { padding: 16px 18px 14px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border-subtle,#E0E2EC); cursor: pointer; background: transparent; transition: background 180ms cubic-bezier(.2,0,.13,1); position: relative; overflow: hidden; } .ds-sidebar-logo-header::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--brand-300,#B4BBEE), transparent); transform: scaleX(0); transition: transform 180ms cubic-bezier(.2,0,.13,1); } .ds-sidebar-logo-header:hover::after { transform: scaleX(1); } .ds-sidebar-logo-header:hover { background: var(--slate-50,#F6F7FB); } .ds-logo-box-modern { width: 48px; height: 48px; border-radius: 8px; background: var(--brand-50,#F1F2FC); display: grid; place-items: center; flex-shrink: 0; border: 1.5px solid var(--brand-100,#E3E6F9); position: relative; transition: transform 180ms cubic-bezier(.2,0,.13,1), box-shadow 180ms cubic-bezier(.2,0,.13,1), border-color 180ms cubic-bezier(.2,0,.13,1); } .ds-logo-box-modern img { width: 36px; height: 36px; object-fit: contain; transition: transform 180ms cubic-bezier(.2,0,.13,1); } .ds-sidebar-logo-header:hover .ds-logo-box-modern { transform: translateY(-2px); box-shadow: 0 6px 18px -8px rgba(52,62,155,.35); border-color: var(--brand-400,#8893E3); } .ds-sidebar-logo-header:hover .ds-logo-box-modern img { transform: scale(1.08) rotate(5deg); } .ds-logo-text-title { font-family: var(--font-display,'Anuphan'); font-weight: 700; font-size: 15px; line-height: 1.25; background: linear-gradient(135deg, var(--brand-900,#1B2152) 0%, var(--brand-600,#4250BC) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: background 180ms cubic-bezier(.2,0,.13,1); } .ds-sidebar-logo-header:hover .ds-logo-text-title { background: linear-gradient(135deg, var(--brand-800,#262E73) 0%, var(--accent-600,#DD5236) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; } .ds-logo-text-subtitle { font-family: var(--font-body,'Sarabun'); font-weight: 500; font-size: 10.5px; line-height: 1.2; color: var(--text-secondary,#54596F); margin-top: 2px; transition: color 180ms cubic-bezier(.2,0,.13,1); } .ds-sidebar-logo-header:hover .ds-logo-text-subtitle { color: var(--text-primary,#181B2A); }"
+    },
+    {
+      "name": "Inline PDF Viewer",
+      "kind": "custom",
+      "refersTo": "inline-pdf-viewer",
+      "description": "Card-based inline iframe container that streams PDF files directly without tab redirects. Contains a top toolbar, dynamic title, and close control.",
+      "html": "<div class=\"ds-pdf-card\"><div class=\"ds-pdf-header\"><div class=\"ds-pdf-title\"><span>คู่มือคุณภาพ (QM-LAB-001).pdf</span></div><button class=\"ds-pdf-close\">&times;</button></div><div class=\"ds-pdf-body\"><iframe src=\"about:blank\" title=\"ตัวอย่างเอกสาร\" class=\"ds-pdf-iframe\"></iframe></div></div>",
+      "css": ".ds-pdf-card { background: #fff; border: 1px solid var(--border-default,#C4C8D6); border-radius: 8px; box-shadow: 0 1px 3px rgba(15,26,30,.08),0 1px 2px rgba(15,26,30,.05); overflow: hidden; display: flex; flex-direction: column; width: 100%; height: 500px; } .ds-pdf-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--border-subtle,#E0E2EC); background: var(--slate-50,#F6F7FB); } .ds-pdf-title { font: 600 .875rem/1.2 'Sarabun',system-ui,sans-serif; color: var(--text-primary,#181B2A); } .ds-pdf-close { background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-tertiary,#70758C); padding: 4px 8px; border-radius: 4px; transition: background 120ms; } .ds-pdf-close:hover { background: var(--slate-100,#EEEFF5); color: var(--text-primary,#181B2A); } .ds-pdf-body { flex: 1; position: relative; background: var(--slate-800,#262A3D); } .ds-pdf-iframe { width: 100%; height: 100%; border: none; }"
     }
   ],
   "narrative": {
@@ -152,16 +168,19 @@
       "Do keep the six document-control status colors as a sacred, fixed vocabulary; a colored pill always means a controlled state.",
       "Do set all system-generated data (document numbers, revisions, dates, counts) in IBM Plex Mono so it reads as machine data.",
       "Do rest surfaces on the soft resting-card shadow and lift only on intent (hover/focus/open).",
-      "Do keep the same control vocabulary on every screen and design responsively for lab tablets (collapse the sidebar, let tables scroll)."
+      "Do keep the same control vocabulary on every screen and design responsively for lab tablets (collapse the sidebar, let tables scroll).",
+      "Do split long Thai titles like 'ห้องปฏิบัติการเทคนิคการแพทย์' using <br /> to ensure predictable syllable-breaking in narrow sidebars.",
+      "Do revoke temporary attachment Object URLs on close or unmount to avoid memory leaks."
     ],
     "donts": [
       "Don't make it look like an old government web system — no dated dense tables without hierarchy, no raw system fonts, no muddy color.",
       "Don't let it feel toy-like or unserious; this is an official document register.",
       "Don't cram every field into one view without hierarchy — clutter erodes trust and findability.",
       "Don't import marketing-SaaS tropes: no loud gradients as decoration, no big hero-metric cards, no ad-like exuberance.",
-      "Don't use gradient text, decorative glassmorphism, or border-left/border-right colored side-stripes on cards, alerts, or list items.",
+      "Don't use gradient text on content fields, decorative glassmorphism, or border-left/border-right colored side-stripes on cards, alerts, or list items.",
       "Don't reuse status tints for non-status decoration, and don't swap a button's color on hover — darken with brightness instead.",
-      "Don't use fluid clamp() heading sizes or nest cards inside cards."
+      "Don't use fluid clamp() heading sizes or nest cards inside cards.",
+      "Don't load PDF files by forcing an external tab redirect when inline streaming within a Card-iframe is possible."
     ]
   }
 }
