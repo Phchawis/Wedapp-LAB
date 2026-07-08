@@ -199,6 +199,171 @@ app.get('/api/logs', authMw, requirePerm('users:manage'), wrap(async (req, res) 
   res.json(await store.listLogs());
 }));
 
+// ── Emergency Kit Export (ZIP) ───────────────────────────────
+app.get('/api/documents/export/zip', authMw, requirePerm('docs:export'), wrap(async (req, res) => {
+  const docs = await store.listDocuments();
+  const zip = new SimpleZip();
+  let rowsHtml = '';
+  const nowStr = new Date().toLocaleString('th-TH');
+  
+  for (const d of docs) {
+    let attachmentsLinks = [];
+    for (const a of d.attachments || []) {
+      if (a.kind === 'url') {
+        attachmentsLinks.push(`<a href="${a.url}" target="_blank" rel="noopener noreferrer">🔗 ลิงก์ภายนอก</a>`);
+      } else if (a.storage) {
+        try {
+          const buf = await store.readAttachmentData(a);
+          if (buf) {
+            const zipPath = `files/${a.id}_${a.name}`;
+            zip.addFile(zipPath, buf);
+            attachmentsLinks.push(`<a href="${zipPath}" download>${a.name}</a>`);
+          } else {
+            attachmentsLinks.push(`<span style="color:#70758C">⚠️ ไฟล์ขัดข้อง (${a.name})</span>`);
+          }
+        } catch (e) {
+          console.error(`Failed to pack file ${a.name}:`, e);
+          attachmentsLinks.push(`<span style="color:#70758C">⚠️ โหลดไม่สำเร็จ (${a.name})</span>`);
+        }
+      }
+    }
+    
+    const typeLabel = d.type;
+    const statusClass = `badge badge-${d.status}`;
+    const statusLabel = d.status === 'effective' ? 'ประกาศใช้' :
+                        d.status === 'review' ? 'รอทบทวน' :
+                        d.status === 'draft' ? 'ร่าง' : 'ยกเลิก';
+                        
+    rowsHtml += `
+      <tr>
+        <td><span class="type-tag">${typeLabel}</span></td>
+        <td style="font-family:monospace; font-weight:600;">${d.no}</td>
+        <td><strong>${d.th}</strong></td>
+        <td style="text-align:center;">${String(d.rev).padStart(2, '0')}</td>
+        <td><span class="${statusClass}">${statusLabel}</span></td>
+        <td>${d.owner}</td>
+        <td><div style="display:flex; flex-direction:column; gap:4px;">${attachmentsLinks.join('')}</div></td>
+      </tr>
+    `;
+  }
+  
+  const template = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ทะเบียนเอกสารคุณภาพห้องปฏิบัติการสำรองออฟไลน์ (QMS Emergency Kit)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #EEEFF5;
+      color: #181B2A;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 24px;
+    }
+    h1 {
+      font-size: 20px;
+      color: #343E9B;
+      margin-top: 0;
+      margin-bottom: 4px;
+    }
+    p {
+      color: #54596F;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #E0E2EC;
+    }
+    th {
+      background-color: #F6F7FB;
+      color: #70758C;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+    tr:hover {
+      background-color: #F6F7FB;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-effective { background-color: #E6F4EA; color: #137333; }
+    .badge-review { background-color: #FEF7E0; color: #B06000; }
+    .badge-draft { background-color: #F1F3F4; color: #3C4043; }
+    .badge-obsolete { background-color: #FCE8E6; color: #C5221F; }
+    .type-tag {
+      background-color: #E8EAF6;
+      color: #3F51B5;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-family: monospace;
+    }
+    a {
+      color: #343E9B;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ทะเบียนเอกสารคุณภาพห้องปฏิบัติการสำรองออฟไลน์ (QMS Emergency Kit)</h1>
+    <p>สำรองข้อมูลเมื่อ: ${nowStr} | ประกอบด้วยเอกสารจัดเก็บทั้งหมดพร้อมไฟล์จริงสำหรับใช้งานออฟไลน์ยามฉุกเฉิน</p>
+    <table>
+      <thead>
+        <tr>
+          <th>ประเภท</th>
+          <th>เลขที่เอกสาร</th>
+          <th>ชื่อเอกสาร</th>
+          <th style="text-align:center;">แก้ไขครั้งที่</th>
+          <th>สถานะ</th>
+          <th>ผู้รับผิดชอบ</th>
+          <th>ไฟล์แนบออฟไลน์</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>`;
+
+  zip.addFile('index.html', template);
+  
+  const zipBuffer = zip.toBuffer();
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="TUH-QMS-Emergency-Kit.zip"');
+  res.send(zipBuffer);
+  
+  await logAction(req.user, 'register:emergency-export');
+}));
+
+
 // ── เสิร์ฟหน้าเว็บที่ build แล้ว (production / โฮสต์) ─────────────
 // dev ใช้ vite แยกบนพอร์ต 5173; แต่บนโฮสต์จะมีโฟลเดอร์ dist ให้เสิร์ฟจากที่นี่
 const distDir = path.join(__dirname, '..', 'dist');
@@ -209,3 +374,103 @@ if (fs.existsSync(distDir)) {
 }
 
 app.listen(PORT, () => console.log(`TUH QMS API on :${PORT} · data store: ${store.label}`));
+
+// ── Simple ZIP Generator (No dependencies, store method) ──────
+class SimpleZip {
+  constructor() {
+    this.files = [];
+  }
+  addFile(name, content) {
+    const buf = Buffer.isBuffer(content) ? content : Buffer.from(content);
+    this.files.push({ name, buf });
+  }
+  toBuffer() {
+    const buffers = [];
+    const localHeaders = [];
+    const centralHeaders = [];
+    let offset = 0;
+
+    for (const f of this.files) {
+      const nameBuf = Buffer.from(f.name);
+      const size = f.buf.length;
+      const date = new Date();
+      const timeVal = ((date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1)) & 0xFFFF;
+      const dateVal = (((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate()) & 0xFFFF;
+      const crc = crc32(f.buf);
+
+      const lh = Buffer.alloc(30 + nameBuf.length);
+      lh.writeUInt32LE(0x04034b50, 0);
+      lh.writeUInt16LE(10, 4);
+      lh.writeUInt16LE(0, 6);
+      lh.writeUInt16LE(0, 8);
+      lh.writeUInt16LE(timeVal, 10);
+      lh.writeUInt16LE(dateVal, 12);
+      lh.writeUInt32LE(crc, 14);
+      lh.writeUInt32LE(size, 18);
+      lh.writeUInt32LE(size, 22);
+      lh.writeUInt16LE(nameBuf.length, 26);
+      lh.writeUInt16LE(0, 28);
+      nameBuf.copy(lh, 30);
+
+      localHeaders.push(lh);
+      localHeaders.push(f.buf);
+
+      const ch = Buffer.alloc(46 + nameBuf.length);
+      ch.writeUInt32LE(0x02014b50, 0);
+      ch.writeUInt16LE(20, 4);
+      ch.writeUInt16LE(10, 6);
+      ch.writeUInt16LE(0, 8);
+      ch.writeUInt16LE(0, 10);
+      ch.writeUInt16LE(timeVal, 12);
+      ch.writeUInt16LE(dateVal, 14);
+      ch.writeUInt32LE(crc, 16);
+      ch.writeUInt32LE(size, 20);
+      ch.writeUInt32LE(size, 24);
+      ch.writeUInt16LE(nameBuf.length, 28);
+      ch.writeUInt16LE(0, 30);
+      ch.writeUInt16LE(0, 32);
+      ch.writeUInt16LE(0, 34);
+      ch.writeUInt16LE(0, 36);
+      ch.writeUInt32LE(0, 38);
+      ch.writeUInt32LE(offset, 42);
+      nameBuf.copy(ch, 46);
+
+      centralHeaders.push(ch);
+      offset += lh.length + size;
+    }
+
+    const localSize = offset;
+    const centralBuf = Buffer.concat(centralHeaders);
+    const centralSize = centralBuf.length;
+
+    const eocd = Buffer.alloc(22);
+    eocd.writeUInt32LE(0x06054b50, 0);
+    eocd.writeUInt16LE(0, 4);
+    eocd.writeUInt16LE(0, 6);
+    eocd.writeUInt16LE(this.files.length, 8);
+    eocd.writeUInt16LE(this.files.length, 10);
+    eocd.writeUInt32LE(centralSize, 12);
+    eocd.writeUInt32LE(localSize, 16);
+    eocd.writeUInt16LE(0, 20);
+
+    return Buffer.concat([...localHeaders, centralBuf, eocd]);
+  }
+}
+
+const crcTable = [];
+for (let n = 0; n < 256; n++) {
+  let c = n;
+  for (let k = 0; k < 8; k++) {
+    c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+  }
+  crcTable[n] = c;
+}
+
+function crc32(buf) {
+  let crc = 0 ^ (-1);
+  for (let i = 0; i < buf.length; i++) {
+    crc = (crc >>> 8) ^ crcTable[(crc ^ buf[i]) & 0xFF];
+  }
+  return (crc ^ (-1)) >>> 0;
+}
+
