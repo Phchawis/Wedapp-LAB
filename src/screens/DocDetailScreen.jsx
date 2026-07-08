@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, StatusBadge, DocTypeTag, Card, Alert } from '../components/ds/index.js';
+import { Button, StatusBadge, DocTypeTag, Card, Alert, Tabs } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { FILE_META } from '../components/FileChip.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
@@ -7,6 +7,55 @@ import { QMS } from '../data/taxonomy.js';
 import { can } from '../auth/users.js';
 import { LOG_ACTIONS } from '../auth/activityLog.js';
 import { api } from '../api.js';
+
+// Line-by-line diffing algorithm for revision comparisons
+function diffLines(oldStr, newStr) {
+  const oldLines = (oldStr || '').split('\n');
+  const newLines = (newStr || '').split('\n');
+  const diffResult = [];
+  let i = 0, j = 0;
+  
+  while (i < oldLines.length || j < newLines.length) {
+    if (i < oldLines.length && j < newLines.length) {
+      if (oldLines[i] === newLines[j]) {
+        diffResult.push({ type: 'normal', text: oldLines[i] });
+        i++; j++;
+      } else {
+        let foundMatch = false;
+        for (let k = 1; k < 5; k++) {
+          if (i + k < oldLines.length && oldLines[i + k] === newLines[j]) {
+            for (let d = 0; d < k; d++) {
+              diffResult.push({ type: 'del', text: oldLines[i + d] });
+            }
+            i += k;
+            foundMatch = true;
+            break;
+          }
+          if (j + k < newLines.length && oldLines[i] === newLines[j + k]) {
+            for (let a = 0; a < k; a++) {
+              diffResult.push({ type: 'add', text: newLines[j + a] });
+            }
+            j += k;
+            foundMatch = true;
+            break;
+          }
+        }
+        if (!foundMatch) {
+          diffResult.push({ type: 'del', text: oldLines[i] });
+          diffResult.push({ type: 'add', text: newLines[j] });
+          i++; j++;
+        }
+      }
+    } else if (i < oldLines.length) {
+      diffResult.push({ type: 'del', text: oldLines[i] });
+      i++;
+    } else if (j < newLines.length) {
+      diffResult.push({ type: 'add', text: newLines[j] });
+      j++;
+    }
+  }
+  return diffResult;
+}
 
 const seal = '/lab-seal.png';
 const today = () => new Date().toISOString().slice(0, 10); // วันที่จริงตอนดำเนินการ workflow
@@ -44,6 +93,53 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewName, setPreviewName] = useState('');
   const [loadingPreviewId, setLoadingPreviewId] = useState(null);
+
+  const [activeTab, setActiveTab] = useState('detail');
+  const [historyList, setHistoryList] = useState([]);
+  const [acks, setAcks] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loadingAcks, setLoadingAcks] = useState(false);
+  const [ackPassword, setAckPassword] = useState('');
+  const [ackChecked, setAckChecked] = useState(false);
+  const [ackError, setAckError] = useState('');
+  const [ackSuccess, setAckSuccess] = useState(false);
+  const [leftRev, setLeftRev] = useState('');
+  const [rightRev, setRightRev] = useState('');
+  const [diffMode, setDiffMode] = useState('unified');
+
+  const fetchHistoryAndAcks = async () => {
+    setLoadingHistory(true);
+    setLoadingAcks(true);
+    try {
+      const hist = await api.getDocumentHistory(doc.no);
+      setHistoryList(hist);
+      if (hist.length > 1) {
+        setLeftRev(String(hist[1].rev));
+        setRightRev(String(hist[0].rev));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingHistory(false);
+    }
+
+    try {
+      const acknowledgments = await api.getDocumentAcknowledgments(doc.no);
+      setAcks(acknowledgments);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAcks(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistoryAndAcks();
+    setAckPassword('');
+    setAckChecked(false);
+    setAckError('');
+    setAckSuccess(false);
+  }, [doc.no]);
 
   // Clean up preview Object URL on close and unmount
   useEffect(() => {
