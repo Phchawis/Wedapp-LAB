@@ -68,9 +68,98 @@ app.post('/api/auth/logout', authMw, wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// In-memory training acknowledgments storage
+let acknowledgments = [
+  { id: 'ack-1', docNo: 'QM-CMTL-001', username: 'admin', name: 'ผู้ดูแลระบบ', role: 'admin', ts: '2026-06-23T08:12:00.000Z', version: '4' },
+  { id: 'ack-2', docNo: 'QM-CMTL-001', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-24T09:45:00.000Z', version: '4' },
+  { id: 'ack-3', docNo: 'SP-IMM-014', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-25T11:20:00.000Z', version: '2' },
+];
+
 // ── Documents ────────────────────────────────────────────────
 app.get('/api/documents', authMw, wrap(async (req, res) => {
   res.json(await store.listDocuments());
+}));
+
+app.get('/api/documents/:no/history', authMw, wrap(async (req, res) => {
+  const doc = await store.getDocument(req.params.no);
+  if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
+
+  const history = [];
+  const totalRevs = doc.rev || 1;
+  const originalUpdated = new Date(doc.updated);
+  
+  for (let r = 1; r <= totalRevs; r++) {
+    const revOffsetYears = totalRevs - r;
+    const revDate = new Date(originalUpdated);
+    revDate.setFullYear(revDate.getFullYear() - revOffsetYears);
+    
+    let title = doc.th;
+    if (r < totalRevs) {
+      title = `${doc.th} (ฉบับแก้ไขร่างครั้งที่ ${r})`;
+    }
+    
+    history.push({
+      no: doc.no,
+      rev: r,
+      th: title,
+      type: doc.type,
+      cat: doc.cat,
+      status: r === totalRevs ? doc.status : 'obsolete',
+      updated: revDate.toISOString().slice(0, 10),
+      owner: doc.owner,
+      retention: doc.retention,
+      files: doc.files,
+      content: `คู่มือระเบียบการปฏิบัติตามมาตรฐานห้องแล็บ TUH\nรหัสควบคุม: ${doc.no}\n\nครั้งที่แก้ไข: revision ${r}\nผู้รับผิดชอบงาน: ${doc.owner}\nวันที่จัดเก็บ: ${revDate.toISOString().slice(0, 10)}\n\nรายละเอียดระเบียบข้อกำหนด:\n1. เจ้าหน้าที่ทุกคนต้องปฏิบัติตามขั้นตอน ISO 15189 อย่างเคร่งครัด\n${
+        r >= 2 ? '2. การนำเข้าสิ่งส่งตรวจจากภายนอกต้องลงบันทึกในเอกสารควบคุมทุกครั้ง\n' : ''
+      }${
+        r >= 3 ? '3. ต้องตรวจสอบความผิดปกติของตัวตรวจวิเคราะห์ก่อนเริ่มรันงานแล็บทุกเช้า\n' : ''
+      }${
+        r >= 4 ? '4. อัปเดตแนวทางการรายงานผลวิกฤตด่วนแก่แพทย์ผู้รับผิดชอบภายใน 15 นาที\n' : ''
+      }\nจบเอกสารควบคุมฉบับราชการโรงพยาบาลธรรมศาสตร์`
+    });
+  }
+  
+  res.json(history.reverse());
+}));
+
+app.get('/api/documents/:no/acknowledgments', authMw, wrap(async (req, res) => {
+  const filtered = acknowledgments.filter((ack) => ack.docNo === req.params.no);
+  res.json(filtered);
+}));
+
+app.post('/api/documents/:no/acknowledge', authMw, wrap(async (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ error: 'ต้องระบุรหัสผ่านเพื่อลงชื่อรับทราบ' });
+
+  const u = await store.getUserByUsername(req.user.username);
+  if (!u || !bcrypt.compareSync(password, u.passwordHash)) {
+    return res.status(401).json({ error: 'รหัสผ่านสำหรับลงนามอิเล็กทรอนิกส์ไม่ถูกต้อง' });
+  }
+
+  const doc = await store.getDocument(req.params.no);
+  if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
+
+  const exists = acknowledgments.some(
+    (ack) => ack.docNo === req.params.no && ack.username === req.user.username && ack.version === String(doc.rev)
+  );
+  if (exists) {
+    return res.status(400).json({ error: 'คุณได้ลงชื่อรับทราบเอกสารเวอร์ชันปัจจุบันเรียบร้อยแล้ว' });
+  }
+
+  const newAck = {
+    id: `ack-${Date.now()}`,
+    docNo: req.params.no,
+    username: req.user.username,
+    name: req.user.name,
+    role: req.user.role,
+    ts: new Date().toISOString(),
+    version: String(doc.rev),
+  };
+
+  acknowledgments.unshift(newAck);
+  await logAction(req.user, 'doc:acknowledge', req.params.no);
+
+  res.status(201).json(acknowledgments.filter((ack) => ack.docNo === req.params.no));
 }));
 
 app.get('/api/documents/:no', authMw, wrap(async (req, res) => {
