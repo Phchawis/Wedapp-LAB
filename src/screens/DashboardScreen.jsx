@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, DocTypeTag, StatusBadge, Button } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
@@ -22,6 +23,16 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
   const Q = QMS;
   const narrow = useNarrow(900);
   const total = docs.length;
+
+  const [onboardingVisible, setOnboardingVisible] = useState(() => {
+    return localStorage.getItem('tuh-qms-onboarding-dismissed') !== 'true';
+  });
+
+  const dismissOnboarding = () => {
+    localStorage.setItem('tuh-qms-onboarding-dismissed', 'true');
+    setOnboardingVisible(false);
+  };
+
 
   // นับตามสถานะ
   const countBy = (s) => docs.filter((d) => d.status === s).length;
@@ -152,6 +163,67 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
 
   return (
     <div className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {onboardingVisible && (
+        <Card padding="md" style={{ background: 'var(--brand-50)', border: '1.5px solid var(--brand-100)', position: 'relative' }}>
+          <button
+            onClick={dismissOnboarding}
+            title="ปิดการแนะนำ"
+            style={{
+              position: 'absolute',
+              top: 14,
+              right: 14,
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              color: 'var(--brand-700)',
+              padding: 4,
+              borderRadius: 'var(--radius-sm)',
+              transition: 'background var(--dur-fast)',
+              minHeight: 'auto'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--brand-100)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            <Icon name="X" size={16} />
+          </button>
+          
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <span style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--brand-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <Icon name="Compass" size={20} color="var(--brand-700)" />
+            </span>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ font: 'var(--fw-bold) var(--text-md)/1.3 var(--font-display)', color: 'var(--brand-900)', marginBottom: 6 }}>
+                ยินดีต้อนรับสู่ระบบบริหารจัดการเอกสารคุณภาพ (QMS Onboarding)
+              </h2>
+              <p style={{ font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12, maxWidth: 640 }}>
+                เพื่อความถูกต้องในการปฏิบัติงานตามมาตรฐาน **ISO 15189** นี่คือคำแนะนำเริ่มต้นสำหรับผู้ปฏิบัติงานห้องแล็บ:
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, font: 'var(--text-xs)/1.4 var(--font-body)', color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <Icon name="HelpCircle" size={14} color="var(--brand-600)" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <strong>ศึกษาข้อกำหนด (SOP Guide):</strong> ทบทวนรหัสประเภทเอกสารและขั้นตอนของระบบผ่านเมนู <strong>"คู่มือการใช้งาน"</strong> ด้านซ้าย หรือกดปุ่มลัด <kbd style={{ background: 'var(--brand-100)', padding: '2px 4px', borderRadius: 'var(--radius-xs)', font: 'var(--font-mono)' }}>Alt + H</kbd> เพื่อเปิดดูคู่มือด่วน
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <Icon name="Search" size={14} color="var(--brand-600)" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <strong>เข้าถึงเอกสารคุณภาพล่าสุด:</strong> ไปที่หน้า <strong>"ทะเบียนเอกสาร"</strong> เพื่อกรองตามแผนกและค้นหาวิธีการปฏิบัติงานล่าสุดเพื่อป้องกันการใช้เอกสารผิดรุ่น
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <Icon name="ShieldAlert" size={14} color="var(--brand-600)" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <strong>ตรวจสอบแจ้งเตือนคุณภาพ:</strong> ระบบจะสแกนทะเบียนเอกสารอัตโนมัติ หากพบฉบับที่เลยรอบการทบทวนประจำปี (1 ปี) หรือหมดอายุจัดเก็บ จะแจ้งเตือนในหน้านี้ทันที
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
 
       {/* ── ภาพรวมทะเบียน: จำนวนรวม + แถบสัดส่วนตามสถานะ + legend ── */}
       <Card padding="md">
