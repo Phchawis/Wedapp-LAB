@@ -84,4 +84,14 @@ export const api = {
     if (!res.ok) throw new Error('ดาวน์โหลดไฟล์ไม่สำเร็จ');
     return res.blob();
   },
+
+  // ดาวน์โหลดชุดกู้ชีพข้อมูลฉุกเฉิน (ZIP)
+  downloadEmergencyKit: async () => {
+    const res = await fetch('/api/documents/export/zip', {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!res.ok) throw new Error('ไม่สามารถดาวน์โหลดชุดสำรองฉุกเฉินได้');
+    return res.blob();
+  },
 };
+
