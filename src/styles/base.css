@@ -134,16 +134,12 @@ code, kbd, samp { font-family: var(--font-mono); }
   font-weight: var(--fw-bold);
   font-size: 15px;
   line-height: 1.25;
-  background: linear-gradient(135deg, var(--brand-900) 0%, var(--brand-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: background var(--dur-base) var(--ease-standard);
+  color: var(--brand-900);
+  transition: color var(--dur-base) var(--ease-standard);
 }
 
 .sidebar-logo-header:hover .logo-text-title {
-  background: linear-gradient(135deg, var(--brand-800) 0%, var(--accent-600) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--accent-700);
 }
 
 .logo-text-subtitle {
