@@ -110,8 +110,32 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
             <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>งานห้องปฏิบัติการเทคนิคการแพทย์</span>
           </button>
 
+          <button onClick={() => { onCat('BB'); setOpen(false); }} title="งานธนาคารโลหิต" style={{
+            display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
+            padding: '9px 12px', marginTop: 6, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+            background: (cat === 'BB' && view === 'register') ? 'var(--brand-700)' : 'var(--brand-50)',
+            color: (cat === 'BB' && view === 'register') ? '#fff' : 'var(--brand-700)',
+            font: 'var(--fw-semibold) var(--text-sm)/1.2 var(--font-body)',
+            transition: 'background var(--dur-fast) var(--ease-standard)',
+          }}>
+            <Icon name="Droplet" size={17} color={(cat === 'BB' && view === 'register') ? '#fff' : 'var(--brand-600)'} />
+            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>งานธนาคารโลหิต</span>
+          </button>
+
+          <button onClick={() => { onCat('MB'); setOpen(false); }} title="งานจุลชีววิทยา" style={{
+            display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
+            padding: '9px 12px', marginTop: 6, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+            background: (cat === 'MB' && view === 'register') ? 'var(--brand-700)' : 'var(--brand-50)',
+            color: (cat === 'MB' && view === 'register') ? '#fff' : 'var(--brand-700)',
+            font: 'var(--fw-semibold) var(--text-sm)/1.2 var(--font-body)',
+            transition: 'background var(--dur-fast) var(--ease-standard)',
+          }}>
+            <Icon name="Microscope" size={17} color={(cat === 'MB' && view === 'register') ? '#fff' : 'var(--brand-600)'} />
+            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>งานจุลชีววิทยา</span>
+          </button>
+
           <div style={{ font: 'var(--text-2xs)/1 var(--font-body)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', padding: '14px 12px 6px' }}>หมวดงาน</div>
-          {Q.WORK_CATEGORIES.map((c) => {
+          {Q.WORK_CATEGORIES.filter(c => !['LAB', 'BB', 'MB'].includes(c.code)).map((c) => {
             const active = cat === c.code && view === 'register';
             return (
               <button key={c.code} onClick={() => { onCat(c.code); setOpen(false); }} title={c.th} style={{

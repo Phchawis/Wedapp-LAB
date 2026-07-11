@@ -393,6 +393,8 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
               {[
                 { dept: 'งานห้องปฏิบัติการเทคนิคการแพทย์', trained: 14, total: 15, pct: 93, color: 'var(--green-600)' },
+                { dept: 'งานธนาคารโลหิต', trained: 11, total: 12, pct: 91, color: 'var(--green-600)' },
+                { dept: 'งานจุลชีววิทยา', trained: 7, total: 10, pct: 70, color: 'var(--brand-700)' },
                 { dept: 'เคมีคลินิก', trained: 8, total: 12, pct: 67, color: 'var(--brand-700)' },
                 { dept: 'ภูมิคุ้มกันวิทยา', trained: 6, total: 8, pct: 75, color: 'var(--brand-700)' },
                 { dept: 'โลหิตวิทยา', trained: 10, total: 10, pct: 100, color: 'var(--green-600)' },

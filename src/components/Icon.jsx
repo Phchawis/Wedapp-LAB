@@ -10,7 +10,7 @@ import {
   BellRing, FlaskConical, LogOut, Files, CircleCheck, Clock, ChevronRight,
   FileSearch, AlertTriangle, Paperclip, ExternalLink, Pencil, Eye, History,
   Check, Megaphone, PencilLine, Download, Ban, FileText, FilePen, Link, Search,
-  UserCog, Trash2, Printer, FileSpreadsheet, Upload,
+  UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
 } from 'lucide-react';
 
 const ICONS = {
@@ -18,7 +18,7 @@ const ICONS = {
   BellRing, FlaskConical, LogOut, Files, CircleCheck, Clock, ChevronRight,
   FileSearch, AlertTriangle, Paperclip, ExternalLink, Pencil, Eye, History,
   Check, Megaphone, PencilLine, Download, Ban, FileText, FilePen, Link, Search,
-  UserCog, Trash2, Printer, FileSpreadsheet, Upload,
+  UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
 };
 
 export function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {
