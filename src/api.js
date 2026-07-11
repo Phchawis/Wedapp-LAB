@@ -55,6 +55,7 @@ async function req(path, { method = 'GET', body, isForm } = {}) {
 }
 
 export const api = {
+  decodeToken,
   login: (username, password) => req('/auth/login', { method: 'POST', body: { username, password } }),
   logout: () => req('/auth/logout', { method: 'POST' }).catch(() => {}),
 
