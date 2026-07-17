@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Card, DocTypeTag, StatusBadge, Button } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 import { api } from '../api.js';
 
-/* DashboardScreen — "แผงควบคุมงานเอกสาร": register health, an action queue of
-   documents that need attention, compliance/quality warnings, then category mix + recent activity.
-   North Star: The Controlled Register — help the user decide what to do next. */
+/* DashboardScreen — the register itself is the dashboard: one action queue leads,
+   system health reads as a slim strip (not a stacked card), and decorative icon
+   boxes are retired in favor of the mono/status vocabulary the rest of the app
+   already trusts. North Star: The Controlled Register — help the user decide what to do next. */
 
 // สีเม็ดสถานะ (คำศัพท์ตายตัวตามกฎ Status-Is-Sacred); ใช้กับแถบสัดส่วนและ legend
 const STATUS_ORDER = ['effective', 'review', 'draft', 'approved', 'controlled', 'obsolete'];
@@ -53,8 +54,6 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
     }
   };
 
-
-
   // นับตามสถานะ
   const countBy = (s) => docs.filter((d) => d.status === s).length;
   const statuses = STATUS_ORDER.map((code) => ({ code, th: Q.STATUS[code]?.th || code, n: countBy(code) }));
@@ -73,7 +72,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
       const updatedDate = new Date(doc.updated);
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
+
       if (updatedDate < oneYearAgo) {
         alerts.push({ type: 'danger', text: 'เกินกำหนดทบทวนประจำปี', icon: 'AlertTriangle' });
       } else {
@@ -89,7 +88,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
       const updatedDate = new Date(doc.updated);
       const expiryDate = new Date(updatedDate);
       expiryDate.setFullYear(expiryDate.getFullYear() + parseInt(doc.retention, 10));
-      
+
       const now = new Date();
       const ninetyDaysFromNow = new Date();
       ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
@@ -124,6 +123,18 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
 
   // ปรับปรุงล่าสุด
   const recent = docs.slice().sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 5);
+
+  const currentUser = api.decodeToken();
+  const isAdminOrCreator = currentUser?.role === 'admin' || currentUser?.role === 'creator';
+
+  const trainingRows = [
+    { dept: 'งานห้องปฏิบัติการเทคนิคการแพทย์', trained: 14, total: 15 },
+    { dept: 'เคมีคลินิก', trained: 8, total: 12 },
+    { dept: 'ภูมิคุ้มกันวิทยา', trained: 6, total: 8 },
+    { dept: 'โลหิตวิทยา', trained: 10, total: 10 },
+    { dept: 'จุลทรรศนศาสตร์และปรสิตวิทยา', trained: 4, total: 6 },
+    { dept: 'รับสิ่งส่งตรวจและห้องปฏิบัติการส่งต่อ', trained: 5, total: 9 },
+  ].map((p) => ({ ...p, pct: Math.round((p.trained / p.total) * 100) }));
 
   // แถวเอกสารที่คลิกเปิดได้ (ใช้ทั้งคิวงานและล่าสุด) — รองรับคีย์บอร์ด
   const DocRow = ({ d, last, meta, index }) => (
@@ -162,9 +173,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
       <div className="qms-rise" style={{ maxWidth: 'var(--container-max)' }}>
         <Card padding="lg">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 14, padding: '40px 20px' }}>
-            <span style={{ width: 64, height: 64, borderRadius: 'var(--radius-lg)', background: 'var(--brand-50)', display: 'grid', placeItems: 'center' }}>
-              <Icon name="Files" size={30} color="var(--brand-700)" />
-            </span>
+            <Icon name="Files" size={40} color="var(--brand-700)" />
             <div style={{ font: 'var(--type-section)', color: 'var(--text-primary)' }}>ยังไม่มีเอกสารในทะเบียน</div>
             <div style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', maxWidth: 440 }}>
               เริ่มต้นด้วยการลงทะเบียนเอกสารคุณภาพฉบับแรก ระบบจะกำหนดเลขที่ควบคุม สถานะ และเก็บประวัติการดำเนินการให้อัตโนมัติ
@@ -182,104 +191,66 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
 
   return (
     <div className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* ── ภาพรวมทะเบียน: แถบสรุปแบบเรียบ (ไม่ใช่การ์ด) — ตัวเลข + แถบสัดส่วน + legend ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
+        flexWrap: 'wrap', paddingBottom: 16, borderBottom: '1px solid var(--border-default)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
+            <span style={{ font: 'var(--fw-bold) var(--text-3xl)/1 var(--font-mono)', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{total}</span>
+            <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>ฉบับในทะเบียน</span>
+          </div>
+
+          <div style={{ flex: '1 1 200px', minWidth: 160, maxWidth: 320 }}>
+            <div style={{ display: 'flex', gap: 2, height: 8, borderRadius: 'var(--radius-pill)', overflow: 'hidden', background: 'var(--slate-100)' }}>
+              {present.map((s) => (
+                <div key={s.code} title={`${s.th} · ${s.n}`} style={{ flexGrow: s.n, flexBasis: 0, minWidth: 6, background: STATUS_DOT[s.code] }} />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
+            {present.map((s) => (
+              <div key={s.code} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_DOT[s.code], flexShrink: 0 }} />
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>{s.th}</span>
+                <span style={{ font: 'var(--fw-semibold) var(--text-xs)/1 var(--font-mono)', color: 'var(--text-primary)' }}>{s.n}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={handleExportEmergencyKit}
+          disabled={exporting}
+          iconLeft={<Icon name={exporting ? "Loader2" : "Download"} size={15} color="var(--brand-700)" className={exporting ? "qms-spin" : ""} />}
+        >
+          {exporting ? 'กำลังสร้างชุดกู้ชีพ…' : 'ชุดกู้ชีพออฟไลน์'}
+        </Button>
+      </div>
+
+      {/* ── Onboarding: แถบเดียวปิดได้ ไม่ใช่การ์ดอธิบายยาว ── */}
       {onboardingVisible && (
-        <Card padding="md" style={{ background: 'var(--brand-50)', border: '1.5px solid var(--brand-100)', position: 'relative' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+          borderRadius: 'var(--radius-md)', background: 'var(--brand-50)', border: '1px solid var(--brand-100)',
+        }}>
+          <Icon name="Compass" size={16} color="var(--brand-700)" style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, font: 'var(--type-ui)', color: 'var(--brand-900)' }}>
+            เริ่มต้นใช้งาน: ดูรหัสเอกสารและวงจรสถานะได้ที่ <strong>คู่มือการใช้งาน</strong> · ค้นหาฉบับล่าสุดได้ที่ <strong>ทะเบียนเอกสาร</strong>
+          </span>
           <button
             onClick={dismissOnboarding}
             title="ปิดการแนะนำ"
-            style={{
-              position: 'absolute',
-              top: 14,
-              right: 14,
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              color: 'var(--brand-700)',
-              padding: 4,
-              borderRadius: 'var(--radius-sm)',
-              transition: 'background var(--dur-fast)',
-              minHeight: 'auto'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--brand-100)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--brand-700)', padding: 4, borderRadius: 'var(--radius-sm)', flexShrink: 0, minHeight: 'auto' }}
           >
-            <Icon name="X" size={16} />
+            <Icon name="X" size={14} />
           </button>
-          
-          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <span style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--brand-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-              <Icon name="Compass" size={20} color="var(--brand-700)" />
-            </span>
-            <div style={{ flex: 1 }}>
-              <h2 style={{ font: 'var(--fw-bold) var(--text-md)/1.3 var(--font-display)', color: 'var(--brand-900)', marginBottom: 6 }}>
-                ยินดีต้อนรับสู่ระบบบริหารจัดการเอกสารคุณภาพ (QMS Onboarding)
-              </h2>
-              <p style={{ font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12, maxWidth: 640 }}>
-                เพื่อความถูกต้องในการปฏิบัติงานตามมาตรฐาน **ISO 15189** นี่คือคำแนะนำเริ่มต้นสำหรับผู้ปฏิบัติงานห้องแล็บ:
-              </p>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, font: 'var(--text-xs)/1.4 var(--font-body)', color: 'var(--text-primary)' }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <Icon name="HelpCircle" size={14} color="var(--brand-600)" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <div>
-                    <strong>ศึกษาข้อกำหนด (SOP Guide):</strong> ทบทวนรหัสประเภทเอกสารและขั้นตอนของระบบผ่านเมนู <strong>"คู่มือการใช้งาน"</strong> ด้านซ้าย หรือกดปุ่มลัด <kbd style={{ background: 'var(--brand-100)', padding: '2px 4px', borderRadius: 'var(--radius-xs)', font: 'var(--font-mono)' }}>Alt + H</kbd> เพื่อเปิดดูคู่มือด่วน
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <Icon name="Search" size={14} color="var(--brand-600)" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <div>
-                    <strong>เข้าถึงเอกสารคุณภาพล่าสุด:</strong> ไปที่หน้า <strong>"ทะเบียนเอกสาร"</strong> เพื่อกรองตามแผนกและค้นหาวิธีการปฏิบัติงานล่าสุดเพื่อป้องกันการใช้เอกสารผิดรุ่น
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <Icon name="ShieldAlert" size={14} color="var(--brand-600)" style={{ marginTop: 2, flexShrink: 0 }} />
-                  <div>
-                    <strong>ตรวจสอบแจ้งเตือนคุณภาพ:</strong> ระบบจะสแกนทะเบียนเอกสารอัตโนมัติ หากพบฉบับที่เลยรอบการทบทวนประจำปี (1 ปี) หรือหมดอายุจัดเก็บ จะแจ้งเตือนในหน้านี้ทันที
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
+        </div>
       )}
-
-
-      {/* ── ภาพรวมทะเบียน: จำนวนรวม + แถบสัดส่วนตามสถานะ + legend ── */}
-      <Card padding="md">
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
-            <span style={{ font: 'var(--fw-bold) var(--text-3xl)/1 var(--font-mono)', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{total}</span>
-            <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)' }}>ฉบับในทะเบียนเอกสาร</span>
-          </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleExportEmergencyKit}
-            disabled={exporting}
-            iconLeft={<Icon name={exporting ? "Loader2" : "Download"} size={15} color="var(--brand-700)" className={exporting ? "qms-spin" : ""} />}
-          >
-            {exporting ? 'กำลังสร้างชุดกู้ชีพ…' : 'ชุดกู้ชีพออฟไลน์ (Emergency ZIP)'}
-          </Button>
-        </div>
-
-        {/* แถบสัดส่วนตามสถานะ (segmented) */}
-        <div style={{ display: 'flex', gap: 2, height: 12, borderRadius: 'var(--radius-pill)', overflow: 'hidden', background: 'var(--slate-100)' }}>
-          {present.map((s) => (
-            <div key={s.code} title={`${s.th} · ${s.n}`} style={{ flexGrow: s.n, flexBasis: 0, minWidth: 8, background: STATUS_DOT[s.code] }} />
-          ))}
-        </div>
-
-        {/* legend: เม็ดสี + ป้าย + จำนวน (mono) */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 20px', marginTop: 14 }}>
-          {present.map((s) => (
-            <div key={s.code} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: STATUS_DOT[s.code], flexShrink: 0 }} />
-              <span style={{ font: 'var(--type-ui)', color: 'var(--text-secondary)' }}>{s.th}</span>
-              <span style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-mono)', color: 'var(--text-primary)' }}>{s.n}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
 
       {/* ── ต้องดำเนินการ (พระเอกของหน้า): รอทบทวน + ร่าง ── */}
       <Card
@@ -301,10 +272,8 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
         )}
       >
         {actionDocs.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 18px' }}>
-            <span style={{ width: 38, height: 38, borderRadius: 'var(--radius-md)', background: 'var(--green-100)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-              <Icon name="CircleCheck" size={20} color="var(--green-700)" />
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 18px' }}>
+            <Icon name="CircleCheck" size={22} color="var(--green-700)" />
             <div>
               <div style={{ font: 'var(--fw-medium) var(--text-base)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>ไม่มีเอกสารค้างดำเนินการ</div>
               <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginTop: 2 }}>ทุกฉบับอยู่ในสถานะที่เป็นปัจจุบัน</div>
@@ -371,54 +340,6 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
         </Card>
       )}
 
-      {/* ── ผู้บริหารติดตามผลการฝึกอบรม (SOP Training Compliance Progress) ── */}
-      {(() => {
-        const currentUser = api.decodeToken();
-        const isAdminOrCreator = currentUser?.role === 'admin' || currentUser?.role === 'creator';
-        if (!isAdminOrCreator) return null;
-        
-        return (
-          <Card
-            padding="md"
-            header={(
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon name="ShieldCheck" size={16} color="var(--brand-700)" />
-                <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>ภาพรวมการฝึกอบรม (SOP Training Compliance)</span>
-              </div>
-            )}
-          >
-            <div style={{ font: 'var(--text-xs)/1.4 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 14 }}>
-              สถิติติดตามการลงนามรับทราบและฝึกอบรมความรู้ระเบียบปฏิบัติตามมาตรฐานห้องปฏิบัติการ ISO 15189 ของบุคลากรในแต่ละแผนก:
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
-              {[
-                { dept: 'งานห้องปฏิบัติการเทคนิคการแพทย์', trained: 14, total: 15, pct: 93, color: 'var(--green-600)' },
-                { dept: 'งานธนาคารโลหิต', trained: 11, total: 12, pct: 91, color: 'var(--green-600)' },
-                { dept: 'งานจุลชีววิทยา', trained: 7, total: 10, pct: 70, color: 'var(--brand-700)' },
-                { dept: 'เคมีคลินิก', trained: 8, total: 12, pct: 67, color: 'var(--brand-700)' },
-                { dept: 'ภูมิคุ้มกันวิทยา', trained: 6, total: 8, pct: 75, color: 'var(--brand-700)' },
-                { dept: 'โลหิตวิทยา', trained: 10, total: 10, pct: 100, color: 'var(--green-600)' },
-                { dept: 'จุลทรรศนศาสตร์และปรสิตวิทยา', trained: 4, total: 6, pct: 66, color: 'var(--brand-700)' },
-                { dept: 'รับสิ่งส่งตรวจและห้องปฏิบัติการส่งต่อ', trained: 5, total: 9, pct: 55, color: 'var(--amber-600)' },
-              ].map((p, idx) => (
-                <div key={idx} style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', background: 'var(--surface-card)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, font: 'var(--fw-semibold) var(--text-xs)/1.2 var(--font-body)', color: 'var(--text-primary)' }}>
-                    <span>{p.dept}</span>
-                    <span className="qms-numeric" style={{ color: p.color }}>{p.pct}%</span>
-                  </div>
-                  <div style={{ height: 6, borderRadius: 3, background: 'var(--slate-100)', overflow: 'hidden', marginBottom: 6 }}>
-                    <div style={{ height: '100%', width: `${p.pct}%`, background: p.color, borderRadius: 3 }} />
-                  </div>
-                  <div className="qms-numeric" style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', textAlign: 'right' }}>
-                    ลงนามรับทราบแล้ว {p.trained}/{p.total} คน
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        );
-      })()}
-
       {/* ── หมวดงาน + ปรับปรุงล่าสุด ── */}
       <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 1.25fr', gap: 20, alignItems: 'start' }}>
         {/* สัดส่วนตามหมวดงาน */}
@@ -450,9 +371,33 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
           )}
         >
           {recent.map((d, i) => <DocRow key={d.no} d={d} last={i === recent.length - 1} meta="updated" index={i} />)}
-          {recent.map((d, i) => <DocRow key={d.no} d={d} last={i === recent.length - 1} meta="updated" index={i} />)}
         </Card>
       </div>
+
+      {/* ── ผู้บริหารติดตามผลการฝึกอบรม (SOP Training Compliance) — แถบรองท้ายสุด ไม่ใช่การ์ดตัวเลขใหญ่ ── */}
+      {isAdminOrCreator && (
+        <Card
+          padding="none"
+          header={<SectionTitle icon="ShieldCheck">ภาพรวมการฝึกอบรม (SOP Training Compliance)</SectionTitle>}
+        >
+          {trainingRows.map((p, idx) => (
+            <div
+              key={idx}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '10px 18px',
+                borderBottom: idx === trainingRows.length - 1 ? 'none' : '1px solid var(--border-subtle)',
+              }}
+            >
+              <span style={{ flex: '1 1 240px', minWidth: 0, font: 'var(--type-ui)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.dept}</span>
+              <div style={{ flex: '1 1 140px', maxWidth: 200, height: 6, borderRadius: 3, background: 'var(--slate-100)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${p.pct}%`, background: p.pct >= 90 ? 'var(--green-600)' : p.pct >= 70 ? 'var(--brand-600)' : 'var(--amber-600)', borderRadius: 3 }} />
+              </div>
+              <span className="qms-numeric" style={{ width: 60, textAlign: 'right', flexShrink: 0, font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{p.trained}/{p.total}</span>
+              <span className="qms-numeric" style={{ width: 40, textAlign: 'right', flexShrink: 0, font: 'var(--fw-semibold) var(--text-xs)/1 var(--font-mono)', color: 'var(--text-secondary)' }}>{p.pct}%</span>
+            </div>
+          ))}
+        </Card>
+      )}
     </div>
   );
 }
