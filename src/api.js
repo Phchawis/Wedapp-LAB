@@ -32,6 +32,23 @@ export function decodeToken(token = getToken()) {
   }
 }
 
+// รหัสประเภท/หมวดงานเดิม → รหัสใหม่ที่ตรงกับระบบ Masterlist (ฝ่ายสหเวชศาสตร์)
+// แปลงตอนรับข้อมูลจาก backend ทันที เพื่อให้เอกสารที่ลงทะเบียนไว้ก่อนหน้านี้ด้วยรหัสเดิม
+// ยังกรอง/นับ/แสดงผลถูกต้องเหมือนเอกสารใหม่ทุกประการ
+const LEGACY_TYPE = { SP: 'SOP' };
+const LEGACY_CAT = { POC: 'POCT' };
+function normalizeDoc(d) {
+  if (!d) return d;
+  return {
+    ...d,
+    type: LEGACY_TYPE[d.type] || d.type,
+    cat: LEGACY_CAT[d.cat] || d.cat,
+  };
+}
+function normalizeDocs(list) {
+  return Array.isArray(list) ? list.map(normalizeDoc) : list;
+}
+
 async function req(path, { method = 'GET', body, isForm } = {}) {
   const headers = {};
   const token = getToken();
@@ -58,11 +75,13 @@ export const api = {
   decodeToken,
   login: (username, password) => req('/auth/login', { method: 'POST', body: { username, password } }),
   logout: () => req('/auth/logout', { method: 'POST' }).catch(() => {}),
+  // เข้าสู่ระบบผ่านลิงก์จาก Masterlist ด้วย token อายุสั้นที่เซ็นมาแล้ว
+  ssoLogin: (ssoToken) => req('/auth/sso', { method: 'POST', body: { token: ssoToken } }),
 
-  listDocuments: () => req('/documents'),
-  getDocument: (no) => req('/documents/' + encodeURIComponent(no)),
-  createDocument: (formData) => req('/documents', { method: 'POST', body: formData, isForm: true }),
-  updateDocument: (no, patch) => req('/documents/' + encodeURIComponent(no), { method: 'PATCH', body: patch }),
+  listDocuments: () => req('/documents').then(normalizeDocs),
+  getDocument: (no) => req('/documents/' + encodeURIComponent(no)).then(normalizeDoc),
+  createDocument: (formData) => req('/documents', { method: 'POST', body: formData, isForm: true }).then(normalizeDoc),
+  updateDocument: (no, patch) => req('/documents/' + encodeURIComponent(no), { method: 'PATCH', body: patch }).then(normalizeDoc),
   deleteDocument: (no) => req('/documents/' + encodeURIComponent(no), { method: 'DELETE' }),
   // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ (แทนที่ไฟล์เดิม) — ส่งไฟล์เดียวแบบ FormData
   updateAttachmentFile: (no, id, file) => {
