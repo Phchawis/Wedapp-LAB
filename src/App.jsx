@@ -190,6 +190,8 @@ export default function App() {
   };
 
   const addUser = async (u) => { await api.createUser(u); await refreshAll(role); };
+  const editUser = async (username, patch) => { await api.updateUser(username, patch); await refreshAll(role); };
+  const resetUserPassword = async (username, password) => { await api.resetUserPassword(username, password); };
   const deleteUser = async (username) => {
     try { await api.deleteUser(username); await refreshAll(role); }
     catch (e) { handleAuthError(e); }
@@ -216,7 +218,7 @@ export default function App() {
   if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'docs:create') ? openCreate : undefined} />;
   else if (view === 'register') body = <RegisterScreen docs={docs} cat={cat} onOpen={openDoc} />;
   else if (view === 'create' && can(role, 'docs:create')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
-  else if (view === 'users' && isManager) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onDelete={deleteUser} />;
+  else if (view === 'users' && isManager) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onEdit={editUser} onResetPassword={resetUserPassword} onDelete={deleteUser} />;
   else if (view === 'log' && isManager) body = <LogScreen logs={logs} />;
   else if (view === 'help') body = <HelpScreen />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
