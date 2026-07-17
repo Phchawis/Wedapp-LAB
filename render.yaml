@@ -18,3 +18,6 @@ services:
         sync: false                # กรอกในหน้า Render เอง (เป็นความลับ)
       - key: SUPABASE_BUCKET
         value: qms-files
+      - key: SSO_SHARED_SECRET
+        sync: false                # กรอกในหน้า Render เอง — ต้องตรงกับ SSO_SHARED_SECRET ฝั่ง Masterlist เป๊ะ
+                                    # (ใช้รับรองลิงก์เข้าสู่ระบบอัตโนมัติจากระบบ Masterlist ฝ่ายสหเวชศาสตร์)
