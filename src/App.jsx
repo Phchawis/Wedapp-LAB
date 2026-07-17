@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Button } from './components/ds/index.js';
 import { Icon } from './components/Icon.jsx';
 import { can } from './auth/users.js';
@@ -36,6 +36,7 @@ export default function App() {
   const [logs, setLogs] = useState([]);
   const [currentUser, setCurrentUser] = useState(() => decodeToken());
   const [booting, setBooting] = useState(true);
+  const [ssoError, setSsoError] = useState('');
 
   const role = currentUser?.role;
   const isManager = role && can(role, 'users:manage');
@@ -55,17 +56,40 @@ export default function App() {
     else window.alert(e?.message || 'เกิดข้อผิดพลาด');
   }, []);
 
-  // กู้คืนเซสชันตอนเปิดแอป (ถ้ามี token ที่ยังไม่หมดอายุ)
+  // กู้คืนเซสชันตอนเปิดแอป (ถ้ามี token ที่ยังไม่หมดอายุ) — หรือถ้ามาจากลิงก์ของ Masterlist (?sso=...)
+  // ให้แลก token อายุสั้นนั้นเป็นเซสชันจริงก่อน แล้วค่อยลบออกจาก URL ทันทีไม่ให้ค้างใน history
+  // ใช้ ref กันการทำงานซ้ำ (แทนตัวแปร alive เดิม) เพราะ React StrictMode ใน dev
+  // จะ mount effect นี้สองรอบติดกัน — ถ้าใช้ closure ธรรมดา ผลลัพธ์ของรอบแรก (รวมถึง error)
+  // จะถูกทิ้งไปเงียบ ๆ เพราะ cleanup ของรอบแรกมาถึงก่อน request จะเสร็จ
+  const bootRanRef = useRef(false);
   useEffect(() => {
-    let alive = true;
+    if (bootRanRef.current) return;
+    bootRanRef.current = true;
     (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const ssoToken = params.get('sso');
+      if (ssoToken) {
+        params.delete('sso');
+        const clean = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.replaceState({}, '', clean);
+        try {
+          const { token, user } = await api.ssoLogin(ssoToken);
+          setToken(token);
+          setCurrentUser(user);
+          await refreshAll(user.role);
+        } catch (e) {
+          setSsoError(e.message || 'เข้าสู่ระบบผ่านลิงก์ไม่สำเร็จ');
+        }
+        setBooting(false);
+        return;
+      }
+
       const u = decodeToken();
       if (u) {
-        try { await refreshAll(u.role); } catch (e) { if (alive) handleAuthError(e); }
+        try { await refreshAll(u.role); } catch (e) { handleAuthError(e); }
       }
-      if (alive) setBooting(false);
+      setBooting(false);
     })();
-    return () => { alive = false; };
   }, [refreshAll, handleAuthError]);
 
   // คีย์บอร์ดคีย์ลัดสำหรับนำทางระบบเอกสาร (Alt + d/r/u/l/c)
@@ -94,6 +118,7 @@ export default function App() {
     return (
       <Suspense fallback={<Loader text="กำลังเตรียมหน้าจอ..." />}>
         <LoginScreen
+          initialError={ssoError}
           onSubmit={async (username, password) => {
             const { token, user } = await api.login(username, password);
             setToken(token);
