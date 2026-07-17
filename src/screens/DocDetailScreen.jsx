@@ -151,7 +151,6 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   }, [previewUrl]);
 
   // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
-  // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
   const publish = () => {
     if (window.confirm('ยืนยันการประกาศใช้เอกสารคุณภาพนี้เป็นทางการ? ระบบจะเปิดให้เจ้าหน้าที่ปฏิบัติงานทุกคนเข้าถึงได้ในเครื่องทันที')) {
       onUpdate(doc.no, { status: 'effective', updated: today(), action: 'doc:publish' });
@@ -419,7 +418,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                 <Card
                   padding="none"
                   header={
-                    <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                         <Icon name="FileText" size={16} color="var(--brand-700)" />
                         <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>แสดงเอกสาร: {previewName}</span>
@@ -559,7 +558,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {/* Selectors */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', flexWrap: 'wrap', gap: 12, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>เปรียบเทียบ:</span>
                       <select
