@@ -49,7 +49,7 @@ export function HelpScreen() {
     { act: 'ลงทะเบียนนำเข้าเอกสารฉบับใหม่', c: true, a: true, u: false },
     { act: 'ลบหรือถอนเอกสารออกจากทะเบียน', c: true, a: true, u: false },
     { act: 'ทบทวนและกดอนุมัติ/ประกาศใช้ Workflow', c: true, a: true, u: false },
-    { act: 'เพิ่ม / ลบ และสลับสิทธิ์เจ้าหน้าที่ผู้ใช้', c: true, a: true, u: false },
+    { act: 'จัดการผู้ใช้งาน (เพิ่ม / แก้ไขชื่อ-สิทธิ์ / ตั้งรหัสผ่านใหม่ / ลบ)', c: true, a: true, u: false },
     { act: 'ดูบันทึกกิจกรรมความโปร่งใส (Audit Log)', c: true, a: true, u: false },
     { act: 'ปรับแต่งการตั้งค่าทางโครงสร้างระบบและเซิร์ฟเวอร์', c: true, a: false, u: false },
   ];
