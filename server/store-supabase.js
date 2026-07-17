@@ -73,6 +73,18 @@ export async function createSupabaseStore() {
       must(error);
       return { username: data.username, name: data.name, role: data.role, createdAt: data.created_at };
     },
+    async updateUser(username, patch) {
+      const row = {};
+      if (patch.name !== undefined) row.name = patch.name;
+      if (patch.role !== undefined) row.role = patch.role;
+      const { data, error } = await sb.from('app_users').update(row).eq('username', username).select().single();
+      must(error);
+      return { username: data.username, name: data.name, role: data.role, createdAt: data.created_at };
+    },
+    async resetUserPassword(username, passwordHash) {
+      const { error } = await sb.from('app_users').update({ password_hash: passwordHash }).eq('username', username);
+      must(error);
+    },
     async deleteUser(username) {
       const { error } = await sb.from('app_users').delete().eq('username', username);
       must(error);
