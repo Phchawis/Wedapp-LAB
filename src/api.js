@@ -92,6 +92,8 @@ export const api = {
 
   listUsers: () => req('/users'),
   createUser: (u) => req('/users', { method: 'POST', body: u }),
+  updateUser: (username, patch) => req('/users/' + encodeURIComponent(username), { method: 'PATCH', body: patch }),
+  resetUserPassword: (username, password) => req('/users/' + encodeURIComponent(username) + '/reset-password', { method: 'POST', body: { password } }),
   deleteUser: (username) => req('/users/' + encodeURIComponent(username), { method: 'DELETE' }),
 
   listLogs: () => req('/logs'),
