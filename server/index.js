@@ -17,6 +17,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // dev: ใช้ QMS_API_PORT (เลี่ยงชน vite); production (โฮสต์): ใช้ PORT ที่โฮสต์กำหนด
 const PORT = process.env.QMS_API_PORT || process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'tuh-qms-dev-secret-change-me';
+// เชื่อถือ token ที่เซ็นมาจากระบบ Masterlist (ฝ่ายสหเวชศาสตร์) เท่านั้น — คนละ secret กับ JWT_SECRET
+// เพื่อไม่ให้ secret รั่วจากฝั่งหนึ่งปลอมเซสชันของอีกฝั่งได้โดยตรง
+const SSO_SHARED_SECRET = process.env.SSO_SHARED_SECRET || '';
 
 const PERMISSIONS = {
   creator: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
@@ -68,11 +71,31 @@ app.post('/api/auth/logout', authMw, wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// เข้าสู่ระบบผ่านลิงก์จาก Masterlist — ไม่ใช่การล็อกอินแบบพาสเวิร์ด แต่รับรอง token อายุสั้น
+// ที่เซ็นด้วย SSO_SHARED_SECRET (ต้องตรงกันทั้งสองระบบ) แล้วไปหาบัญชีจริงในทะเบียนผู้ใช้ของระบบนี้
+// ต่อด้วยชื่อผู้ใช้งาน — ถ้าไม่พบบัญชีที่ตรงกัน ให้กลับไปหน้าล็อกอินปกติ ไม่สร้างบัญชีใหม่ให้อัตโนมัติ
+app.post('/api/auth/sso', wrap(async (req, res) => {
+  if (!SSO_SHARED_SECRET) return res.status(503).json({ error: 'ระบบยังไม่เปิดใช้งานการเข้าสู่ระบบผ่าน Masterlist' });
+  const { token: ssoToken } = req.body;
+  let payload;
+  try {
+    payload = jwt.verify(ssoToken, SSO_SHARED_SECRET, { issuer: 'masterlist', audience: 'tuh-lab-qms' });
+  } catch {
+    return res.status(401).json({ error: 'ลิงก์เข้าสู่ระบบหมดอายุหรือไม่ถูกต้อง กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้งานโดยตรง' });
+  }
+  const u = await store.getUserByUsername(payload.username || '');
+  if (!u) return res.status(404).json({ error: 'ไม่พบบัญชีผู้ใช้งานนี้ในระบบทะเบียนเอกสารเทคนิคการแพทย์ กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้งานโดยตรง' });
+  const actor = { username: u.username, name: u.name, role: u.role };
+  const token = jwt.sign(actor, JWT_SECRET, { expiresIn: '12h' });
+  await logAction(actor, 'login');
+  res.json({ token, user: actor });
+}));
+
 // In-memory training acknowledgments storage
 let acknowledgments = [
   { id: 'ack-1', docNo: 'QM-CMTL-001', username: 'admin', name: 'ผู้ดูแลระบบ', role: 'admin', ts: '2026-06-23T08:12:00.000Z', version: '4' },
   { id: 'ack-2', docNo: 'QM-CMTL-001', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-24T09:45:00.000Z', version: '4' },
-  { id: 'ack-3', docNo: 'SP-IMM-014', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-25T11:20:00.000Z', version: '2' },
+  { id: 'ack-3', docNo: 'SOP-IMM-014', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-25T11:20:00.000Z', version: '2' },
 ];
 
 // ── Documents ────────────────────────────────────────────────
