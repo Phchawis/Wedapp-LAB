@@ -9,10 +9,10 @@ const seal = '/lab-seal.png';
    masthead panel (the hospital seal + system identity) beside a clean form.
    Restrained and institutional — no SaaS-hero gradient, glass, or coral fill.
    Authenticates against the API; session is cleared when the browser closes. */
-export function LoginScreen({ onSubmit }) {
+export function LoginScreen({ onSubmit, initialError = '' }) {
   const [user, setUser] = useState('');
   const [pw, setPw] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(false);
   const narrow = useNarrow(860);
 
