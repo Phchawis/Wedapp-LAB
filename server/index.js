@@ -296,6 +296,36 @@ app.post('/api/users', authMw, requirePerm('users:manage'), wrap(async (req, res
   res.status(201).json(created);
 }));
 
+app.patch('/api/users/:username', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+  const target = await store.getUserByUsername(req.params.username);
+  if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
+  const { name, role } = req.body;
+  const patch = {};
+  if (name !== undefined) {
+    if (!name.trim()) return res.status(400).json({ error: 'กรุณาระบุชื่อ-นามสกุล' });
+    patch.name = name.trim();
+  }
+  if (role !== undefined) {
+    if (!['creator', 'admin', 'user'].includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
+    if (role === 'creator' && req.user.role !== 'creator') return res.status(403).json({ error: 'เฉพาะ Creator เท่านั้นที่กำหนดสิทธิ์ Creator ได้' });
+    if (target.role === 'creator' && role !== 'creator' && (await store.countCreators()) <= 1) return res.status(400).json({ error: 'ต้องมี Creator อย่างน้อย 1 บัญชี — ลดสิทธิ์บัญชีนี้ไม่ได้' });
+    patch.role = role;
+  }
+  const updated = await store.updateUser(req.params.username, patch);
+  await logAction(req.user, 'user:edit', req.params.username);
+  res.json(updated);
+}));
+
+app.post('/api/users/:username/reset-password', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+  const target = await store.getUserByUsername(req.params.username);
+  if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
+  const { password = '' } = req.body;
+  if (password.length < 6) return res.status(400).json({ error: 'รหัสผ่านอย่างน้อย 6 ตัวอักษร' });
+  await store.resetUserPassword(req.params.username, bcrypt.hashSync(password, 8));
+  await logAction(req.user, 'user:reset-password', req.params.username);
+  res.json({ ok: true });
+}));
+
 app.delete('/api/users/:username', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
   const target = await store.getUserByUsername(req.params.username);
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
