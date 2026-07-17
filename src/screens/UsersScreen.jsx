@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Card, Input, Select, Button, IconButton } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { ROLES, ROLE_ORDER } from '../auth/users.js';
@@ -35,10 +35,96 @@ function RoleBadge({ role }) {
   );
 }
 
-/* UsersScreen — manage application accounts (เพิ่ม/ลบ ผู้ใช้งาน).
+// แถวแก้ไขชื่อ/สิทธิ์ — ขยายแทรกใต้แถวผู้ใช้งานที่กำลังแก้ไข
+function EditRow({ user, assignableRoles, onCancel, onSave }) {
+  const [name, setName] = useState(user.name);
+  const [role, setRole] = useState(user.role);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const save = async () => {
+    if (!name.trim()) { setError('กรุณาระบุชื่อ-นามสกุล'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      await onSave({ name: name.trim(), role });
+    } catch (e) {
+      setError(e.message || 'บันทึกไม่สำเร็จ');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <tr style={{ background: 'var(--brand-50)' }}>
+      <td colSpan={4} style={{ padding: '14px 16px' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 220px' }}>
+            <Input label="ชื่อ-นามสกุล" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div style={{ flex: '0 1 180px' }}>
+            <Select label="ระดับสิทธิ์" value={role} onChange={(e) => setRole(e.target.value)}
+              options={assignableRoles.map((r) => ({ value: r, label: ROLES[r].short }))} />
+          </div>
+          <Button size="sm" disabled={busy} onClick={save} iconLeft={<Icon name="Check" size={15} color="#fff" />}>{busy ? 'กำลังบันทึก…' : 'บันทึก'}</Button>
+          <Button size="sm" variant="secondary" onClick={onCancel}>ยกเลิก</Button>
+        </div>
+        {error && <div style={{ marginTop: 8, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{error}</div>}
+      </td>
+    </tr>
+  );
+}
+
+// แถวตั้งรหัสผ่านใหม่
+function PasswordRow({ username, onCancel, onSave }) {
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  const save = async () => {
+    if (password.length < 6) { setError('รหัสผ่านอย่างน้อย 6 ตัวอักษร'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      await onSave(password);
+      setDone(true);
+    } catch (e) {
+      setError(e.message || 'ตั้งรหัสผ่านไม่สำเร็จ');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <tr style={{ background: 'var(--brand-50)' }}>
+      <td colSpan={4} style={{ padding: '14px 16px' }}>
+        {done ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Icon name="CircleCheck" size={17} color="var(--green-700)" />
+            <span style={{ font: 'var(--type-ui)', color: 'var(--text-primary)' }}>ตั้งรหัสผ่านใหม่ให้ @{username} แล้ว — แจ้งรหัสผ่านนี้ให้ผู้ใช้งาน</span>
+            <Button size="sm" variant="secondary" onClick={onCancel}>ปิด</Button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 220px' }}>
+              <Input label={`รหัสผ่านใหม่ของ @${username}`} type="text" value={password} onChange={(e) => setPassword(e.target.value)}
+                placeholder="อย่างน้อย 6 ตัวอักษร" prefix={<Icon name="Lock" size={16} color="var(--text-tertiary)" />} />
+            </div>
+            <Button size="sm" disabled={busy} onClick={save} iconLeft={<Icon name="Check" size={15} color="#fff" />}>{busy ? 'กำลังตั้ง…' : 'ตั้งรหัสผ่าน'}</Button>
+            <Button size="sm" variant="secondary" onClick={onCancel}>ยกเลิก</Button>
+          </div>
+        )}
+        {error && <div style={{ marginTop: 8, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{error}</div>}
+      </td>
+    </tr>
+  );
+}
+
+/* UsersScreen — manage application accounts (เพิ่ม/แก้ไข/ตั้งรหัสผ่านใหม่/ลบ ผู้ใช้งาน).
    - Admin may create admin/user accounts; Creator may create any role.
-   - Cannot delete yourself or the last remaining Creator. */
-export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
+   - Cannot delete yourself or the last remaining Creator (same rule applies to demoting via edit). */
+export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword, onDelete }) {
   const isCreator = currentUser.role === 'creator';
   const assignableRoles = isCreator ? ROLE_ORDER : ['admin', 'user'];
 
@@ -47,6 +133,9 @@ export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  // แถวที่กำลังขยายแก้ไขอยู่ — { username, mode: 'edit' | 'password' } หรือ null
+  const [expanded, setExpanded] = useState(null);
 
   const uname = form.username.trim();
   const duplicate = uname && users.some((u) => u.username.toLowerCase() === uname.toLowerCase());
@@ -82,6 +171,10 @@ export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
     return true;
   };
 
+  const toggle = (username, mode) => {
+    setExpanded((cur) => (cur && cur.username === username && cur.mode === mode ? null : { username, mode }));
+  };
+
   return (
     <div className="qms-rise" style={{ maxWidth: 1000, display: 'flex', flexDirection: 'column', gap: 20 }}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
@@ -96,21 +189,47 @@ export function UsersScreen({ users, currentUser, onAdd, onDelete }) {
             </tr>
           </thead>
           <tbody>
-            {users.map((u, i) => (
-              <tr key={u.username} style={{ borderBottom: i === users.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
-                <td style={{ padding: '12px 16px', font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>
-                  {u.name}
-                  {u.username === currentUser.username && <span style={{ marginLeft: 8, font: 'var(--text-2xs) var(--font-body)', color: 'var(--text-tertiary)' }}>(คุณ)</span>}
-                </td>
-                <td style={{ padding: '12px 16px', font: 'var(--text-sm)/1.3 var(--font-mono)', color: 'var(--text-secondary)' }}>{u.username}</td>
-                <td style={{ padding: '12px 16px' }}><RoleBadge role={u.role} /></td>
-                <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                  <IconButton label="ลบผู้ใช้งาน" variant="ghost" disabled={!canDelete(u)} onClick={() => canDelete(u) && onDelete(u.username)}>
-                    <Icon name="Ban" size={16} color={canDelete(u) ? 'var(--red-600)' : 'var(--slate-300)'} />
-                  </IconButton>
-                </td>
-              </tr>
-            ))}
+            {users.map((u, i) => {
+              const isExpanded = expanded && expanded.username === u.username;
+              return (
+                <Fragment key={u.username}>
+                  <tr style={{ borderBottom: isExpanded ? 'none' : (i === users.length - 1 ? 'none' : '1px solid var(--border-subtle)') }}>
+                    <td style={{ padding: '12px 16px', font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>
+                      {u.name}
+                      {u.username === currentUser.username && <span style={{ marginLeft: 8, font: 'var(--text-2xs) var(--font-body)', color: 'var(--text-tertiary)' }}>(คุณ)</span>}
+                    </td>
+                    <td style={{ padding: '12px 16px', font: 'var(--text-sm)/1.3 var(--font-mono)', color: 'var(--text-secondary)' }}>{u.username}</td>
+                    <td style={{ padding: '12px 16px' }}><RoleBadge role={u.role} /></td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <IconButton label="แก้ไขชื่อ/สิทธิ์" variant="ghost" onClick={() => toggle(u.username, 'edit')}>
+                        <Icon name="PencilLine" size={16} color="var(--text-tertiary)" />
+                      </IconButton>
+                      <IconButton label="ตั้งรหัสผ่านใหม่" variant="ghost" onClick={() => toggle(u.username, 'password')}>
+                        <Icon name="Lock" size={16} color="var(--text-tertiary)" />
+                      </IconButton>
+                      <IconButton label="ลบผู้ใช้งาน" variant="ghost" disabled={!canDelete(u)} onClick={() => canDelete(u) && onDelete(u.username)}>
+                        <Icon name="Ban" size={16} color={canDelete(u) ? 'var(--red-600)' : 'var(--slate-300)'} />
+                      </IconButton>
+                    </td>
+                  </tr>
+                  {isExpanded && expanded.mode === 'edit' && (
+                    <EditRow
+                      user={u}
+                      assignableRoles={assignableRoles}
+                      onCancel={() => setExpanded(null)}
+                      onSave={async (patch) => { await onEdit(u.username, patch); setExpanded(null); }}
+                    />
+                  )}
+                  {isExpanded && expanded.mode === 'password' && (
+                    <PasswordRow
+                      username={u.username}
+                      onCancel={() => setExpanded(null)}
+                      onSave={(password) => onResetPassword(u.username, password)}
+                    />
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </Card>
