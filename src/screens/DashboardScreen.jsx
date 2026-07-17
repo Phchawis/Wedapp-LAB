@@ -1,9 +1,69 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, DocTypeTag, StatusBadge, Button } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 import { api } from '../api.js';
+
+// นับเลขไล่จาก 0 ถึงค่าจริงตอนโหลดหน้า (เคารพ prefers-reduced-motion — ข้ามไปเลขจริงทันที)
+function useCountUp(target, duration = 700) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setValue(target); return; }
+    let raf;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setValue(Math.round(target * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
+
+// โดนัทสัดส่วนสถานะเอกสาร — ไล่เฉดสีเดียวกับ legend เป๊ะ (Status-Is-Sacred)
+// เส้นแต่ละสถานะ "คลี่" ออกตอนโหลดหน้า ผ่าน stroke-dasharray transition
+function StatusDonut({ segments, total, size = 76 }) {
+  const strokeWidth = 10;
+  const r = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * r;
+  const [revealed, setRevealed] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  useEffect(() => {
+    if (revealed) return;
+    const raf = requestAnimationFrame(() => setRevealed(true));
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  let acc = 0;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="สัดส่วนสถานะเอกสาร" style={{ flexShrink: 0 }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--slate-100)" strokeWidth={strokeWidth} />
+      <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+        {segments.map((s) => {
+          const frac = total ? s.n / total : 0;
+          const len = frac * circumference;
+          const dashOffset = -acc;
+          acc += len;
+          return (
+            <circle
+              key={s.code}
+              cx={size / 2} cy={size / 2} r={r} fill="none"
+              stroke={s.color} strokeWidth={strokeWidth} strokeLinecap="butt"
+              strokeDasharray={revealed ? `${len} ${circumference - len}` : `0 ${circumference}`}
+              strokeDashoffset={dashOffset}
+              style={{ transition: 'stroke-dasharray var(--dur-slow) var(--ease-out)' }}
+            />
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
 
 /* DashboardScreen — the register itself is the dashboard: one action queue leads,
    system health reads as a slim strip (not a stacked card), and decorative icon
@@ -25,6 +85,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
   const Q = QMS;
   const narrow = useNarrow(900);
   const total = docs.length;
+  const totalDisplay = useCountUp(total);
 
   const [onboardingVisible, setOnboardingVisible] = useState(() => {
     return localStorage.getItem('tuh-qms-onboarding-dismissed') !== 'true';
@@ -197,20 +258,15 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
         flexWrap: 'wrap', paddingBottom: 16, borderBottom: '1px solid var(--border-default)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
-            <span style={{ font: 'var(--fw-bold) var(--text-3xl)/1 var(--font-mono)', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{total}</span>
-            <span style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>ฉบับในทะเบียน</span>
-          </div>
-
-          <div style={{ flex: '1 1 200px', minWidth: 160, maxWidth: 320 }}>
-            <div style={{ display: 'flex', gap: 2, height: 8, borderRadius: 'var(--radius-pill)', overflow: 'hidden', background: 'var(--slate-100)' }}>
-              {present.map((s) => (
-                <div key={s.code} title={`${s.th} · ${s.n}`} style={{ flexGrow: s.n, flexBasis: 0, minWidth: 6, background: STATUS_DOT[s.code] }} />
-              ))}
+          <div style={{ position: 'relative', width: 76, height: 76, flexShrink: 0 }}>
+            <StatusDonut segments={present.map((s) => ({ code: s.code, n: s.n, color: STATUS_DOT[s.code] }))} total={total} />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="qms-numeric" style={{ font: 'var(--fw-bold) var(--text-lg)/1 var(--font-mono)', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{totalDisplay}</span>
+              <span style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', marginTop: 1 }}>ฉบับ</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px' }}>
             {present.map((s) => (
               <div key={s.code} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_DOT[s.code], flexShrink: 0 }} />
@@ -345,13 +401,13 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
         {/* สัดส่วนตามหมวดงาน */}
         <Card padding="md" header={<SectionTitle icon="FolderClosed">เอกสารตามหมวดงาน</SectionTitle>}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
-            {byCat.map((c) => (
+            {byCat.map((c, i) => (
               <div key={c.code} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ width: 46, flexShrink: 0, font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-secondary)' }}>{c.code}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>{c.th}</div>
                   <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--slate-100)', overflow: 'hidden' }}>
-                    <div style={{ width: (c.n / maxCat * 100) + '%', height: '100%', background: 'var(--brand-600)', borderRadius: 'var(--radius-pill)' }} />
+                    <div className="qms-grow" style={{ width: (c.n / maxCat * 100) + '%', height: '100%', background: 'var(--brand-600)', borderRadius: 'var(--radius-pill)', '--i': i }} />
                   </div>
                 </div>
                 <span style={{ width: 22, textAlign: 'right', flexShrink: 0, font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-mono)', color: 'var(--text-primary)' }}>{c.n}</span>
@@ -390,7 +446,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
             >
               <span style={{ flex: '1 1 240px', minWidth: 0, font: 'var(--type-ui)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.dept}</span>
               <div style={{ flex: '1 1 140px', maxWidth: 200, height: 6, borderRadius: 3, background: 'var(--slate-100)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${p.pct}%`, background: p.pct >= 90 ? 'var(--green-600)' : p.pct >= 70 ? 'var(--brand-600)' : 'var(--amber-600)', borderRadius: 3 }} />
+                <div className="qms-grow" style={{ height: '100%', width: `${p.pct}%`, background: p.pct >= 90 ? 'var(--green-600)' : p.pct >= 70 ? 'var(--brand-600)' : 'var(--amber-600)', borderRadius: 3, '--i': idx }} />
               </div>
               <span className="qms-numeric" style={{ width: 60, textAlign: 'right', flexShrink: 0, font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{p.trained}/{p.total}</span>
               <span className="qms-numeric" style={{ width: 40, textAlign: 'right', flexShrink: 0, font: 'var(--fw-semibold) var(--text-xs)/1 var(--font-mono)', color: 'var(--text-secondary)' }}>{p.pct}%</span>
