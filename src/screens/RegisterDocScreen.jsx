@@ -12,7 +12,7 @@ function fmtSize(bytes) {
 }
 
 /* RegisterDocScreen — นำเข้าเอกสารคุณภาพเข้าสู่ระบบ
-   เลขที่เอกสาร: ประเภท-รหัสเอกสาร เช่น SP-0014-00123 (รหัสพิมพ์ได้อิสระ ตัวเลข/ตัวอักษรกี่ตัวก็ได้)
+   เลขที่เอกสาร: ประเภท-รหัสเอกสาร เช่น SOP-0014-00123 (รหัสพิมพ์ได้อิสระ ตัวเลข/ตัวอักษรกี่ตัวก็ได้)
    แนบไฟล์จริง (Word/PDF) อัปโหลด + แนบลิงก์ภายนอก (URL) — ส่งเป็น FormData ไป backend */
 export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const Q = QMS;
