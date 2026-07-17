@@ -24,6 +24,14 @@ function useCountUp(target, duration = 700) {
   return value;
 }
 
+// ตัวเลข KPI ที่นับไล่ขึ้นตอนโหลด — ใช้ในแถบสรุป (stat ledger)
+function StatNumber({ value, color }) {
+  const v = useCountUp(value);
+  return (
+    <div className="qms-numeric" style={{ font: 'var(--fw-bold) var(--text-3xl)/1 var(--font-display)', color, letterSpacing: '-0.02em' }}>{v}</div>
+  );
+}
+
 // โดนัทสัดส่วนสถานะเอกสาร — ไล่เฉดสีเดียวกับ legend เป๊ะ (Status-Is-Sacred)
 // เส้นแต่ละสถานะ "คลี่" ออกตอนโหลดหน้า ผ่าน stroke-dasharray transition
 function StatusDonut({ segments, total, size = 76 }) {
@@ -175,6 +183,16 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
       return b.doc.updated.localeCompare(a.doc.updated);
     });
 
+  // ── ตัวเลขสรุป (KPI ledger) — เมตริกเชิงดำเนินการ เสริมจาก breakdown รายสถานะในโดนัท ──
+  const reviewDueCount = alertDocs.filter(({ alerts }) => alerts.some((a) => a.text.includes('ทบทวน'))).length;
+  const ledger = [
+    { label: 'เอกสารทั้งหมด', sub: 'Total documents', value: total, color: 'var(--text-primary)' },
+    { label: 'ประกาศใช้', sub: 'Active', value: countBy('effective'), color: 'var(--green-700)' },
+    { label: 'ต้องดำเนินการ', sub: 'Action queue', value: actionDocs.length, color: 'var(--brand-700)' },
+    { label: 'แจ้งเตือนคุณภาพ', sub: 'Quality alerts', value: alertDocs.length, color: 'var(--accent-700)' },
+    { label: 'ครบกำหนดทบทวน', sub: 'Review due', value: reviewDueCount, color: 'var(--amber-700)' },
+  ];
+
   // สัดส่วนตามหมวดงาน
   const byCat = Q.WORK_CATEGORIES
     .map((c) => ({ ...c, n: docs.filter((d) => d.cat === c.code).length }))
@@ -252,6 +270,28 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
 
   return (
     <div className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* ── ตัวเลขสรุป (KPI ledger) — ตัวเลขใหญ่นับไล่ขึ้น แบ่งช่องด้วยเส้นบาง ── */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: `repeat(${narrow ? 2 : ledger.length}, 1fr)`,
+        borderTop: '1px solid var(--border-default)', borderBottom: '1px solid var(--border-default)',
+      }}>
+        {ledger.map((s, i) => (
+          <div
+            key={s.label}
+            style={{
+              padding: narrow ? '18px 16px' : '22px 20px',
+              borderRight: (narrow ? (i % 2 === 0) : (i < ledger.length - 1)) ? '1px solid var(--border-subtle)' : 'none',
+              borderTop: (narrow && i >= 2) ? '1px solid var(--border-subtle)' : 'none',
+              minWidth: 0,
+            }}
+          >
+            <StatNumber value={s.value} color={s.color} />
+            <div style={{ font: 'var(--fw-medium) var(--text-sm)/1.2 var(--font-body)', color: 'var(--text-secondary)', marginTop: 10 }}>{s.label}</div>
+            <div style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.08em', marginTop: 4 }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
       {/* ── ภาพรวมทะเบียน: แถบสรุปแบบเรียบ (ไม่ใช่การ์ด) — ตัวเลข + แถบสัดส่วน + legend ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
