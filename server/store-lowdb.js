@@ -49,6 +49,19 @@ export const lowdbStore = {
     await db.write();
     return { username: row.username, name: row.name, role: row.role, createdAt: row.createdAt };
   },
+  async updateUser(username, patch) {
+    const u = db.data.users.find((x) => x.username === username);
+    if (!u) return null;
+    Object.assign(u, patch);
+    await db.write();
+    return { username: u.username, name: u.name, role: u.role, createdAt: u.createdAt };
+  },
+  async resetUserPassword(username, passwordHash) {
+    const u = db.data.users.find((x) => x.username === username);
+    if (!u) return;
+    u.passwordHash = passwordHash;
+    await db.write();
+  },
   async deleteUser(username) {
     db.data.users = db.data.users.filter((u) => u.username !== username);
     await db.write();
