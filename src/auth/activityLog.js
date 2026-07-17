@@ -15,6 +15,8 @@ export const LOG_ACTIONS = {
   'doc:obsolete': { th: 'ยกเลิกใช้งานเอกสาร', icon: 'Ban', c: 'var(--red-700)' },
   'doc:delete': { th: 'ลบเอกสาร', icon: 'Trash2', c: 'var(--red-700)' },
   'user:add': { th: 'เพิ่มผู้ใช้งาน', icon: 'UserCog', c: 'var(--blue-700)' },
+  'user:edit': { th: 'แก้ไขผู้ใช้งาน', icon: 'PencilLine', c: 'var(--amber-700)' },
+  'user:reset-password': { th: 'รีเซ็ตรหัสผ่าน', icon: 'Lock', c: 'var(--blue-700)' },
   'user:delete': { th: 'ลบผู้ใช้งาน', icon: 'UserCog', c: 'var(--red-700)' },
 };
 
