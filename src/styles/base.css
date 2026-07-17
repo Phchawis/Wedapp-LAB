@@ -59,8 +59,15 @@ code, kbd, samp { font-family: var(--font-mono); }
   animation: qms-spin 1s linear infinite;
 }
 
+/* แถบ/กราฟที่ต้อง "โต" ขึ้นตอนโหลดหน้า (infographic reveal) — ใช้ --i ไล่ดีเลย์เหมือน qms-rise-stagger */
+.qms-grow {
+  transform-origin: left;
+  animation: qms-grow var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .qms-rise, .qms-stagger > *, .qms-spin { animation: none !important; }
+  .qms-rise, .qms-stagger > *, .qms-spin, .qms-grow { animation: none !important; }
 }
 
 /* ── Sidebar Logo Header ────────────────────────────────────────────────── */
