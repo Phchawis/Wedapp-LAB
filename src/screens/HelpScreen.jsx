@@ -1,6 +1,7 @@
 import { Card, DocTypeTag, StatusBadge } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { QMS } from '../data/taxonomy.js';
+import { PermMatrix } from '../components/PermMatrix.jsx';
 
 /* HelpScreen — the manual reads like the controlled documents it describes: numbered
    clauses with a mono spine, not a grid of stat-card tiles. North Star: The Controlled
@@ -42,17 +43,6 @@ export function HelpScreen() {
       </div>
     </div>
   );
-
-  const PERM_ROWS = [
-    { act: 'ดู / ดาวน์โหลด / พิมพ์เอกสารคุณภาพ', c: true, a: true, u: true },
-    { act: 'อัปเดต/นำเข้าไฟล์ Excel (.xlsx) แบบบันทึกแล็บ', c: true, a: true, u: true },
-    { act: 'ลงทะเบียนนำเข้าเอกสารฉบับใหม่', c: true, a: true, u: false },
-    { act: 'ลบหรือถอนเอกสารออกจากทะเบียน', c: true, a: true, u: false },
-    { act: 'ทบทวนและกดอนุมัติ/ประกาศใช้ Workflow', c: true, a: true, u: false },
-    { act: 'จัดการผู้ใช้งาน (เพิ่ม / แก้ไขชื่อ-สิทธิ์ / ตั้งรหัสผ่านใหม่ / ลบ)', c: true, a: true, u: false },
-    { act: 'ดูบันทึกกิจกรรมความโปร่งใส (Audit Log)', c: true, a: true, u: false },
-    { act: 'ปรับแต่งการตั้งค่าทางโครงสร้างระบบและเซิร์ฟเวอร์', c: true, a: false, u: false },
-  ];
 
   const STATUS_DESC = {
     effective: 'เอกสารฉบับล่าสุดที่ได้รับการประกาศใช้ บุคลากรต้องยึดถือปฏิบัติงาน ณ ปัจจุบัน',
@@ -114,31 +104,7 @@ export function HelpScreen() {
       {/* 02 — Permissions matrix (real tabular data keeps the register's own table treatment) */}
       <Section n="02" title="ตารางสิทธิ์และการเข้าถึง (Role & Permissions Matrix)">
         <Card padding="none">
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
-              <thead>
-                <tr style={{ background: 'var(--slate-50)', borderBottom: '1px solid var(--border-subtle)' }}>
-                  {['การดำเนินการ', 'Creator', 'Admin', 'User'].map((h, i) => (
-                    <th key={i} style={{ textAlign: i === 0 ? 'left' : 'center', padding: '12px 16px', font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {PERM_ROWS.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: i === PERM_ROWS.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
-                    <td style={{ padding: '11px 16px', font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{row.act}</td>
-                    {[row.c, row.a, row.u].map((on, j) => (
-                      <td key={j} style={{ padding: '11px 16px', textAlign: 'center' }}>
-                        {on
-                          ? <Icon name="Check" size={15} color="var(--green-700)" style={{ display: 'inline-block' }} />
-                          : <span style={{ color: 'var(--slate-300)', font: 'var(--fw-bold) var(--text-sm)/1' }}>—</span>}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PermMatrix />
         </Card>
       </Section>
 
