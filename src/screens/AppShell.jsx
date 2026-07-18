@@ -25,7 +25,7 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
     : otherCats;
 
   const navItems = [
-    { id: 'dashboard', icon: 'LayoutDashboard', label: 'แดชบอร์ด' },
+    { id: 'dashboard', icon: 'LayoutDashboard', label: 'Dashboard' },
     { id: 'register', icon: 'FolderClosed', label: 'ทะเบียนเอกสาร', count: registerCount },
     can(user.role, 'viewUsers') && { id: 'users', icon: 'UserCog', label: 'จัดการผู้ใช้งาน' },
     can(user.role, 'audit') && { id: 'log', icon: 'History', label: 'บันทึกกิจกรรม' },
