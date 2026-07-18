@@ -197,13 +197,13 @@ export default function App() {
   };
 
   const titles = {
-    dashboard: { t: 'แดชบอร์ด', s: 'ภาพรวมทะเบียนเอกสารคุณภาพห้องปฏิบัติการ' },
-    register: { t: 'ทะเบียนเอกสาร', s: 'ค้นหา กรอง และเปิดดูเอกสารคุณภาพ' },
-    create: { t: 'ลงทะเบียนเอกสาร', s: 'นำเข้าเอกสารคุณภาพ (Word/PDF/ลิงก์) เข้าสู่ระบบ' },
-    users: { t: 'จัดการผู้ใช้งาน', s: 'เพิ่ม ลบ และกำหนดสิทธิ์ผู้ใช้งานระบบ' },
-    log: { t: 'บันทึกกิจกรรม', s: 'ประวัติการทำงานของผู้ใช้งานในระบบ' },
-    detail: { t: 'รายละเอียดเอกสาร', s: doc ? doc.no : '' },
-    help: { t: 'คู่มือการใช้งาน', s: 'คู่มือการควบคุมเอกสารตามมาตรฐาน ISO 15189' },
+    dashboard: { e: 'OVERVIEW', t: 'แดชบอร์ด', s: 'ภาพรวมทะเบียนเอกสารคุณภาพห้องปฏิบัติการ' },
+    register: { e: 'REGISTER', t: 'ทะเบียนเอกสาร', s: 'ค้นหา กรอง และเปิดดูเอกสารคุณภาพ' },
+    create: { e: 'NEW ENTRY', t: 'ลงทะเบียนเอกสาร', s: 'นำเข้าเอกสารคุณภาพ (Word/PDF/ลิงก์) เข้าสู่ระบบ' },
+    users: { e: 'ACCESS CONTROL', t: 'จัดการผู้ใช้งาน', s: 'เพิ่ม ลบ และกำหนดสิทธิ์ผู้ใช้งานระบบ' },
+    log: { e: 'AUDIT LOG', t: 'บันทึกกิจกรรม', s: 'ประวัติการทำงานของผู้ใช้งานในระบบ' },
+    detail: { e: 'DOCUMENT', t: 'รายละเอียดเอกสาร', s: doc ? doc.no : '' },
+    help: { e: 'USER GUIDE', t: 'คู่มือการใช้งาน', s: 'คู่มือการควบคุมเอกสารตามมาตรฐาน ISO 15189' },
   };
   const head = titles[view] || titles.dashboard;
 
@@ -236,6 +236,7 @@ export default function App() {
         onCat={pickCat}
         onLogout={logout}
         user={currentUser}
+        eyebrow={head.e}
         title={head.t}
         subtitle={head.s}
         docCount={docs.length}
