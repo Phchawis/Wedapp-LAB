@@ -11,6 +11,19 @@ function fmtSize(bytes) {
   return (bytes / 1024 / 1024).toFixed(1) + ' MB';
 }
 
+// ป้ายชื่อฟิลด์แบบ mono ตัวพิมพ์ใหญ่ไล่ระยะห่างตัวอักษร — สไตล์เอกสารควบคุมทางเทคนิค
+function Field({ label, required, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+        {label}
+        {required && <span style={{ color: 'var(--red-600)' }}>*</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /* RegisterDocScreen — นำเข้าเอกสารคุณภาพเข้าสู่ระบบ
    เลขที่เอกสาร: ประเภท-รหัสเอกสาร เช่น SOP-0014-00123 (รหัสพิมพ์ได้อิสระ ตัวเลข/ตัวอักษรกี่ตัวก็ได้)
    แนบไฟล์จริง (Word/PDF) อัปโหลด + แนบลิงก์ภายนอก (URL) — ส่งเป็น FormData ไป backend */
@@ -107,7 +120,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
     background: 'var(--white)', borderRadius: 'var(--radius-md)',
     border: '1px solid ' + (invalid ? 'var(--red-600)' : 'var(--border-default)'),
   });
-  const segInput = { border: 'none', outline: 'none', background: 'transparent', width: '100%', minWidth: 0, font: 'var(--type-code)', color: 'var(--text-primary)' };
+  const segInput = { border: 'none', outline: 'none', background: 'transparent', width: '100%', minWidth: 0, font: 'var(--type-code)', color: 'var(--text-primary)', textTransform: 'uppercase' };
   const dash = { font: 'var(--fw-bold) var(--text-lg) var(--font-mono)', color: 'var(--text-tertiary)', flexShrink: 0 };
 
   return (
@@ -120,10 +133,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
         {/* Classification */}
         <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FolderClosed" size={16} color="var(--text-secondary)" /> การจัดประเภทเอกสาร</span>}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ font: 'var(--type-ui)', color: 'var(--text-secondary)' }}>
-                เลขที่เอกสาร<span style={{ color: 'var(--red-600)', marginLeft: 2 }}>*</span>
-              </label>
+            <Field label="เลขที่เอกสาร" required>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ ...segBox(touched && errors.type), flex: '0 0 132px', padding: '0 8px 0 12px', position: 'relative' }}>
                   <select value={form.type} onChange={(e) => set('type', e.target.value)} style={{ ...segInput, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', paddingRight: 16 }}>
@@ -137,31 +147,45 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
                   <input placeholder="0014-00123" value={form.docId} onChange={(e) => set('docId', e.target.value.replace(/\s/g, ''))} style={segInput} aria-label="เลขที่เอกสาร" />
                 </div>
               </div>
-              {touched && noError && <span style={{ font: 'var(--type-caption)', color: 'var(--red-600)' }}>{noError}</span>}
-            </div>
+              {touched && noError && <span style={{ display: 'block', marginTop: 6, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{noError}</span>}
+            </Field>
 
-            <Select label="หมวดงาน" required placeholder="— เลือกหมวดงาน —" value={form.cat}
-              onChange={(e) => set('cat', e.target.value)} hint={touched ? errors.cat : undefined}
-              options={Q.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
+            <Field label="หมวดงาน" required>
+              <Select placeholder="— เลือกหมวดงาน —" value={form.cat}
+                onChange={(e) => set('cat', e.target.value)} hint={touched ? errors.cat : undefined}
+                options={Q.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
+            </Field>
           </div>
         </Card>
 
         {/* Document details */}
         <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="PencilLine" size={16} color="var(--text-secondary)" /> รายละเอียดเอกสาร</span>}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Input label="ชื่อเอกสาร" required placeholder="เช่น การควบคุมคุณภาพการตรวจเคมีคลินิก"
-              value={form.th} onChange={(e) => set('th', e.target.value)} error={touched ? errors.th : undefined} />
+            <Field label="ชื่อเอกสาร" required>
+              <Input placeholder="เช่น การควบคุมคุณภาพการตรวจเคมีคลินิก"
+                value={form.th} onChange={(e) => set('th', e.target.value)} error={touched ? errors.th : undefined} />
+            </Field>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-              <Input label="ผู้รับผิดชอบ" required placeholder="เช่น ทนพ. ธนกร พงษ์"
-                value={form.owner} onChange={(e) => set('owner', e.target.value)} error={touched ? errors.owner : undefined} />
-              <Input label="แก้ไขครั้งที่" type="number" min="1" value={form.rev} onChange={(e) => set('rev', e.target.value)} />
+              <Field label="ผู้รับผิดชอบ" required>
+                <Input placeholder="เช่น ทนพ. ธนกร พงษ์"
+                  value={form.owner} onChange={(e) => set('owner', e.target.value)} error={touched ? errors.owner : undefined} />
+              </Field>
+              <Field label="แก้ไขครั้งที่">
+                <Input type="number" min="1" value={form.rev} onChange={(e) => set('rev', e.target.value)} />
+              </Field>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-              <Select label="สถานะเริ่มต้น" value={form.status} onChange={(e) => set('status', e.target.value)}
-                options={Object.entries(Q.STATUS).map(([code, s]) => ({ value: code, label: s.th }))} />
-              <Input label="วันที่ของเอกสาร" type="date" value={form.updated} onChange={(e) => set('updated', e.target.value)} />
-              <Select label="ระยะเวลาจัดเก็บเอกสาร" value={form.retention} onChange={(e) => set('retention', e.target.value)}
-                options={RETENTION_OPTIONS.map((r) => ({ value: String(r.value), label: r.label }))} />
+              <Field label="สถานะเริ่มต้น">
+                <Select value={form.status} onChange={(e) => set('status', e.target.value)}
+                  options={Object.entries(Q.STATUS).map(([code, s]) => ({ value: code, label: s.th }))} />
+              </Field>
+              <Field label="วันที่ของเอกสาร">
+                <Input type="date" value={form.updated} onChange={(e) => set('updated', e.target.value)} />
+              </Field>
+              <Field label="ระยะเวลาจัดเก็บเอกสาร">
+                <Select value={form.retention} onChange={(e) => set('retention', e.target.value)}
+                  options={RETENTION_OPTIONS.map((r) => ({ value: String(r.value), label: r.label }))} />
+              </Field>
             </div>
           </div>
         </Card>
@@ -197,7 +221,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
           )}
 
           {/* Links */}
-          <div style={{ marginTop: 16, font: 'var(--type-ui)', color: 'var(--text-secondary)', marginBottom: 8 }}>ลิงก์ภายนอก (URL)</div>
+          <div style={{ marginTop: 16, marginBottom: 8, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>ลิงก์ภายนอก (URL)</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {links.map((l, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
