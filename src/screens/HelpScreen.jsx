@@ -55,20 +55,6 @@ export function HelpScreen() {
 
   return (
     <div className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {/* ── หัวเรื่อง: เหมือนหน้าปกเอกสารควบคุม ไม่ใช่การ์ดแนะนำ ── */}
-      <div style={{ paddingBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--brand-700)', letterSpacing: '.06em', marginBottom: 10 }}>
-          <Icon name="BookOpen" size={14} color="var(--brand-700)" />
-          QM · 00 · คู่มือระบบ
-        </div>
-        <h1 style={{ font: 'var(--type-page-title)', color: 'var(--text-primary)', marginBottom: 8 }}>
-          คู่มือการควบคุมเอกสารตามมาตรฐาน ISO 15189
-        </h1>
-        <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', maxWidth: 760 }}>
-          การควบคุมเอกสารในระบบบริหารคุณภาพห้องปฏิบัติการทางการแพทย์ (SOP Document Control) มีวัตถุประสงค์เพื่อรับประกันว่า บุคลากรผู้ตรวจวิเคราะห์จะเข้าถึงและใช้งานเอกสารคุณภาพฉบับที่เป็นปัจจุบันและผ่านการอนุมัติแล้วเท่านั้น โดยป้องกันการนำเอกสารที่ยกเลิกหรือไม่ได้รับการรับรองมาใช้งานโดยไม่ได้ตั้งใจ
-        </p>
-      </div>
-
       {/* 01 — Coding standards + lifecycle */}
       <Section n="01" title="ข้อกำหนดรหัสเอกสารควบคุมและวงจรสถานะ">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px 32px' }}>
