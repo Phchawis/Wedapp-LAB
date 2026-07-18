@@ -26,7 +26,7 @@ function Field({ label, required, children }) {
 }
 
 // การ์ดที่ไม่มีเงา — ใช้แทน Card ปกติเมื่ออยู่ในป็อปอัปที่มีเงาของตัวเองอยู่แล้ว กันไม่ให้ดูซ้อนหนัก
-const FLAT_CARD_STYLE = { boxShadow: 'none' };
+const FLAT_CARD_STYLE = { boxShadow: 'none', flexShrink: 0 };
 
 /* RegisterDocScreen — ป็อปอัปนำเข้าเอกสารคุณภาพเข้าสู่ระบบ กึ่งกลางจอ พื้นหลังเบลอ
    เลขที่เอกสาร: ประเภท-รหัสเอกสาร เช่น SOP-0014-00123 (รหัสพิมพ์ได้อิสระ ตัวเลข/ตัวอักษรกี่ตัวก็ได้)
@@ -173,7 +173,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
         </div>
 
         {/* Body — scrollable */}
-        <div style={{ padding: 24, overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ padding: 24, overflowY: 'auto', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Classification */}
           <Card padding="md" style={FLAT_CARD_STYLE} header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FolderClosed" size={16} color="var(--text-secondary)" /> การจัดประเภทเอกสาร</span>}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -285,7 +285,7 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
             {touched && errors.links && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.links}</div>}
           </Card>
 
-          {submitError && <Alert tone="danger" icon={<Icon name="AlertTriangle" size={18} color="var(--red-700)" />}>{submitError}</Alert>}
+          {submitError && <Alert tone="danger" style={{ flexShrink: 0 }} icon={<Icon name="AlertTriangle" size={18} color="var(--red-700)" />}>{submitError}</Alert>}
         </div>
 
         {/* Footer */}
