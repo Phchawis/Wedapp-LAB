@@ -2,9 +2,13 @@
 import path from 'node:path';
 
 export const SEED_USERS = [
-  { username: 'creator', password: 'creator123', name: 'ธนกร พงษ์เจริญ', role: 'creator' },
-  { username: 'admin', password: 'admin123', name: 'ผู้ดูแลระบบ', role: 'admin' },
-  { username: 'user', password: 'user123', name: 'ผู้ใช้งานทั่วไป', role: 'user' },
+  { username: 'sysadmin', password: 'sysadmin123', name: 'ธนกร พงษ์เจริญ', role: 'sysadmin' },
+  { username: 'head_work', password: 'headwork123', name: 'หัวหน้างานเทคนิคการแพทย์', role: 'head_work' },
+  { username: 'head_cat', password: 'headcat123', name: 'หัวหน้าหมวดงานจุลชีววิทยา', role: 'head_cat' },
+  { username: 'med_tech', password: 'medtech123', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech' },
+  { username: 'assistant', password: 'assistant123', name: 'ผู้ช่วยนักเทคนิคการแพทย์', role: 'assistant' },
+  { username: 'admin_staff', password: 'adminstaff123', name: 'เจ้าหน้าที่ธุรการห้องปฏิบัติการ', role: 'admin_staff' },
+  { username: 'doc_manager', password: 'docmanager123', name: 'ผู้จัดการเอกสารคุณภาพ', role: 'doc_manager' },
 ];
 
 export const SEED_DOCS = [
