@@ -11,6 +11,7 @@ import {
   FileSearch, AlertTriangle, Paperclip, ExternalLink, Pencil, Eye, History,
   Check, Megaphone, PencilLine, Download, Ban, FileText, FilePen, Link, Search,
   UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
+  TrendingUp, Users,
 } from 'lucide-react';
 
 const ICONS = {
@@ -19,6 +20,7 @@ const ICONS = {
   FileSearch, AlertTriangle, Paperclip, ExternalLink, Pencil, Eye, History,
   Check, Megaphone, PencilLine, Download, Ban, FileText, FilePen, Link, Search,
   UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
+  TrendingUp, Users,
 };
 
 export function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {
