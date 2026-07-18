@@ -93,8 +93,8 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
         <div style={{ padding: '12px 12px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', flex: 1 }}>
           <NavItem id="dashboard" icon="LayoutDashboard" label="แดชบอร์ด" />
           <NavItem id="register" icon="FolderClosed" label="ทะเบียนเอกสาร" count={registerCount} />
-          {can(user.role, 'users:manage') && <NavItem id="users" icon="UserCog" label="จัดการผู้ใช้งาน" />}
-          {can(user.role, 'users:manage') && <NavItem id="log" icon="History" label="บันทึกกิจกรรม" />}
+          {can(user.role, 'viewUsers') && <NavItem id="users" icon="UserCog" label="จัดการผู้ใช้งาน" />}
+          {can(user.role, 'audit') && <NavItem id="log" icon="History" label="บันทึกกิจกรรม" />}
           <NavItem id="help" icon="HelpCircle" label="คู่มือการใช้งาน" />
 
           <div style={{ font: 'var(--text-2xs)/1 var(--font-body)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', padding: '14px 12px 6px' }}>หน่วยงาน</div>
