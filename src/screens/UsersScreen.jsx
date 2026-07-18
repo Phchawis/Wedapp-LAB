@@ -31,7 +31,8 @@ function RoleBadge({ role }) {
 }
 
 // แถวแก้ไขชื่อ/สิทธิ์/หมวดงาน — ขยายแทรกใต้แถวผู้ใช้งานที่กำลังแก้ไข
-function EditRow({ user, assignableRoles, onCancel, onSave }) {
+function EditRow({ user, assignableRoles, isSelf, onCancel, onSave }) {
+  const [username, setUsername] = useState(user.username);
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState(user.role);
   const [cat, setCat] = useState(user.cat || '');
@@ -40,10 +41,13 @@ function EditRow({ user, assignableRoles, onCancel, onSave }) {
 
   const save = async () => {
     if (!name.trim()) { setError('กรุณาระบุชื่อ-นามสกุล'); return; }
+    if (!isSelf && !username.trim()) { setError('กรุณาระบุชื่อผู้ใช้งาน'); return; }
     setBusy(true);
     setError('');
     try {
-      await onSave({ name: name.trim(), role, cat: cat || null });
+      const patch = { name: name.trim(), role, cat: cat || null };
+      if (!isSelf) patch.username = username.trim();
+      await onSave(patch);
     } catch (e) {
       setError(e.message || 'บันทึกไม่สำเร็จ');
     } finally {
@@ -57,6 +61,12 @@ function EditRow({ user, assignableRoles, onCancel, onSave }) {
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 200px' }}>
             <Input label="ชื่อ-นามสกุล" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div style={{ flex: '1 1 160px' }}>
+            <Input label="ชื่อผู้ใช้งาน" value={username} disabled={isSelf}
+              onChange={(e) => setUsername(e.target.value)}
+              hint={isSelf ? 'เปลี่ยนชื่อผู้ใช้งานของตัวเองไม่ได้ในหน้านี้' : undefined}
+              prefix={<Icon name="User" size={16} color="var(--text-tertiary)" />} />
           </div>
           <div style={{ flex: '0 1 160px' }}>
             <Select label="ระดับสิทธิ์" value={role} onChange={(e) => setRole(e.target.value)}
@@ -301,6 +311,7 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
                     <EditRow
                       user={u}
                       assignableRoles={assignableRoles}
+                      isSelf={u.username === currentUser.username}
                       onCancel={() => setExpanded(null)}
                       onSave={async (patch) => { await onEdit(u.username, patch); setExpanded(null); }}
                     />
