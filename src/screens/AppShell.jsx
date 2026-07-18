@@ -17,6 +17,13 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
   const narrow = useNarrow(900);
   const [open, setOpen] = useState(false);
 
+  // ปักหมวดงานที่กำลังเลือกอยู่ไว้บนสุดของรายการ — ไม่ต้องเลื่อนหาในลิสต์ยาว
+  const otherCats = Q.WORK_CATEGORIES.filter((c) => c.code !== 'LAB');
+  const activeCatCode = view === 'register' && otherCats.some((c) => c.code === cat) ? cat : null;
+  const orderedCats = activeCatCode
+    ? [otherCats.find((c) => c.code === activeCatCode), ...otherCats.filter((c) => c.code !== activeCatCode)]
+    : otherCats;
+
   const NavItem = ({ id, icon, label, count }) => {
     const active = view === id;
     return (
@@ -113,22 +120,25 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
           </button>
 
           <div style={{ font: 'var(--text-2xs)/1 var(--font-body)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.06em', padding: '14px 12px 6px' }}>หมวดงาน</div>
-          {Q.WORK_CATEGORIES.filter(c => c.code !== 'LAB').map((c) => {
+          {orderedCats.map((c, i) => {
             const active = cat === c.code && view === 'register';
             return (
-              <button key={c.code} onClick={() => { onCat(c.code); setOpen(false); }} title={c.th} style={{
-                display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
-                padding: '7px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                background: active ? 'var(--brand-50)' : 'transparent',
-                color: active ? 'var(--brand-800)' : 'var(--text-secondary)',
-                font: (active ? 'var(--fw-semibold) ' : 'var(--fw-regular) ') + 'var(--text-xs)/1.3 var(--font-body)',
-                transition: 'background var(--dur-fast) var(--ease-standard)',
-              }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--slate-100)'; }}
-                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
-                <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', width: 38, flexShrink: 0 }}>{c.code}</span>
-                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.th}</span>
-              </button>
+              <div key={c.code} style={activeCatCode && i === 0 ? { paddingBottom: 6, marginBottom: 6, borderBottom: '1px solid var(--border-subtle)' } : undefined}>
+                <button onClick={() => { onCat(c.code); setOpen(false); }} title={c.th} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+                  padding: '7px 12px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+                  background: active ? 'var(--brand-50)' : 'transparent',
+                  color: active ? 'var(--brand-800)' : 'var(--text-secondary)',
+                  font: (active ? 'var(--fw-semibold) ' : 'var(--fw-regular) ') + 'var(--text-xs)/1.3 var(--font-body)',
+                  transition: 'background var(--dur-fast) var(--ease-standard)',
+                }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--slate-100)'; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
+                  <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', width: 38, flexShrink: 0 }}>{c.code}</span>
+                  <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.th}</span>
+                  {active && <Icon name="ChevronRight" size={13} color="var(--brand-600)" style={{ flexShrink: 0 }} />}
+                </button>
+              </div>
             );
           })}
         </div>
