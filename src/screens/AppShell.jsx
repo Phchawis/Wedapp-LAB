@@ -66,8 +66,10 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
       background: active ? 'var(--brand-700)' : 'var(--white)',
       color: active ? '#fff' : 'var(--text-secondary)',
       font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-sm)/1 var(--font-body)',
-      transition: 'background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard)',
-    }}>
+      transition: 'background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard)',
+    }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'var(--brand-50)'; e.currentTarget.style.borderColor = 'var(--brand-300)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; } }}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'var(--white)'; e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; } }}>
       {icon ? <Icon name={icon} size={15} color={active ? '#fff' : 'var(--brand-600)'} /> : <span style={{ font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', opacity: active ? 1 : .7 }}>{code}</span>}
       {th}
     </button>
@@ -78,15 +80,17 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
       ? { display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'stretch' }
       : { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }
     }>
-      <CatChip code="LAB" th="งานห้องปฏิบัติการเทคนิคการแพทย์" icon="FlaskConical"
-        active={cat === 'LAB' && view === 'register'} onClick={() => { onCat('LAB'); setOpen(false); }} />
+      <div className={vertical ? undefined : 'qms-rise-stagger'} style={vertical ? undefined : { '--i': 0 }}>
+        <CatChip code="LAB" th="งานห้องปฏิบัติการเทคนิคการแพทย์" icon="FlaskConical"
+          active={cat === 'LAB' && view === 'register'} onClick={() => { onCat('LAB'); setOpen(false); }} />
+      </div>
       {orderedCats.map((c, i) => {
         const chip = <CatChip code={c.code} th={c.th} active={cat === c.code && view === 'register'} onClick={() => { onCat(c.code); setOpen(false); }} />;
         // ในโหมดแนวตั้ง คั่นหมวดที่ถูกปักไว้หน้าสุด (จากการเลือกอยู่) ออกจากรายการที่เหลือด้วยเส้นบาง
         if (vertical && activeCatCode && i === 1) {
           return <div key={c.code} style={{ paddingTop: 6, marginTop: 4, borderTop: '1px solid var(--border-subtle)' }}>{chip}</div>;
         }
-        return <div key={c.code}>{chip}</div>;
+        return <div key={c.code} className={vertical ? undefined : 'qms-rise-stagger'} style={vertical ? undefined : { '--i': i + 1 }}>{chip}</div>;
       })}
     </div>
   );
@@ -136,9 +140,9 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
           )}
         </div>
 
-        {/* Row 2 — หน่วยงาน / หมวดงาน sub-nav (desktop only; folded into dropdown on narrow) */}
+        {/* Row 2 — หน่วยงาน / หมวดงาน sub-nav (desktop only; folded into dropdown on narrow) — โทนอ่อนแยกจากแถวหลักเบาๆ */}
         {!narrow && (
-          <div style={{ padding: '10px var(--page-gutter)', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ padding: '10px var(--page-gutter)', borderTop: '1px solid var(--border-subtle)', background: 'var(--surface-page)' }}>
             <CatRow />
           </div>
         )}
