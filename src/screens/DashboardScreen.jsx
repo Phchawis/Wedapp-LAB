@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon.jsx';
 import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 import { api } from '../api.js';
+import { can } from '../auth/users.js';
 
 // นับเลขไล่จาก 0 ถึงค่าจริงตอนโหลดหน้า (เคารพ prefers-reduced-motion — ข้ามไปเลขจริงทันที)
 function useCountUp(target, duration = 700) {
@@ -204,7 +205,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
   const recent = docs.slice().sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 5);
 
   const currentUser = api.decodeToken();
-  const isAdminOrCreator = currentUser?.role === 'admin' || currentUser?.role === 'creator';
+  const isAdminOrCreator = can(currentUser?.role, 'audit');
 
   const trainingRows = [
     { dept: 'งานห้องปฏิบัติการเทคนิคการแพทย์', trained: 14, total: 15 },
