@@ -48,7 +48,7 @@ export function LogScreen({ logs }) {
   );
 
   return (
-    <div className="qms-rise" style={{ maxWidth: 980 }}>
+    <div className="qms-rise" style={{ maxWidth: 'var(--container-max)' }}>
       <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 16 }}>
         <Chip code="all" label="ทั้งหมด" count={logs.length} active={action === 'all'} />
         {presentActions.map((code) => (
