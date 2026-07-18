@@ -9,7 +9,9 @@ const seal = '/lab-seal.png';
 
 /* AppShell — sidebar + topbar chrome wrapping every signed-in screen.
    Responsive drawer: Collapses into a toggleable slide-out panel on viewport width < 900px. */
-export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subtitle, actions, children, docCount }) {
+const thaiToday = () => new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+
+export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, title, subtitle, actions, children, docCount }) {
   const Q = QMS;
   const registerCount = docCount != null ? docCount : Q.DOCS.length;
   const narrow = useNarrow(900);
@@ -146,21 +148,36 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, title, subti
       {/* Main content area */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <header style={{
-          height: 'var(--topbar-height)', flexShrink: 0, background: 'var(--white)',
-          borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center',
-          gap: 16, padding: '0 var(--page-gutter)', position: 'sticky', top: 0, zIndex: 5,
+          flexShrink: 0, background: 'var(--white)',
+          borderBottom: '1px solid var(--border-subtle)',
+          padding: '26px var(--page-gutter) 24px',
         }}>
           {narrow && (
-            <IconButton label="เปิดเมนู" onClick={() => setOpen(true)} variant="ghost">
+            <IconButton label="เปิดเมนู" onClick={() => setOpen(true)} variant="ghost" style={{ marginBottom: 12 }}>
               <Icon name="Menu" size={20} color="var(--text-secondary)" />
             </IconButton>
           )}
-          <div style={{ minWidth: 0 }}>
-            <div style={{ font: 'var(--fw-bold) var(--text-lg)/1.1 var(--font-display)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
-            {subtitle && <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-tertiary)' }}>{subtitle}</div>}
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0 }}>
+              {eyebrow && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.12em', color: 'var(--brand-700)', marginBottom: 10 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-500)', flexShrink: 0 }} />
+                  {eyebrow}
+                </div>
+              )}
+              <h1 style={{ font: 'var(--type-page-title)', color: 'var(--text-primary)', margin: 0, textWrap: 'balance' }}>{title}</h1>
+              {subtitle && <p style={{ marginTop: 6, font: 'var(--type-body)', color: 'var(--text-secondary)', maxWidth: 640 }}>{subtitle}</p>}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexShrink: 0 }}>
+              {!narrow && (
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ font: 'var(--text-xs)/1.4 var(--font-body)', color: 'var(--text-tertiary)' }}>ณ วันที่ {thaiToday()}</div>
+                  <div style={{ font: 'var(--fw-medium) var(--text-2xs)/1.3 var(--font-mono)', color: 'var(--text-tertiary)', letterSpacing: '.04em' }}>มาตรฐาน ISO 15189:2022</div>
+                </div>
+              )}
+              {actions}
+            </div>
           </div>
-          <div style={{ flex: 1 }} />
-          {actions}
         </header>
         <main style={{ flex: 1, padding: 'var(--page-gutter)', overflowY: 'auto' }}>{children}</main>
       </div>
