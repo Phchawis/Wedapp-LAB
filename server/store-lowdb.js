@@ -66,8 +66,8 @@ export const lowdbStore = {
     db.data.users = db.data.users.filter((u) => u.username !== username);
     await db.write();
   },
-  async countCreators() {
-    return db.data.users.filter((u) => u.role === 'creator').length;
+  async countSysadmins() {
+    return db.data.users.filter((u) => u.role === 'sysadmin').length;
   },
 
   async listDocuments() {
