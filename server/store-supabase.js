@@ -75,6 +75,7 @@ export async function createSupabaseStore() {
     },
     async updateUser(username, patch) {
       const row = {};
+      if (patch.username !== undefined) row.username = patch.username;
       if (patch.name !== undefined) row.name = patch.name;
       if (patch.role !== undefined) row.role = patch.role;
       if (patch.cat !== undefined) row.cat = patch.cat;
