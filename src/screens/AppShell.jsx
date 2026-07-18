@@ -101,9 +101,10 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
             role="button" tabIndex={0}
             onClick={() => onNav('dashboard')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav('dashboard'); } }}
+            className="masthead-link"
             style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flexShrink: 0 }}
           >
-            <img src={seal} alt="ตรา รพธ." style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0 }} />
+            <span className="masthead-badge"><img src={seal} alt="ตรา รพธ." /></span>
             {!narrow && (
               <div style={{ lineHeight: 1.2 }}>
                 <div style={{ font: 'var(--fw-bold) var(--text-sm)/1.25 var(--font-display)', color: 'var(--brand-900)' }}>ห้องปฏิบัติการเทคนิคการแพทย์</div>
