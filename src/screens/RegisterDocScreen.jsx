@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
-import { Button, Card, Input, Select, Alert, DocTypeTag, StatusBadge } from '../components/ds/index.js';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Button, Card, Input, Select, Alert, DocTypeTag, StatusBadge, IconButton } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { QMS, RETENTION_OPTIONS } from '../data/taxonomy.js';
 
@@ -24,7 +25,10 @@ function Field({ label, required, children }) {
   );
 }
 
-/* RegisterDocScreen — นำเข้าเอกสารคุณภาพเข้าสู่ระบบ
+// การ์ดที่ไม่มีเงา — ใช้แทน Card ปกติเมื่ออยู่ในป็อปอัปที่มีเงาของตัวเองอยู่แล้ว กันไม่ให้ดูซ้อนหนัก
+const FLAT_CARD_STYLE = { boxShadow: 'none' };
+
+/* RegisterDocScreen — ป็อปอัปนำเข้าเอกสารคุณภาพเข้าสู่ระบบ กึ่งกลางจอ พื้นหลังเบลอ
    เลขที่เอกสาร: ประเภท-รหัสเอกสาร เช่น SOP-0014-00123 (รหัสพิมพ์ได้อิสระ ตัวเลข/ตัวอักษรกี่ตัวก็ได้)
    แนบไฟล์จริง (Word/PDF) อัปโหลด + แนบลิงก์ภายนอก (URL) — ส่งเป็น FormData ไป backend */
 export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
@@ -87,6 +91,17 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const valid = !Object.values(errors).some(Boolean);
   const noError = errors.type || errors.docId || errors.duplicate;
 
+  // ปิดด้วย Esc + ล็อกการเลื่อนของพื้นหลังขณะป็อปอัปเปิดอยู่
+  useEffect(() => {
+    const onKeyDown = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onCancel]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -123,136 +138,167 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
   const segInput = { border: 'none', outline: 'none', background: 'transparent', width: '100%', minWidth: 0, font: 'var(--type-code)', color: 'var(--text-primary)', textTransform: 'uppercase' };
   const dash = { font: 'var(--fw-bold) var(--text-lg) var(--font-mono)', color: 'var(--text-tertiary)', flexShrink: 0 };
 
-  return (
-    <form onSubmit={handleSubmit} className="qms-rise" style={{ maxWidth: 880 }}>
-      <button type="button" onClick={onCancel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: 0, marginBottom: 16 }}>
-        <Icon name="ArrowLeft" size={16} /> ยกเลิกและกลับ
-      </button>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {/* Classification */}
-        <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FolderClosed" size={16} color="var(--text-secondary)" /> การจัดประเภทเอกสาร</span>}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Field label="เลขที่เอกสาร" required>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ ...segBox(touched && errors.type), flex: '0 0 132px', padding: '0 8px 0 12px', position: 'relative' }}>
-                  <select value={form.type} onChange={(e) => set('type', e.target.value)} style={{ ...segInput, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', paddingRight: 16 }}>
-                    <option value="">ประเภท</option>
-                    {Q.DOC_TYPES.map((t) => <option key={t.code} value={t.code}>{t.code}</option>)}
-                  </select>
-                  <Icon name="ChevronRight" size={14} color="var(--text-tertiary)" style={{ transform: 'rotate(90deg)', position: 'absolute', right: 8, pointerEvents: 'none' }} />
-                </div>
-                <span style={dash}>-</span>
-                <div style={{ ...segBox(touched && errors.docId), flex: 1 }}>
-                  <input placeholder="0014-00123" value={form.docId} onChange={(e) => set('docId', e.target.value.replace(/\s/g, ''))} style={segInput} aria-label="เลขที่เอกสาร" />
-                </div>
-              </div>
-              {touched && noError && <span style={{ display: 'block', marginTop: 6, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{noError}</span>}
-            </Field>
-
-            <Field label="หมวดงาน" required>
-              <Select placeholder="— เลือกหมวดงาน —" value={form.cat}
-                onChange={(e) => set('cat', e.target.value)} hint={touched ? errors.cat : undefined}
-                options={Q.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
-            </Field>
-          </div>
-        </Card>
-
-        {/* Document details */}
-        <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="PencilLine" size={16} color="var(--text-secondary)" /> รายละเอียดเอกสาร</span>}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Field label="ชื่อเอกสาร" required>
-              <Input placeholder="เช่น การควบคุมคุณภาพการตรวจเคมีคลินิก"
-                value={form.th} onChange={(e) => set('th', e.target.value)} error={touched ? errors.th : undefined} />
-            </Field>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-              <Field label="ผู้รับผิดชอบ" required>
-                <Input placeholder="เช่น ทนพ. ธนกร พงษ์"
-                  value={form.owner} onChange={(e) => set('owner', e.target.value)} error={touched ? errors.owner : undefined} />
-              </Field>
-              <Field label="แก้ไขครั้งที่">
-                <Input type="number" min="1" value={form.rev} onChange={(e) => set('rev', e.target.value)} />
-              </Field>
+  return createPortal(
+    <div
+      role="presentation"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(24, 27, 42, 0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, overflowY: 'auto',
+      }}
+    >
+      <form
+        role="dialog" aria-modal="true" aria-label="ลงทะเบียนเอกสารใหม่"
+        onSubmit={handleSubmit} className="qms-rise"
+        style={{
+          background: 'var(--surface-page)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+          width: '100%', maxWidth: 720, maxHeight: '90vh',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '22px 26px 20px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--white)', flexShrink: 0 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.12em', color: 'var(--brand-700)', marginBottom: 8 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-500)', flexShrink: 0 }} />
+              NEW ENTRY
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-              <Field label="สถานะเริ่มต้น">
-                <Select value={form.status} onChange={(e) => set('status', e.target.value)}
-                  options={Object.entries(Q.STATUS).map(([code, s]) => ({ value: code, label: s.th }))} />
-              </Field>
-              <Field label="วันที่ของเอกสาร">
-                <Input type="date" value={form.updated} onChange={(e) => set('updated', e.target.value)} />
-              </Field>
-              <Field label="ระยะเวลาจัดเก็บเอกสาร">
-                <Select value={form.retention} onChange={(e) => set('retention', e.target.value)}
-                  options={RETENTION_OPTIONS.map((r) => ({ value: String(r.value), label: r.label }))} />
-              </Field>
-            </div>
+            <h2 style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)', margin: 0 }}>ลงทะเบียนเอกสารคุณภาพ</h2>
+            <p style={{ marginTop: 4, font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>นำเข้าเอกสารคุณภาพ (Word/PDF/ลิงก์) เข้าสู่ระบบ</p>
           </div>
-        </Card>
+          <IconButton label="ปิด" variant="ghost" onClick={onCancel}>
+            <Icon name="X" size={18} color="var(--text-tertiary)" />
+          </IconButton>
+        </div>
 
-        {/* Attachments — real upload + links */}
-        <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบและลิงก์</span>}>
-          {/* File upload dropzone */}
-          <div
-            onClick={() => fileRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '20px 16px', cursor: 'pointer', borderRadius: 'var(--radius-md)', border: '1.5px dashed var(--border-default)', background: 'var(--slate-50)', color: 'var(--text-secondary)', font: 'var(--type-ui)' }}
-          >
-            <Icon name="Download" size={18} color="var(--brand-600)" style={{ transform: 'rotate(180deg)' }} />
-            คลิกหรือลากไฟล์ Word / Excel / PDF มาวางที่นี่ (สูงสุด 25 MB ต่อไฟล์)
-          </div>
-          <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-            style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
-
-          {files.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              {files.map((f, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
-                  <Icon name="FileText" size={18} color="var(--brand-600)" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ font: 'var(--fw-medium) var(--text-sm)/1.2 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
-                    <div style={{ font: 'var(--text-2xs)/1.2 var(--font-mono)', color: 'var(--text-tertiary)' }}>{fmtSize(f.size)}</div>
+        {/* Body — scrollable */}
+        <div style={{ padding: 24, overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Classification */}
+          <Card padding="md" style={FLAT_CARD_STYLE} header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FolderClosed" size={16} color="var(--text-secondary)" /> การจัดประเภทเอกสาร</span>}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Field label="เลขที่เอกสาร" required>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ ...segBox(touched && errors.type), flex: '0 0 132px', padding: '0 8px 0 12px', position: 'relative' }}>
+                    <select value={form.type} onChange={(e) => set('type', e.target.value)} style={{ ...segInput, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', paddingRight: 16 }}>
+                      <option value="">ประเภท</option>
+                      {Q.DOC_TYPES.map((t) => <option key={t.code} value={t.code}>{t.code}</option>)}
+                    </select>
+                    <Icon name="ChevronRight" size={14} color="var(--text-tertiary)" style={{ transform: 'rotate(90deg)', position: 'absolute', right: 8, pointerEvents: 'none' }} />
                   </div>
-                  <button type="button" onClick={() => removeFile(i)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, color: 'var(--red-600)' }}><Icon name="Trash2" size={16} color="var(--red-600)" /></button>
+                  <span style={dash}>-</span>
+                  <div style={{ ...segBox(touched && errors.docId), flex: 1 }}>
+                    <input placeholder="0014-00123" value={form.docId} onChange={(e) => set('docId', e.target.value.replace(/\s/g, ''))} style={segInput} aria-label="เลขที่เอกสาร" />
+                  </div>
+                </div>
+                {touched && noError && <span style={{ display: 'block', marginTop: 6, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{noError}</span>}
+              </Field>
+
+              <Field label="หมวดงาน" required>
+                <Select placeholder="— เลือกหมวดงาน —" value={form.cat}
+                  onChange={(e) => set('cat', e.target.value)} hint={touched ? errors.cat : undefined}
+                  options={Q.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
+              </Field>
+            </div>
+          </Card>
+
+          {/* Document details */}
+          <Card padding="md" style={FLAT_CARD_STYLE} header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="PencilLine" size={16} color="var(--text-secondary)" /> รายละเอียดเอกสาร</span>}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Field label="ชื่อเอกสาร" required>
+                <Input placeholder="เช่น การควบคุมคุณภาพการตรวจเคมีคลินิก"
+                  value={form.th} onChange={(e) => set('th', e.target.value)} error={touched ? errors.th : undefined} />
+              </Field>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+                <Field label="ผู้รับผิดชอบ" required>
+                  <Input placeholder="เช่น ทนพ. ธนกร พงษ์"
+                    value={form.owner} onChange={(e) => set('owner', e.target.value)} error={touched ? errors.owner : undefined} />
+                </Field>
+                <Field label="แก้ไขครั้งที่">
+                  <Input type="number" min="1" value={form.rev} onChange={(e) => set('rev', e.target.value)} />
+                </Field>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                <Field label="สถานะเริ่มต้น">
+                  <Select value={form.status} onChange={(e) => set('status', e.target.value)}
+                    options={Object.entries(Q.STATUS).map(([code, s]) => ({ value: code, label: s.th }))} />
+                </Field>
+                <Field label="วันที่ของเอกสาร">
+                  <Input type="date" value={form.updated} onChange={(e) => set('updated', e.target.value)} />
+                </Field>
+                <Field label="ระยะเวลาจัดเก็บเอกสาร">
+                  <Select value={form.retention} onChange={(e) => set('retention', e.target.value)}
+                    options={RETENTION_OPTIONS.map((r) => ({ value: String(r.value), label: r.label }))} />
+                </Field>
+              </div>
+            </div>
+          </Card>
+
+          {/* Attachments — real upload + links */}
+          <Card padding="md" style={FLAT_CARD_STYLE} header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบและลิงก์</span>}>
+            {/* File upload dropzone */}
+            <div
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '20px 16px', cursor: 'pointer', borderRadius: 'var(--radius-md)', border: '1.5px dashed var(--border-default)', background: 'var(--slate-50)', color: 'var(--text-secondary)', font: 'var(--type-ui)' }}
+            >
+              <Icon name="Download" size={18} color="var(--brand-600)" style={{ transform: 'rotate(180deg)' }} />
+              คลิกหรือลากไฟล์ Word / Excel / PDF มาวางที่นี่ (สูงสุด 25 MB ต่อไฟล์)
+            </div>
+            <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+              style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+
+            {files.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                {files.map((f, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+                    <Icon name="FileText" size={18} color="var(--brand-600)" />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ font: 'var(--fw-medium) var(--text-sm)/1.2 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
+                      <div style={{ font: 'var(--text-2xs)/1.2 var(--font-mono)', color: 'var(--text-tertiary)' }}>{fmtSize(f.size)}</div>
+                    </div>
+                    <button type="button" onClick={() => removeFile(i)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, color: 'var(--red-600)' }}><Icon name="Trash2" size={16} color="var(--red-600)" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Links */}
+            <div style={{ marginTop: 16, marginBottom: 8, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>ลิงก์ภายนอก (URL)</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {links.map((l, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <Input placeholder="https://edoc.tuh.go.th/..." value={l} onChange={(e) => setLink(i, e.target.value)}
+                      prefix={<Icon name="Link" size={15} color="var(--text-tertiary)" />} />
+                  </div>
+                  <button type="button" onClick={() => removeLink(i)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 8, color: 'var(--text-tertiary)' }}><Icon name="Trash2" size={16} /></button>
                 </div>
               ))}
             </div>
-          )}
+            <button type="button" onClick={addLinkRow} style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-link)', font: 'var(--type-ui)', padding: 0 }}>
+              <Icon name="Plus" size={15} color="var(--text-link)" /> เพิ่มลิงก์
+            </button>
 
-          {/* Links */}
-          <div style={{ marginTop: 16, marginBottom: 8, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>ลิงก์ภายนอก (URL)</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {links.map((l, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <Input placeholder="https://edoc.tuh.go.th/..." value={l} onChange={(e) => setLink(i, e.target.value)}
-                    prefix={<Icon name="Link" size={15} color="var(--text-tertiary)" />} />
-                </div>
-                <button type="button" onClick={() => removeLink(i)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 8, color: 'var(--text-tertiary)' }}><Icon name="Trash2" size={16} /></button>
-              </div>
-            ))}
-          </div>
-          <button type="button" onClick={addLinkRow} style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-link)', font: 'var(--type-ui)', padding: 0 }}>
-            <Icon name="Plus" size={15} color="var(--text-link)" /> เพิ่มลิงก์
-          </button>
+            {touched && errors.attach && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.attach}</div>}
+            {touched && errors.links && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.links}</div>}
+          </Card>
 
-          {touched && errors.attach && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.attach}</div>}
-          {touched && errors.links && <div style={{ marginTop: 10, font: 'var(--type-caption)', color: 'var(--red-600)' }}>{errors.links}</div>}
-        </Card>
+          {submitError && <Alert tone="danger" icon={<Icon name="AlertTriangle" size={18} color="var(--red-700)" />}>{submitError}</Alert>}
+        </div>
 
-        {submitError && <Alert tone="danger" icon={<Icon name="AlertTriangle" size={18} color="var(--red-700)" />}>{submitError}</Alert>}
-
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Footer */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 26px', borderTop: '1px solid var(--border-subtle)', background: 'var(--white)', flexShrink: 0 }}>
           <Button type="submit" size="lg" disabled={busy} iconLeft={<Icon name="Check" size={17} color="#fff" />}>{busy ? 'กำลังนำเข้า…' : 'บันทึกลงทะเบียน'}</Button>
           <Button type="button" variant="secondary" size="lg" onClick={onCancel}>ยกเลิก</Button>
           <div style={{ flex: 1 }} />
           {form.type && <DocTypeTag type={form.type} showLabel />}
           {form.status && <StatusBadge status={form.status} />}
         </div>
-      </div>
-    </form>
+      </form>
+    </div>,
+    document.body
   );
 }
 

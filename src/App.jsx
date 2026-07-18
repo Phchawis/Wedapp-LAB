@@ -31,6 +31,7 @@ export default function App() {
   const [view, setView] = useState('dashboard');
   const [cat, setCat] = useState(null);
   const [doc, setDoc] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
   const [docs, setDocs] = useState([]);
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -104,7 +105,7 @@ export default function App() {
         else if ((key === 'u' || key === 'จ') && canViewUsers) { e.preventDefault(); setView('users'); setCat(null); }
         else if ((key === 'l' || key === 'บ') && canAudit) { e.preventDefault(); setView('log'); setCat(null); }
         else if (key === 'h' || key === 'อ') { e.preventDefault(); setView('help'); setCat(null); }
-        else if ((key === 'c' || key === 'ล') && can(role, 'register')) { e.preventDefault(); setCat(null); setView('create'); window.scrollTo(0, 0); }
+        else if ((key === 'c' || key === 'ล') && can(role, 'register')) { e.preventDefault(); setShowCreate(true); }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -142,7 +143,7 @@ export default function App() {
   const openDoc = (d) => transitionTo(() => { setDoc(d); setView('detail'); window.scrollTo(0, 0); });
   const nav = (v) => transitionTo(() => { setView(v); setCat(null); });
   const pickCat = (c) => transitionTo(() => { setCat(c); setView('register'); });
-  const openCreate = () => transitionTo(() => { setCat(null); setView('create'); window.scrollTo(0, 0); });
+  const openCreate = () => setShowCreate(true);
 
   const logout = async () => {
     await api.logout();
@@ -158,6 +159,7 @@ export default function App() {
   const createDoc = async (formData) => {
     const created = await api.createDocument(formData);
     await refreshAll(role);
+    setShowCreate(false);
     setDoc(created);
     setCat(null);
     setView('detail');
@@ -199,7 +201,6 @@ export default function App() {
   const titles = {
     dashboard: { e: 'OVERVIEW', t: 'Dashboard', s: 'ภาพรวมทะเบียนเอกสารคุณภาพห้องปฏิบัติการ' },
     register: { e: 'REGISTER', t: 'ทะเบียนเอกสาร', s: 'ค้นหา กรอง และเปิดดูเอกสารคุณภาพ' },
-    create: { e: 'NEW ENTRY', t: 'ลงทะเบียนเอกสาร', s: 'นำเข้าเอกสารคุณภาพ (Word/PDF/ลิงก์) เข้าสู่ระบบ' },
     users: { e: 'ACCESS CONTROL', t: 'จัดการผู้ใช้งาน', s: 'เพิ่ม ลบ และกำหนดสิทธิ์ผู้ใช้งานระบบ' },
     log: { e: 'AUDIT LOG', t: 'บันทึกกิจกรรม', s: 'ประวัติการทำงานของผู้ใช้งานในระบบ' },
     detail: { e: 'DOCUMENT', t: 'รายละเอียดเอกสาร', s: doc ? doc.no : '' },
@@ -216,16 +217,13 @@ export default function App() {
   let body;
   if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
   else if (view === 'register') body = <RegisterScreen docs={docs} cat={cat} onOpen={openDoc} />;
-  else if (view === 'create' && can(role, 'register')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
   else if (view === 'users' && canViewUsers) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onEdit={editUser} onResetPassword={resetUserPassword} onDelete={deleteUser} />;
   else if (view === 'log' && canAudit) body = <LogScreen logs={logs} />;
   else if (view === 'help') body = <HelpScreen />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
   else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
 
-  const shellView = (view === 'detail' || view === 'create')
-    ? (cat ? 'register' : 'dashboard')
-    : view;
+  const shellView = view === 'detail' ? (cat ? 'register' : 'dashboard') : view;
 
   return (
     <Suspense fallback={<Loader text="กำลังดาวน์โหลดหน้าจอระบบ..." />}>
@@ -244,6 +242,9 @@ export default function App() {
       >
         {body}
       </AppShell>
+      {showCreate && can(role, 'register') && (
+        <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => setShowCreate(false)} />
+      )}
     </Suspense>
   );
 
