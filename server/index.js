@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { store } from './store.js';
 import { newId, kindFromFile } from './seed.js';
+import { ROLE_ORDER, can } from '../src/auth/roles.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // dev: ใช้ QMS_API_PORT (เลี่ยงชน vite); production (โฮสต์): ใช้ PORT ที่โฮสต์กำหนด
@@ -20,13 +21,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'tuh-qms-dev-secret-change-me';
 // เชื่อถือ token ที่เซ็นมาจากระบบ Masterlist (ฝ่ายสหเวชศาสตร์) เท่านั้น — คนละ secret กับ JWT_SECRET
 // เพื่อไม่ให้ secret รั่วจากฝั่งหนึ่งปลอมเซสชันของอีกฝั่งได้โดยตรง
 const SSO_SHARED_SECRET = process.env.SSO_SHARED_SECRET || '';
-
-const PERMISSIONS = {
-  creator: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
-  admin: ['users:manage', 'docs:create', 'docs:delete', 'docs:edit', 'docs:view', 'docs:export'],
-  user: ['docs:view', 'docs:export'],
-};
-const can = (role, action) => (PERMISSIONS[role] || []).includes(action);
 
 const app = express();
 app.use(cors());
@@ -93,9 +87,9 @@ app.post('/api/auth/sso', wrap(async (req, res) => {
 
 // In-memory training acknowledgments storage
 let acknowledgments = [
-  { id: 'ack-1', docNo: 'QM-CMTL-001', username: 'admin', name: 'ผู้ดูแลระบบ', role: 'admin', ts: '2026-06-23T08:12:00.000Z', version: '4' },
-  { id: 'ack-2', docNo: 'QM-CMTL-001', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-24T09:45:00.000Z', version: '4' },
-  { id: 'ack-3', docNo: 'SOP-IMM-014', username: 'user', name: 'ผู้ใช้งานทั่วไป', role: 'user', ts: '2026-06-25T11:20:00.000Z', version: '2' },
+  { id: 'ack-1', docNo: 'QM-CMTL-001', username: 'head_work', name: 'หัวหน้างานเทคนิคการแพทย์', role: 'head_work', ts: '2026-06-23T08:12:00.000Z', version: '4' },
+  { id: 'ack-2', docNo: 'QM-CMTL-001', username: 'med_tech', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech', ts: '2026-06-24T09:45:00.000Z', version: '4' },
+  { id: 'ack-3', docNo: 'SOP-IMM-014', username: 'med_tech', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech', ts: '2026-06-25T11:20:00.000Z', version: '2' },
 ];
 
 // ── Documents ────────────────────────────────────────────────
@@ -191,7 +185,7 @@ app.get('/api/documents/:no', authMw, wrap(async (req, res) => {
   res.json(doc);
 }));
 
-app.post('/api/documents', authMw, requirePerm('docs:create'), upload.array('files', 10), wrap(async (req, res) => {
+app.post('/api/documents', authMw, requirePerm('register'), upload.array('files', 10), wrap(async (req, res) => {
   const b = req.body;
   const no = (b.no || '').trim();
   if (!no) return res.status(400).json({ error: 'ต้องระบุเลขที่เอกสาร' });
@@ -222,8 +216,22 @@ app.post('/api/documents', authMw, requirePerm('docs:create'), upload.array('fil
   res.status(201).json(await store.getDocument(no)); // ส่งกลับพร้อมประวัติล่าสุด
 }));
 
-app.patch('/api/documents/:no', authMw, requirePerm('docs:edit'), wrap(async (req, res) => {
+// การเปลี่ยนสถานะเอกสารแต่ละแบบต้องใช้สิทธิ์เฉพาะ — ตรวจจากสถานะปัจจุบัน→สถานะใหม่ ไม่ใช่สิทธิ์เดียวครอบทุกกรณี
+const STATUS_TRANSITIONS = {
+  draft: { review: 'revise', effective: 'publish' },
+  review: { effective: 'publish', draft: 'revise' },
+  effective: { review: 'revise', obsolete: 'register' },
+};
+app.patch('/api/documents/:no', authMw, wrap(async (req, res) => {
   const { status, rev, updated, action } = req.body;
+  const doc = await store.getDocument(req.params.no);
+  if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
+  if (status && status !== doc.status) {
+    const needPerm = STATUS_TRANSITIONS[doc.status]?.[status];
+    if (!needPerm || !can(req.user.role, needPerm)) {
+      return res.status(403).json({ error: 'ไม่มีสิทธิ์เปลี่ยนสถานะเอกสารนี้' });
+    }
+  }
   const updatedDoc = await store.updateDocument(req.params.no, { status, rev, updated });
   if (!updatedDoc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   await logAction(req.user, action || 'doc:edit', req.params.no);
@@ -231,8 +239,7 @@ app.patch('/api/documents/:no', authMw, requirePerm('docs:edit'), wrap(async (re
 }));
 
 // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ — แทนที่ไฟล์เดิม + เพิ่มเลขแก้ไข (rev) + บันทึกประวัติ
-// สิทธิ์: Creator อัปเดตได้ทุกชนิด; Admin/User อัปเดตได้เฉพาะไฟล์ Excel
-app.post('/api/documents/:no/attachments/:id/version', authMw, upload.single('file'), wrap(async (req, res) => {
+app.post('/api/documents/:no/attachments/:id/version', authMw, requirePerm('upload'), upload.single('file'), wrap(async (req, res) => {
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   const att = (doc.attachments || []).find((a) => a.id === req.params.id);
@@ -242,10 +249,6 @@ app.post('/api/documents/:no/attachments/:id/version', authMw, upload.single('fi
 
   const name = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
   const newKind = kindFromFile(name, req.file.mimetype);
-  // ตรวจสิทธิ์ตามบทบาท — ไม่ใช่ Creator ต้องเป็น Excel ทั้งไฟล์เดิมและไฟล์ใหม่
-  if (req.user.role !== 'creator' && (att.kind !== 'excel' || newKind !== 'excel')) {
-    return res.status(403).json({ error: 'บทบาทของคุณอัปเดตได้เฉพาะไฟล์ Excel เท่านั้น' });
-  }
 
   const storage = await store.saveFile(req.file);
   await store.updateAttachment(att.id, {
@@ -260,7 +263,7 @@ app.post('/api/documents/:no/attachments/:id/version', authMw, upload.single('fi
   res.json(await store.getDocument(req.params.no));
 }));
 
-app.delete('/api/documents/:no', authMw, requirePerm('docs:delete'), wrap(async (req, res) => {
+app.delete('/api/documents/:no', authMw, requirePerm('register'), wrap(async (req, res) => {
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   await store.deleteDocument(req.params.no);
@@ -280,23 +283,23 @@ app.get('/api/attachments/:id/download', authMw, wrap(async (req, res) => {
 }));
 
 // ── Users ────────────────────────────────────────────────────
-app.get('/api/users', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+app.get('/api/users', authMw, requirePerm('viewUsers'), wrap(async (req, res) => {
   res.json(await store.listUsers());
 }));
 
-app.post('/api/users', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
-  const { username = '', password = '', name = '', role = 'user' } = req.body;
+app.post('/api/users', authMw, requirePerm('manage'), wrap(async (req, res) => {
+  const { username = '', password = '', name = '', role = 'med_tech' } = req.body;
   const uname = username.trim();
   if (!uname || password.length < 6 || !name.trim()) return res.status(400).json({ error: 'ข้อมูลไม่ครบ (รหัสผ่านอย่างน้อย 6 ตัวอักษร)' });
-  if (!['creator', 'admin', 'user'].includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
-  if (role === 'creator' && req.user.role !== 'creator') return res.status(403).json({ error: 'เฉพาะ Creator เท่านั้นที่สร้างบัญชี Creator ได้' });
+  if (!ROLE_ORDER.includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
+  if (role === 'sysadmin' && req.user.role !== 'sysadmin') return res.status(403).json({ error: 'เฉพาะ SysAdmin เท่านั้นที่สร้างบัญชี SysAdmin ได้' });
   if (await store.getUserByUsername(uname)) return res.status(409).json({ error: 'ชื่อผู้ใช้งานนี้มีอยู่แล้ว' });
   const created = await store.createUser({ username: uname, passwordHash: bcrypt.hashSync(password, 8), name: name.trim(), role });
   await logAction(req.user, 'user:add', uname);
   res.status(201).json(created);
 }));
 
-app.patch('/api/users/:username', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+app.patch('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req, res) => {
   const target = await store.getUserByUsername(req.params.username);
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
   const { name, role } = req.body;
@@ -306,9 +309,9 @@ app.patch('/api/users/:username', authMw, requirePerm('users:manage'), wrap(asyn
     patch.name = name.trim();
   }
   if (role !== undefined) {
-    if (!['creator', 'admin', 'user'].includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
-    if (role === 'creator' && req.user.role !== 'creator') return res.status(403).json({ error: 'เฉพาะ Creator เท่านั้นที่กำหนดสิทธิ์ Creator ได้' });
-    if (target.role === 'creator' && role !== 'creator' && (await store.countCreators()) <= 1) return res.status(400).json({ error: 'ต้องมี Creator อย่างน้อย 1 บัญชี — ลดสิทธิ์บัญชีนี้ไม่ได้' });
+    if (!ROLE_ORDER.includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
+    if (role === 'sysadmin' && req.user.role !== 'sysadmin') return res.status(403).json({ error: 'เฉพาะ SysAdmin เท่านั้นที่กำหนดสิทธิ์ SysAdmin ได้' });
+    if (target.role === 'sysadmin' && role !== 'sysadmin' && (await store.countSysadmins()) <= 1) return res.status(400).json({ error: 'ต้องมี SysAdmin อย่างน้อย 1 บัญชี — ลดสิทธิ์บัญชีนี้ไม่ได้' });
     patch.role = role;
   }
   const updated = await store.updateUser(req.params.username, patch);
@@ -316,7 +319,7 @@ app.patch('/api/users/:username', authMw, requirePerm('users:manage'), wrap(asyn
   res.json(updated);
 }));
 
-app.post('/api/users/:username/reset-password', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+app.post('/api/users/:username/reset-password', authMw, requirePerm('manage'), wrap(async (req, res) => {
   const target = await store.getUserByUsername(req.params.username);
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
   const { password = '' } = req.body;
@@ -326,23 +329,24 @@ app.post('/api/users/:username/reset-password', authMw, requirePerm('users:manag
   res.json({ ok: true });
 }));
 
-app.delete('/api/users/:username', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+app.delete('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req, res) => {
   const target = await store.getUserByUsername(req.params.username);
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
   if (target.username === req.user.username) return res.status(400).json({ error: 'ลบบัญชีตัวเองไม่ได้' });
-  if (target.role === 'creator' && (await store.countCreators()) <= 1) return res.status(400).json({ error: 'ต้องมี Creator อย่างน้อย 1 บัญชี' });
+  if (target.role === 'sysadmin' && (await store.countSysadmins()) <= 1) return res.status(400).json({ error: 'ต้องมี SysAdmin อย่างน้อย 1 บัญชี' });
   await store.deleteUser(req.params.username);
   await logAction(req.user, 'user:delete', req.params.username);
   res.json({ ok: true });
 }));
 
 // ── Logs ─────────────────────────────────────────────────────
-app.get('/api/logs', authMw, requirePerm('users:manage'), wrap(async (req, res) => {
+app.get('/api/logs', authMw, requirePerm('audit'), wrap(async (req, res) => {
   res.json(await store.listLogs());
 }));
 
 // ── Emergency Kit Export (ZIP) ───────────────────────────────
-app.get('/api/documents/export/zip', authMw, requirePerm('docs:export'), wrap(async (req, res) => {
+// ไม่มีสิทธิ์ใดโดยเฉพาะครอบคลุมฟีเจอร์นี้ใน Masterlist — เปิดให้ผู้ใช้งานที่ล็อกอินทุกคนใช้ได้ (เหมือนพฤติกรรมเดิม)
+app.get('/api/documents/export/zip', authMw, wrap(async (req, res) => {
   const docs = await store.listDocuments();
   const zip = new SimpleZip();
   let rowsHtml = '';
