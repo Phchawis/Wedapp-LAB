@@ -4,13 +4,27 @@
 -- ════════════════════════════════════════════════════════════════
 
 -- ผู้ใช้งานระบบ (เก็บ hash รหัสผ่าน — backend ทำ bcrypt ให้)
+-- role: 7 ระดับสิทธิ์เทียบเท่าระบบ Masterlist (ดู src/auth/roles.js)
 create table if not exists app_users (
   username     text primary key,
   password_hash text not null,
   name         text not null,
-  role         text not null check (role in ('creator','admin','user')),
+  role         text not null check (role in ('sysadmin','head_work','head_cat','med_tech','assistant','admin_staff','doc_manager')),
   created_at   timestamptz not null default now()
 );
+
+-- ════════════════════════════════════════════════════════════════
+-- MANUAL MIGRATION — รันด้วยตัวเองใน Supabase SQL Editor ตอนพร้อม deploy โค้ดเวอร์ชันสิทธิ์ 7 ระดับ
+-- (ห้ามรันอัตโนมัติ — ต้อง sync กับตอน deploy โค้ดใหม่พอดี ไม่งั้นบัญชีเดิมจะใช้งานไม่ได้ชั่วคราว)
+-- ════════════════════════════════════════════════════════════════
+-- begin;
+-- alter table app_users drop constraint app_users_role_check;
+-- alter table app_users add constraint app_users_role_check
+--   check (role in ('sysadmin','head_work','head_cat','med_tech','assistant','admin_staff','doc_manager'));
+-- update app_users set role = 'sysadmin'  where role = 'creator';
+-- update app_users set role = 'head_work' where role = 'admin';
+-- update app_users set role = 'med_tech'  where role = 'user';
+-- commit;
 
 -- เอกสารคุณภาพ
 create table if not exists documents (
