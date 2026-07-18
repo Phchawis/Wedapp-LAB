@@ -44,6 +44,13 @@ export function HelpScreen() {
     </div>
   );
 
+  const REGISTER_STEPS = [
+    { icon: 'Plus', title: 'เปิดฟอร์มลงทะเบียน', desc: 'กดปุ่ม "+ ลงทะเบียนเอกสาร" ที่หน้าทะเบียนเอกสาร หรือกดคีย์ลัด Alt+C — ระบบเปิดป็อปอัปกึ่งกลางจอ พื้นหลังเบลอ' },
+    { icon: 'FolderClosed', title: 'จัดประเภทเอกสาร', desc: 'เลือกประเภท (QM · SOP · WI · ...) ระบุเลขที่เอกสาร แล้วเลือกหมวดงานที่รับผิดชอบ' },
+    { icon: 'PencilLine', title: 'กรอกรายละเอียด', desc: 'ระบุชื่อเอกสาร ผู้รับผิดชอบ สถานะเริ่มต้น วันที่ของเอกสาร และระยะเวลาจัดเก็บ' },
+    { icon: 'Paperclip', title: 'แนบไฟล์และบันทึก', desc: 'อัปโหลดไฟล์ Word/Excel/PDF หรือแนบลิงก์ภายนอก แล้วกด "บันทึกลงทะเบียน" เพื่อนำเข้าสู่ทะเบียน' },
+  ];
+
   const STATUS_DESC = {
     effective: 'เอกสารฉบับล่าสุดที่ได้รับการประกาศใช้ บุคลากรต้องยึดถือปฏิบัติงาน ณ ปัจจุบัน',
     review: 'เอกสารอยู่ระหว่างขั้นตอนการทบทวนแก้ไข ให้บุคลากรใช้เวอร์ชันประกาศเดิมไปพลางก่อน',
@@ -87,15 +94,36 @@ export function HelpScreen() {
         </div>
       </Section>
 
-      {/* 02 — Permissions matrix (real tabular data keeps the register's own table treatment) */}
-      <Section n="02" title="ตารางสิทธิ์และการเข้าถึง (Role & Permissions Matrix)">
+      {/* 02 — How to register a document: animated step infographic */}
+      <Section n="02" title="วิธีการลงทะเบียนเอกสารใหม่">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
+          {REGISTER_STEPS.map((s, i) => (
+            <div key={s.title} className="qms-rise-stagger" style={{ '--i': i, minWidth: 0 }}>
+              <div className="qms-grow" style={{ height: 3, borderRadius: 2, background: 'var(--brand-600)', marginBottom: 16, transformOrigin: 'left' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <span style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  width: 26, height: 26, borderRadius: '50%', background: 'var(--brand-700)',
+                  font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', color: '#fff',
+                }}>{i + 1}</span>
+                <Icon name={s.icon} size={17} color="var(--brand-700)" />
+              </div>
+              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)', marginBottom: 6 }}>{s.title}</div>
+              <div style={{ font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--text-secondary)' }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* 03 — Permissions matrix (real tabular data keeps the register's own table treatment) */}
+      <Section n="03" title="ตารางสิทธิ์และการเข้าถึง (Role & Permissions Matrix)">
         <Card padding="none">
           <PermMatrix />
         </Card>
       </Section>
 
-      {/* 03 — Shortcuts + printing */}
-      <Section n="03" title="คีย์ลัดนำทางด่วนและการพิมพ์เอกสาร">
+      {/* 04 — Shortcuts + printing */}
+      <Section n="04" title="คีย์ลัดนำทางด่วนและการพิมพ์เอกสาร">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px 32px' }}>
           <div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
