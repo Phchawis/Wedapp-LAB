@@ -39,15 +39,14 @@ export default function App() {
   const [ssoError, setSsoError] = useState('');
 
   const role = currentUser?.role;
-  const isManager = role && can(role, 'users:manage');
+  const canViewUsers = role && can(role, 'viewUsers');
+  const canAudit = role && can(role, 'audit');
 
   // โหลดข้อมูลจากเซิร์ฟเวอร์ (ตามสิทธิ์)
   const refreshAll = useCallback(async (r) => {
     const tasks = [api.listDocuments().then(setDocs)];
-    if (r && can(r, 'users:manage')) {
-      tasks.push(api.listUsers().then(setUsers));
-      tasks.push(api.listLogs().then(setLogs));
-    }
+    if (r && can(r, 'viewUsers')) tasks.push(api.listUsers().then(setUsers));
+    if (r && can(r, 'audit')) tasks.push(api.listLogs().then(setLogs));
     await Promise.all(tasks);
   }, []);
 
@@ -102,15 +101,15 @@ export default function App() {
         const key = e.key.toLowerCase();
         if (key === 'd' || key === 'ด') { e.preventDefault(); setView('dashboard'); setCat(null); }
         else if (key === 'r' || key === 'ท') { e.preventDefault(); setView('register'); setCat(null); }
-        else if ((key === 'u' || key === 'จ') && isManager) { e.preventDefault(); setView('users'); setCat(null); }
-        else if ((key === 'l' || key === 'บ') && isManager) { e.preventDefault(); setView('log'); setCat(null); }
+        else if ((key === 'u' || key === 'จ') && canViewUsers) { e.preventDefault(); setView('users'); setCat(null); }
+        else if ((key === 'l' || key === 'บ') && canAudit) { e.preventDefault(); setView('log'); setCat(null); }
         else if (key === 'h' || key === 'อ') { e.preventDefault(); setView('help'); setCat(null); }
-        else if ((key === 'c' || key === 'ล') && can(role, 'docs:create')) { e.preventDefault(); setCat(null); setView('create'); window.scrollTo(0, 0); }
+        else if ((key === 'c' || key === 'ล') && can(role, 'register')) { e.preventDefault(); setCat(null); setView('create'); window.scrollTo(0, 0); }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentUser, isManager, role]);
+  }, [currentUser, canViewUsers, canAudit, role]);
 
   if (booting) return <Loader text="กำลังโหลดระบบข้อมูล..." />;
 
@@ -208,21 +207,21 @@ export default function App() {
   };
   const head = titles[view] || titles.dashboard;
 
-  const RegisterBtn = can(role, 'docs:create') ? (
+  const RegisterBtn = can(role, 'register') ? (
     <Button onClick={openCreate} iconLeft={<Icon name="Plus" size={17} color="#fff" />}>
       ลงทะเบียนเอกสาร
     </Button>
   ) : null;
 
   let body;
-  if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'docs:create') ? openCreate : undefined} />;
+  if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
   else if (view === 'register') body = <RegisterScreen docs={docs} cat={cat} onOpen={openDoc} />;
-  else if (view === 'create' && can(role, 'docs:create')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
-  else if (view === 'users' && isManager) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onEdit={editUser} onResetPassword={resetUserPassword} onDelete={deleteUser} />;
-  else if (view === 'log' && isManager) body = <LogScreen logs={logs} />;
+  else if (view === 'create' && can(role, 'register')) body = <RegisterDocScreen docs={docs} onSubmit={createDoc} onCancel={() => nav('register')} />;
+  else if (view === 'users' && canViewUsers) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onEdit={editUser} onResetPassword={resetUserPassword} onDelete={deleteUser} />;
+  else if (view === 'log' && canAudit) body = <LogScreen logs={logs} />;
   else if (view === 'help') body = <HelpScreen />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
-  else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'docs:create') ? openCreate : undefined} />;
+  else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
 
   const shellView = (view === 'detail' || view === 'create')
     ? (cat ? 'register' : 'dashboard')
