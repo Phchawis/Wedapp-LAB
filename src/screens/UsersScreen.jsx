@@ -165,8 +165,8 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
   };
 
   return (
-    <div className="qms-rise" style={{ maxWidth: 1000, display: 'flex', flexDirection: 'column', gap: 20 }}>
-    <div style={canManage ? { display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' } : undefined}>
+    <div className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={canManage ? { display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, alignItems: 'start' } : undefined}>
       {/* User list */}
       <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Files" size={16} color="var(--text-secondary)" /> ผู้ใช้งานทั้งหมด ({users.length})</span>}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
