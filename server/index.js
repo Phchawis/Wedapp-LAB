@@ -288,13 +288,13 @@ app.get('/api/users', authMw, requirePerm('viewUsers'), wrap(async (req, res) =>
 }));
 
 app.post('/api/users', authMw, requirePerm('manage'), wrap(async (req, res) => {
-  const { username = '', password = '', name = '', role = 'med_tech' } = req.body;
+  const { username = '', password = '', name = '', role = 'med_tech', cat = '' } = req.body;
   const uname = username.trim();
   if (!uname || password.length < 6 || !name.trim()) return res.status(400).json({ error: 'ข้อมูลไม่ครบ (รหัสผ่านอย่างน้อย 6 ตัวอักษร)' });
   if (!ROLE_ORDER.includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
   if (role === 'sysadmin' && req.user.role !== 'sysadmin') return res.status(403).json({ error: 'เฉพาะ SysAdmin เท่านั้นที่สร้างบัญชี SysAdmin ได้' });
   if (await store.getUserByUsername(uname)) return res.status(409).json({ error: 'ชื่อผู้ใช้งานนี้มีอยู่แล้ว' });
-  const created = await store.createUser({ username: uname, passwordHash: bcrypt.hashSync(password, 8), name: name.trim(), role });
+  const created = await store.createUser({ username: uname, passwordHash: bcrypt.hashSync(password, 8), name: name.trim(), role, cat: cat.trim() || null });
   await logAction(req.user, 'user:add', uname);
   res.status(201).json(created);
 }));
@@ -302,7 +302,7 @@ app.post('/api/users', authMw, requirePerm('manage'), wrap(async (req, res) => {
 app.patch('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req, res) => {
   const target = await store.getUserByUsername(req.params.username);
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
-  const { name, role } = req.body;
+  const { name, role, cat } = req.body;
   const patch = {};
   if (name !== undefined) {
     if (!name.trim()) return res.status(400).json({ error: 'กรุณาระบุชื่อ-นามสกุล' });
@@ -314,6 +314,7 @@ app.patch('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req
     if (target.role === 'sysadmin' && role !== 'sysadmin' && (await store.countSysadmins()) <= 1) return res.status(400).json({ error: 'ต้องมี SysAdmin อย่างน้อย 1 บัญชี — ลดสิทธิ์บัญชีนี้ไม่ได้' });
     patch.role = role;
   }
+  if (cat !== undefined) patch.cat = cat.trim() || null;
   const updated = await store.updateUser(req.params.username, patch);
   await logAction(req.user, 'user:edit', req.params.username);
   res.json(updated);

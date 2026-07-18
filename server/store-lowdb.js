@@ -22,7 +22,7 @@ let changed = false;
 if (db.data.users.length === 0) {
   db.data.users = SEED_USERS.map((u) => ({
     username: u.username, passwordHash: bcrypt.hashSync(u.password, 8),
-    name: u.name, role: u.role, createdAt: new Date().toISOString(),
+    name: u.name, role: u.role, cat: u.cat || null, createdAt: new Date().toISOString(),
   }));
   changed = true;
 }
@@ -41,20 +41,20 @@ export const lowdbStore = {
     return db.data.users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase()) || null;
   },
   async listUsers() {
-    return db.data.users.map((u) => ({ username: u.username, name: u.name, role: u.role, createdAt: u.createdAt }));
+    return db.data.users.map((u) => ({ username: u.username, name: u.name, role: u.role, cat: u.cat || null, createdAt: u.createdAt }));
   },
   async createUser(u) {
     const row = { ...u, createdAt: new Date().toISOString() };
     db.data.users.push(row);
     await db.write();
-    return { username: row.username, name: row.name, role: row.role, createdAt: row.createdAt };
+    return { username: row.username, name: row.name, role: row.role, cat: row.cat || null, createdAt: row.createdAt };
   },
   async updateUser(username, patch) {
     const u = db.data.users.find((x) => x.username === username);
     if (!u) return null;
     Object.assign(u, patch);
     await db.write();
-    return { username: u.username, name: u.name, role: u.role, createdAt: u.createdAt };
+    return { username: u.username, name: u.name, role: u.role, cat: u.cat || null, createdAt: u.createdAt };
   },
   async resetUserPassword(username, passwordHash) {
     const u = db.data.users.find((x) => x.username === username);

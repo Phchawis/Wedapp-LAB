@@ -1,7 +1,9 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, Input, Select, Button, IconButton } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { ROLES, ROLE_ORDER, can } from '../auth/users.js';
+import { QMS } from '../data/taxonomy.js';
 import { PermMatrix } from '../components/PermMatrix.jsx';
 
 const ROLE_TONE = {
@@ -14,6 +16,11 @@ const ROLE_TONE = {
   doc_manager: { fg: 'var(--accent-700)', bg: 'var(--accent-100)' },
 };
 
+const catLabel = (code) => {
+  const c = QMS.WORK_CATEGORIES.find((x) => x.code === code);
+  return c ? `${c.code} · ${c.th}` : null;
+};
+
 function RoleBadge({ role }) {
   const t = ROLE_TONE[role] || ROLE_TONE.user;
   return (
@@ -23,10 +30,11 @@ function RoleBadge({ role }) {
   );
 }
 
-// แถวแก้ไขชื่อ/สิทธิ์ — ขยายแทรกใต้แถวผู้ใช้งานที่กำลังแก้ไข
+// แถวแก้ไขชื่อ/สิทธิ์/หมวดงาน — ขยายแทรกใต้แถวผู้ใช้งานที่กำลังแก้ไข
 function EditRow({ user, assignableRoles, onCancel, onSave }) {
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState(user.role);
+  const [cat, setCat] = useState(user.cat || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -35,7 +43,7 @@ function EditRow({ user, assignableRoles, onCancel, onSave }) {
     setBusy(true);
     setError('');
     try {
-      await onSave({ name: name.trim(), role });
+      await onSave({ name: name.trim(), role, cat: cat || null });
     } catch (e) {
       setError(e.message || 'บันทึกไม่สำเร็จ');
     } finally {
@@ -45,14 +53,18 @@ function EditRow({ user, assignableRoles, onCancel, onSave }) {
 
   return (
     <tr style={{ background: 'var(--brand-50)' }}>
-      <td colSpan={4} style={{ padding: '14px 16px' }}>
+      <td colSpan={5} style={{ padding: '14px 16px' }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 220px' }}>
+          <div style={{ flex: '1 1 200px' }}>
             <Input label="ชื่อ-นามสกุล" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-          <div style={{ flex: '0 1 180px' }}>
+          <div style={{ flex: '0 1 160px' }}>
             <Select label="ระดับสิทธิ์" value={role} onChange={(e) => setRole(e.target.value)}
               options={assignableRoles.map((r) => ({ value: r, label: ROLES[r].short }))} />
+          </div>
+          <div style={{ flex: '1 1 220px' }}>
+            <Select label="หมวดงานสังกัด" placeholder="— ไม่ระบุ —" value={cat} onChange={(e) => setCat(e.target.value)}
+              options={QMS.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
           </div>
           <Button size="sm" disabled={busy} onClick={save} iconLeft={<Icon name="Check" size={15} color="#fff" />}>{busy ? 'กำลังบันทึก…' : 'บันทึก'}</Button>
           <Button size="sm" variant="secondary" onClick={onCancel}>ยกเลิก</Button>
@@ -86,7 +98,7 @@ function PasswordRow({ username, onCancel, onSave }) {
 
   return (
     <tr style={{ background: 'var(--brand-50)' }}>
-      <td colSpan={4} style={{ padding: '14px 16px' }}>
+      <td colSpan={5} style={{ padding: '14px 16px' }}>
         {done ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Icon name="CircleCheck" size={17} color="var(--green-700)" />
@@ -109,22 +121,24 @@ function PasswordRow({ username, onCancel, onSave }) {
   );
 }
 
-/* UsersScreen — manage application accounts (เพิ่ม/แก้ไข/ตั้งรหัสผ่านใหม่/ลบ ผู้ใช้งาน).
-   - ผู้มีสิทธิ์ manage (SysAdmin) เท่านั้นที่เพิ่ม/แก้ไข/ลบได้ — เลือกได้ทุกระดับสิทธิ์
-   - ผู้มีเฉพาะ viewUsers (เช่น Head Work) เห็นหน้านี้แบบอ่านอย่างเดียว ไม่มีปุ่มแก้ไข/ลบ/เพิ่ม
-   - ห้ามลบตัวเองหรือลด/ลบ SysAdmin คนสุดท้าย */
-export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword, onDelete }) {
-  const canManage = can(currentUser.role, 'manage');
-  const assignableRoles = ROLE_ORDER;
-
-  const [form, setForm] = useState({ username: '', password: '', name: '', role: 'med_tech' });
+// ป็อปอัปเพิ่มผู้ใช้งานใหม่ กึ่งกลางจอ พื้นหลังเบลอ — เหมือนป็อปอัปลงทะเบียนเอกสาร
+function AddUserModal({ users, assignableRoles, onAdd, onCancel }) {
+  const [form, setForm] = useState({ username: '', password: '', name: '', role: 'med_tech', cat: '' });
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  // แถวที่กำลังขยายแก้ไขอยู่ — { username, mode: 'edit' | 'password' } หรือ null
-  const [expanded, setExpanded] = useState(null);
+  useEffect(() => {
+    const onKeyDown = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onCancel]);
 
   const uname = form.username.trim();
   const duplicate = uname && users.some((u) => u.username.toLowerCase() === uname.toLowerCase());
@@ -132,10 +146,9 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
     username: !uname ? 'กรุณาระบุชื่อผู้ใช้งาน' : duplicate ? 'ชื่อผู้ใช้งานนี้มีอยู่แล้ว' : '',
     password: form.password.length < 6 ? 'รหัสผ่านอย่างน้อย 6 ตัวอักษร' : '',
     name: !form.name.trim() ? 'กรุณาระบุชื่อ-นามสกุล' : '',
+    cat: !form.cat ? 'กรุณาเลือกหมวดงานสังกัด' : '',
   };
   const valid = !Object.values(errors).some(Boolean);
-
-  const sysadminCount = users.filter((u) => u.role === 'sysadmin').length;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -144,15 +157,89 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
     if (!valid) return;
     setBusy(true);
     try {
-      await onAdd({ username: uname, password: form.password, name: form.name.trim(), role: form.role });
-      setForm({ username: '', password: '', name: '', role: 'med_tech' });
-      setTouched(false);
+      await onAdd({ username: uname, password: form.password, name: form.name.trim(), role: form.role, cat: form.cat });
+      onCancel();
     } catch (err) {
       setSubmitError(err.message || 'เพิ่มผู้ใช้งานไม่สำเร็จ');
-    } finally {
       setBusy(false);
     }
   };
+
+  return createPortal(
+    <div
+      role="presentation"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(24, 27, 42, 0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, overflowY: 'auto',
+      }}
+    >
+      <form
+        role="dialog" aria-modal="true" aria-label="เพิ่มผู้ใช้งานใหม่"
+        onSubmit={submit} className="qms-rise"
+        style={{
+          background: 'var(--surface-page)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+          width: '100%', maxWidth: 480, maxHeight: '90vh',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '22px 26px 20px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--white)', flexShrink: 0 }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.12em', color: 'var(--brand-700)', marginBottom: 8 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-500)', flexShrink: 0 }} />
+              NEW ACCOUNT
+            </div>
+            <h2 style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)', margin: 0 }}>เพิ่มผู้ใช้งานใหม่</h2>
+          </div>
+          <IconButton label="ปิด" variant="ghost" onClick={onCancel}>
+            <Icon name="X" size={18} color="var(--text-tertiary)" />
+          </IconButton>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: 24, overflowY: 'auto', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Input label="ชื่อ-นามสกุล" required placeholder="เช่น ทนพ. สมชาย ใจดี"
+            value={form.name} onChange={(e) => set('name', e.target.value)} error={touched ? errors.name : undefined} />
+          <Input label="ชื่อผู้ใช้งาน" required placeholder="เช่น somchai.j"
+            value={form.username} onChange={(e) => set('username', e.target.value)} error={touched ? errors.username : undefined}
+            prefix={<Icon name="User" size={16} color="var(--text-tertiary)" />} />
+          <Input label="รหัสผ่าน" required type="password" placeholder="อย่างน้อย 6 ตัวอักษร"
+            value={form.password} onChange={(e) => set('password', e.target.value)} error={touched ? errors.password : undefined}
+            prefix={<Icon name="Lock" size={16} color="var(--text-tertiary)" />} />
+          <Select label="ระดับสิทธิ์" value={form.role} onChange={(e) => set('role', e.target.value)}
+            options={assignableRoles.map((r) => ({ value: r, label: ROLES[r].short }))} />
+          <Select label="หมวดงานสังกัด" required placeholder="— เลือกหมวดงาน —" value={form.cat}
+            onChange={(e) => set('cat', e.target.value)} hint={touched ? errors.cat : undefined}
+            options={QMS.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
+          {submitError && <div style={{ font: 'var(--type-caption)', color: 'var(--red-600)' }}>{submitError}</div>}
+        </div>
+
+        {/* Footer */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 26px', borderTop: '1px solid var(--border-subtle)', background: 'var(--white)', flexShrink: 0 }}>
+          <Button type="submit" disabled={busy} iconLeft={<Icon name="Check" size={16} color="#fff" />}>{busy ? 'กำลังเพิ่ม…' : 'เพิ่มผู้ใช้งาน'}</Button>
+          <Button type="button" variant="secondary" onClick={onCancel}>ยกเลิก</Button>
+        </div>
+      </form>
+    </div>,
+    document.body
+  );
+}
+
+/* UsersScreen — manage application accounts (เพิ่ม/แก้ไข/ตั้งรหัสผ่านใหม่/ลบ ผู้ใช้งาน).
+   - ผู้มีสิทธิ์ manage (SysAdmin) เท่านั้นที่เพิ่ม/แก้ไข/ลบได้ — เลือกได้ทุกระดับสิทธิ์
+   - ผู้มีเฉพาะ viewUsers (เช่น Head Work) เห็นหน้านี้แบบอ่านอย่างเดียว ไม่มีปุ่มแก้ไข/ลบ/เพิ่ม
+   - ห้ามลบตัวเองหรือลด/ลบ SysAdmin คนสุดท้าย */
+export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword, onDelete }) {
+  const canManage = can(currentUser.role, 'manage');
+  const assignableRoles = ROLE_ORDER;
+
+  const [showAdd, setShowAdd] = useState(false);
+  // แถวที่กำลังขยายแก้ไขอยู่ — { username, mode: 'edit' | 'password' } หรือ null
+  const [expanded, setExpanded] = useState(null);
+
+  const sysadminCount = users.filter((u) => u.role === 'sysadmin').length;
 
   const canDeleteUser = (u) => {
     if (u.username === currentUser.username) return false; // ห้ามลบตัวเอง
@@ -166,13 +253,19 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
 
   return (
     <div className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 20 }}>
-    <div style={canManage ? { display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, alignItems: 'start' } : undefined}>
       {/* User list */}
-      <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Files" size={16} color="var(--text-secondary)" /> ผู้ใช้งานทั้งหมด ({users.length})</span>}>
+      <Card padding="none" header={
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Files" size={16} color="var(--text-secondary)" /> ผู้ใช้งานทั้งหมด ({users.length})</span>
+          {canManage && (
+            <Button size="sm" onClick={() => setShowAdd(true)} iconLeft={<Icon name="Plus" size={15} color="#fff" />}>เพิ่มผู้ใช้งาน</Button>
+          )}
+        </div>
+      }>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: 'var(--slate-50)', borderBottom: '1px solid var(--border-subtle)' }}>
-              {['ชื่อ-นามสกุล', 'ชื่อผู้ใช้งาน', 'สิทธิ์', canManage ? '' : null].filter((h) => h !== null).map((h, i) => (
+              {['ชื่อ-นามสกุล', 'ชื่อผู้ใช้งาน', 'สิทธิ์', 'หมวดงานสังกัด', canManage ? '' : null].filter((h) => h !== null).map((h, i) => (
                 <th key={i} style={{ textAlign: 'left', padding: '11px 16px', font: 'var(--fw-semibold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{h}</th>
               ))}
             </tr>
@@ -189,9 +282,10 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
                     </td>
                     <td style={{ padding: '12px 16px', font: 'var(--text-sm)/1.3 var(--font-mono)', color: 'var(--text-secondary)' }}>{u.username}</td>
                     <td style={{ padding: '12px 16px' }}><RoleBadge role={u.role} /></td>
+                    <td style={{ padding: '12px 16px', font: 'var(--text-sm)/1.3 var(--font-body)', color: u.cat ? 'var(--text-secondary)' : 'var(--text-tertiary)' }}>{catLabel(u.cat) || '—'}</td>
                     {canManage && (
                       <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <IconButton label="แก้ไขชื่อ/สิทธิ์" variant="ghost" onClick={() => toggle(u.username, 'edit')}>
+                        <IconButton label="แก้ไขชื่อ/สิทธิ์/หมวดงาน" variant="ghost" onClick={() => toggle(u.username, 'edit')}>
                           <Icon name="PencilLine" size={16} color="var(--text-tertiary)" />
                         </IconButton>
                         <IconButton label="ตั้งรหัสผ่านใหม่" variant="ghost" onClick={() => toggle(u.username, 'password')}>
@@ -225,37 +319,20 @@ export function UsersScreen({ users, currentUser, onAdd, onEdit, onResetPassword
         </table>
       </Card>
 
-      {/* Add user form — เฉพาะผู้มีสิทธิ์ manage เท่านั้น */}
-      {canManage && (
-        <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Plus" size={16} color="var(--text-secondary)" /> เพิ่มผู้ใช้งานใหม่</span>}>
-          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Input label="ชื่อ-นามสกุล" required placeholder="เช่น ทนพ. สมชาย ใจดี"
-              value={form.name} onChange={(e) => set('name', e.target.value)} error={touched ? errors.name : undefined} />
-            <Input label="ชื่อผู้ใช้งาน" required placeholder="เช่น somchai.j"
-              value={form.username} onChange={(e) => set('username', e.target.value)} error={touched ? errors.username : undefined}
-              prefix={<Icon name="User" size={16} color="var(--text-tertiary)" />} />
-            <Input label="รหัสผ่าน" required type="password" placeholder="อย่างน้อย 6 ตัวอักษร"
-              value={form.password} onChange={(e) => set('password', e.target.value)} error={touched ? errors.password : undefined}
-              prefix={<Icon name="Lock" size={16} color="var(--text-tertiary)" />} />
-            <Select label="ระดับสิทธิ์" value={form.role} onChange={(e) => set('role', e.target.value)}
-              options={assignableRoles.map((r) => ({ value: r, label: ROLES[r].short }))} />
-            {submitError && <div style={{ font: 'var(--type-caption)', color: 'var(--red-600)' }}>{submitError}</div>}
-            <Button type="submit" block disabled={busy} iconLeft={<Icon name="Check" size={16} color="#fff" />}>{busy ? 'กำลังเพิ่ม…' : 'เพิ่มผู้ใช้งาน'}</Button>
-          </form>
-        </Card>
+      {!canManage && (
+        <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>
+          * บทบาทของคุณดูรายชื่อผู้ใช้งานได้อย่างเดียว — เพิ่ม/แก้ไข/ลบทำได้เฉพาะ SysAdmin
+        </div>
       )}
-    </div>
 
-    {!canManage && (
-      <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>
-        * บทบาทของคุณดูรายชื่อผู้ใช้งานได้อย่างเดียว — เพิ่ม/แก้ไข/ลบทำได้เฉพาะ SysAdmin
-      </div>
-    )}
+      {/* ตารางสิทธิ์ ทำได้/ทำไม่ได้ ของแต่ละระดับ */}
+      <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="UserCog" size={16} color="var(--text-secondary)" /> สิทธิ์การใช้งานแต่ละระดับ</span>}>
+        <PermMatrix />
+      </Card>
 
-    {/* ตารางสิทธิ์ ทำได้/ทำไม่ได้ ของแต่ละระดับ */}
-    <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="UserCog" size={16} color="var(--text-secondary)" /> สิทธิ์การใช้งานแต่ละระดับ</span>}>
-      <PermMatrix />
-    </Card>
+      {showAdd && (
+        <AddUserModal users={users} assignableRoles={assignableRoles} onAdd={onAdd} onCancel={() => setShowAdd(false)} />
+      )}
     </div>
   );
 }

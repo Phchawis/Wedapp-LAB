@@ -2,13 +2,13 @@
 import path from 'node:path';
 
 export const SEED_USERS = [
-  { username: 'sysadmin', password: 'sysadmin123', name: 'ธนกร พงษ์เจริญ', role: 'sysadmin' },
-  { username: 'head_work', password: 'headwork123', name: 'หัวหน้างานเทคนิคการแพทย์', role: 'head_work' },
-  { username: 'head_cat', password: 'headcat123', name: 'หัวหน้าหมวดงานจุลชีววิทยา', role: 'head_cat' },
-  { username: 'med_tech', password: 'medtech123', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech' },
-  { username: 'assistant', password: 'assistant123', name: 'ผู้ช่วยนักเทคนิคการแพทย์', role: 'assistant' },
-  { username: 'admin_staff', password: 'adminstaff123', name: 'เจ้าหน้าที่ธุรการห้องปฏิบัติการ', role: 'admin_staff' },
-  { username: 'doc_manager', password: 'docmanager123', name: 'ผู้จัดการเอกสารคุณภาพ', role: 'doc_manager' },
+  { username: 'sysadmin', password: 'sysadmin123', name: 'ธนกร พงษ์เจริญ', role: 'sysadmin', cat: 'LAB' },
+  { username: 'head_work', password: 'headwork123', name: 'หัวหน้างานเทคนิคการแพทย์', role: 'head_work', cat: 'LAB' },
+  { username: 'head_cat', password: 'headcat123', name: 'หัวหน้าหมวดงานจุลชีววิทยา', role: 'head_cat', cat: 'MIC' },
+  { username: 'med_tech', password: 'medtech123', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech', cat: 'CHE' },
+  { username: 'assistant', password: 'assistant123', name: 'ผู้ช่วยนักเทคนิคการแพทย์', role: 'assistant', cat: 'HEM' },
+  { username: 'admin_staff', password: 'adminstaff123', name: 'เจ้าหน้าที่ธุรการห้องปฏิบัติการ', role: 'admin_staff', cat: 'ADS' },
+  { username: 'doc_manager', password: 'docmanager123', name: 'ผู้จัดการเอกสารคุณภาพ', role: 'doc_manager', cat: 'CMTL' },
 ];
 
 export const SEED_DOCS = [

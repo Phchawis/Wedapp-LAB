@@ -10,6 +10,7 @@ create table if not exists app_users (
   password_hash text not null,
   name         text not null,
   role         text not null check (role in ('sysadmin','head_work','head_cat','med_tech','assistant','admin_staff','doc_manager')),
+  cat          text,                     -- หมวดงานสังกัด (รหัสเดียวกับ WORK_CATEGORIES ของเอกสาร เช่น 'HEM','CHE') — ไม่บังคับ
   created_at   timestamptz not null default now()
 );
 
@@ -25,6 +26,11 @@ create table if not exists app_users (
 -- update app_users set role = 'head_work' where role = 'admin';
 -- update app_users set role = 'med_tech'  where role = 'user';
 -- commit;
+
+-- ════════════════════════════════════════════════════════════════
+-- MANUAL MIGRATION — เพิ่มคอลัมน์ "หมวดงานสังกัด" ให้บัญชีที่มีอยู่แล้ว (ปลอดภัย เพิ่มคอลัมน์ nullable เท่านั้น)
+-- ════════════════════════════════════════════════════════════════
+-- alter table app_users add column if not exists cat text;
 
 -- เอกสารคุณภาพ
 create table if not exists documents (

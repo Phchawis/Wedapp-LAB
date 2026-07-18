@@ -30,7 +30,7 @@ export async function createSupabaseStore() {
     must(uErr);
     if (!uCount) {
       const { error } = await sb.from('app_users').insert(SEED_USERS.map((u) => ({
-        username: u.username, password_hash: bcrypt.hashSync(u.password, 8), name: u.name, role: u.role,
+        username: u.username, password_hash: bcrypt.hashSync(u.password, 8), name: u.name, role: u.role, cat: u.cat || null,
       })));
       must(error);
     }
@@ -59,27 +59,28 @@ export async function createSupabaseStore() {
       const { data, error } = await sb.from('app_users').select('*').ilike('username', username.trim()).maybeSingle();
       must(error);
       if (!data) return null;
-      return { username: data.username, passwordHash: data.password_hash, name: data.name, role: data.role };
+      return { username: data.username, passwordHash: data.password_hash, name: data.name, role: data.role, cat: data.cat || null };
     },
     async listUsers() {
-      const { data, error } = await sb.from('app_users').select('username,name,role,created_at').order('created_at');
+      const { data, error } = await sb.from('app_users').select('username,name,role,cat,created_at').order('created_at');
       must(error);
-      return (data || []).map((u) => ({ username: u.username, name: u.name, role: u.role, createdAt: u.created_at }));
+      return (data || []).map((u) => ({ username: u.username, name: u.name, role: u.role, cat: u.cat || null, createdAt: u.created_at }));
     },
     async createUser(u) {
       const { data, error } = await sb.from('app_users')
-        .insert({ username: u.username, password_hash: u.passwordHash, name: u.name, role: u.role })
+        .insert({ username: u.username, password_hash: u.passwordHash, name: u.name, role: u.role, cat: u.cat || null })
         .select().single();
       must(error);
-      return { username: data.username, name: data.name, role: data.role, createdAt: data.created_at };
+      return { username: data.username, name: data.name, role: data.role, cat: data.cat || null, createdAt: data.created_at };
     },
     async updateUser(username, patch) {
       const row = {};
       if (patch.name !== undefined) row.name = patch.name;
       if (patch.role !== undefined) row.role = patch.role;
+      if (patch.cat !== undefined) row.cat = patch.cat;
       const { data, error } = await sb.from('app_users').update(row).eq('username', username).select().single();
       must(error);
-      return { username: data.username, name: data.name, role: data.role, createdAt: data.created_at };
+      return { username: data.username, name: data.name, role: data.role, cat: data.cat || null, createdAt: data.created_at };
     },
     async resetUserPassword(username, passwordHash) {
       const { error } = await sb.from('app_users').update({ password_hash: passwordHash }).eq('username', username);
