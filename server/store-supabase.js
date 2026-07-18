@@ -89,8 +89,8 @@ export async function createSupabaseStore() {
       const { error } = await sb.from('app_users').delete().eq('username', username);
       must(error);
     },
-    async countCreators() {
-      const { count, error } = await sb.from('app_users').select('username', { count: 'exact', head: true }).eq('role', 'creator');
+    async countSysadmins() {
+      const { count, error } = await sb.from('app_users').select('username', { count: 'exact', head: true }).eq('role', 'sysadmin');
       must(error);
       return count || 0;
     },
