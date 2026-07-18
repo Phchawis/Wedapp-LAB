@@ -260,8 +260,8 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  --container-max: 1320px;
-  --topbar-height: 108px;
+  --container-max: 1800px;
+  --topbar-height: 180px;
   --page-gutter: var(--space-8);
 
   /* ── Radius · Elevation · Motion ── */

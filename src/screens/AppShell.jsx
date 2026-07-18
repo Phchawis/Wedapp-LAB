@@ -36,18 +36,18 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
     const active = view === id;
     return (
       <button onClick={() => { onNav(id); setOpen(false); }} style={{
-        display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
-        padding: '8px 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 9, whiteSpace: 'nowrap',
+        padding: '10px 18px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
         background: active ? 'var(--brand-700)' : 'transparent',
         color: active ? '#fff' : 'var(--text-secondary)',
-        font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-sm)/1 var(--font-body)',
+        font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-base)/1 var(--font-body)',
         transition: 'background var(--dur-fast) var(--ease-standard)',
       }}
         onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--slate-100)'; }}
         onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
-        <Icon name={icon} size={16} color={active ? '#fff' : 'var(--text-tertiary)'} />
+        <Icon name={icon} size={18} color={active ? '#fff' : 'var(--text-tertiary)'} />
         {label}
-        {count != null && <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: active ? 'rgba(255,255,255,.85)' : 'var(--text-tertiary)' }}>{count}</span>}
+        {count != null && <span style={{ font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', color: active ? 'rgba(255,255,255,.85)' : 'var(--text-tertiary)' }}>{count}</span>}
       </button>
     );
   };
@@ -60,15 +60,15 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
 
   const CatChip = ({ code, th, active, onClick, icon }) => (
     <button onClick={onClick} title={th} style={{
-      display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, whiteSpace: 'nowrap',
-      padding: '6px 12px', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+      display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, whiteSpace: 'nowrap',
+      padding: '8px 15px', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
       border: '1px solid ' + (active ? 'var(--brand-700)' : 'var(--border-default)'),
       background: active ? 'var(--brand-700)' : 'var(--white)',
       color: active ? '#fff' : 'var(--text-secondary)',
-      font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-xs)/1 var(--font-body)',
+      font: (active ? 'var(--fw-semibold) ' : 'var(--fw-medium) ') + 'var(--text-sm)/1 var(--font-body)',
       transition: 'background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard)',
     }}>
-      {icon ? <Icon name={icon} size={13} color={active ? '#fff' : 'var(--brand-600)'} /> : <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', opacity: active ? 1 : .7 }}>{code}</span>}
+      {icon ? <Icon name={icon} size={15} color={active ? '#fff' : 'var(--brand-600)'} /> : <span style={{ font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', opacity: active ? 1 : .7 }}>{code}</span>}
       {th}
     </button>
   );
@@ -76,11 +76,10 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
   const CatRow = ({ vertical = false }) => (
     <div style={vertical
       ? { display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'stretch' }
-      : { display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto' }
+      : { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }
     }>
       <CatChip code="LAB" th="งานห้องปฏิบัติการเทคนิคการแพทย์" icon="FlaskConical"
         active={cat === 'LAB' && view === 'register'} onClick={() => { onCat('LAB'); setOpen(false); }} />
-      {!vertical && <span style={{ width: 1, height: 18, background: 'var(--border-default)', flexShrink: 0, margin: '0 2px' }} />}
       {orderedCats.map((c, i) => {
         const chip = <CatChip code={c.code} th={c.th} active={cat === c.code && view === 'register'} onClick={() => { onCat(c.code); setOpen(false); }} />;
         // ในโหมดแนวตั้ง คั่นหมวดที่ถูกปักไว้หน้าสุด (จากการเลือกอยู่) ออกจากรายการที่เหลือด้วยเส้นบาง
@@ -97,18 +96,18 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
       {/* Top chrome — sticky across both rows */}
       <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--white)', borderBottom: '1px solid var(--border-subtle)' }}>
         {/* Row 1 — masthead + primary nav + user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '0 var(--page-gutter)', height: 60 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, padding: '0 var(--page-gutter)', height: 76 }}>
           <div
             role="button" tabIndex={0}
             onClick={() => onNav('dashboard')}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav('dashboard'); } }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flexShrink: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flexShrink: 0 }}
           >
-            <img src={seal} alt="ตรา รพธ." style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
+            <img src={seal} alt="ตรา รพธ." style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0 }} />
             {!narrow && (
-              <div style={{ lineHeight: 1.15 }}>
-                <div style={{ font: 'var(--fw-bold) var(--text-xs)/1.2 var(--font-display)', color: 'var(--brand-900)' }}>ห้องปฏิบัติการเทคนิคการแพทย์</div>
-                <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-tertiary)' }}>รพ.ธรรมศาสตร์เฉลิมพระเกียรติ</div>
+              <div style={{ lineHeight: 1.2 }}>
+                <div style={{ font: 'var(--fw-bold) var(--text-sm)/1.25 var(--font-display)', color: 'var(--brand-900)' }}>ห้องปฏิบัติการเทคนิคการแพทย์</div>
+                <div style={{ font: 'var(--text-xs)/1.25 var(--font-body)', color: 'var(--text-tertiary)' }}>รพ.ธรรมศาสตร์เฉลิมพระเกียรติ</div>
               </div>
             )}
           </div>
@@ -117,28 +116,28 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
           {narrow && <div style={{ flex: 1 }} />}
 
           {!narrow && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              <Avatar name={user.name} size="sm" />
-              <div style={{ lineHeight: 1.25, maxWidth: 140 }}>
-                <div style={{ font: 'var(--fw-semibold) var(--text-xs)/1.2 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
-                <div style={{ font: 'var(--text-2xs)/1.2 var(--font-body)', color: 'var(--text-tertiary)' }}>{ROLES[user.role]?.short || user.role}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+              <Avatar name={user.name} size="md" />
+              <div style={{ lineHeight: 1.3, maxWidth: 160 }}>
+                <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.25 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                <div style={{ font: 'var(--text-xs)/1.25 var(--font-body)', color: 'var(--text-tertiary)' }}>{ROLES[user.role]?.short || user.role}</div>
               </div>
               <IconButton label="ออกจากระบบ" variant="ghost" onClick={onLogout}>
-                <Icon name="LogOut" size={16} color="var(--text-tertiary)" />
+                <Icon name="LogOut" size={18} color="var(--text-tertiary)" />
               </IconButton>
             </div>
           )}
 
           {narrow && (
             <IconButton label={open ? 'ปิดเมนู' : 'เปิดเมนู'} onClick={() => setOpen((v) => !v)} variant="ghost">
-              <Icon name={open ? 'X' : 'Menu'} size={20} color="var(--text-secondary)" />
+              <Icon name={open ? 'X' : 'Menu'} size={22} color="var(--text-secondary)" />
             </IconButton>
           )}
         </div>
 
         {/* Row 2 — หน่วยงาน / หมวดงาน sub-nav (desktop only; folded into dropdown on narrow) */}
         {!narrow && (
-          <div style={{ padding: '8px var(--page-gutter)', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ padding: '10px var(--page-gutter)', borderTop: '1px solid var(--border-subtle)' }}>
             <CatRow />
           </div>
         )}
@@ -147,9 +146,9 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
       {/* Narrow dropdown panel — nav + หน่วยงาน/หมวดงาน + user, stacked vertically */}
       {narrow && open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, top: 60, background: 'rgba(24,27,42,0.4)', backdropFilter: 'blur(1.5px)', zIndex: 18 }} />
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, top: 76, background: 'rgba(24,27,42,0.4)', backdropFilter: 'blur(1.5px)', zIndex: 18 }} />
           <div style={{
-            position: 'fixed', top: 60, left: 0, right: 0, zIndex: 19, maxHeight: 'calc(100vh - 60px)', overflowY: 'auto',
+            position: 'fixed', top: 76, left: 0, right: 0, zIndex: 19, maxHeight: 'calc(100vh - 76px)', overflowY: 'auto',
             background: 'var(--white)', borderBottom: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)',
             padding: '14px var(--page-gutter) 18px', display: 'flex', flexDirection: 'column', gap: 16,
           }}>
