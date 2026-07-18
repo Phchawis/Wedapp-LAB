@@ -302,8 +302,17 @@ app.post('/api/users', authMw, requirePerm('manage'), wrap(async (req, res) => {
 app.patch('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req, res) => {
   const target = await store.getUserByUsername(req.params.username);
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
-  const { name, role, cat } = req.body;
+  const { name, role, cat, username } = req.body;
   const patch = {};
+  if (username !== undefined) {
+    const newUname = username.trim();
+    if (!newUname) return res.status(400).json({ error: 'กรุณาระบุชื่อผู้ใช้งาน' });
+    if (newUname.toLowerCase() !== req.params.username.toLowerCase()) {
+      if (target.username === req.user.username) return res.status(400).json({ error: 'เปลี่ยนชื่อผู้ใช้งานของตัวเองไม่ได้ในหน้านี้' });
+      if (await store.getUserByUsername(newUname)) return res.status(409).json({ error: 'ชื่อผู้ใช้งานนี้มีอยู่แล้ว' });
+      patch.username = newUname;
+    }
+  }
   if (name !== undefined) {
     if (!name.trim()) return res.status(400).json({ error: 'กรุณาระบุชื่อ-นามสกุล' });
     patch.name = name.trim();
@@ -316,7 +325,7 @@ app.patch('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req
   }
   if (cat !== undefined) patch.cat = cat.trim() || null;
   const updated = await store.updateUser(req.params.username, patch);
-  await logAction(req.user, 'user:edit', req.params.username);
+  await logAction(req.user, 'user:edit', patch.username || req.params.username);
   res.json(updated);
 }));
 
