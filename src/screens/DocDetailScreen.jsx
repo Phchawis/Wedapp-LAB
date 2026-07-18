@@ -85,8 +85,10 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   const typeObj = Q.DOC_TYPES.find((t) => t.code === doc.type);
   const narrow = useNarrow(900);
 
-  const canEdit = can(role, 'docs:edit');
-  const canDelete = can(role, 'docs:delete');
+  const canRevise = can(role, 'revise');
+  const canPublish = can(role, 'publish');
+  const canRegister = can(role, 'register');
+  const canUpload = can(role, 'upload');
   const attachments = doc.attachments || [];
   const history = doc.history || [];
 
@@ -245,13 +247,9 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   };
 
   // อัปเดตไฟล์เป็นเวอร์ชันใหม่ — เลือกไฟล์ใหม่แทนที่ไฟล์เดิม (เพิ่มเลขแก้ไขอัตโนมัติ)
-  // สิทธิ์: Creator อัปเดตได้ทุกชนิด; Admin/User อัปเดตได้เฉพาะไฟล์ Excel
-  const isCreator = role === 'creator';
-  const EXCEL_EXT = ['xls', 'xlsx', 'xlsm', 'csv'];
-  const canUpdateFile = (att) => att.kind !== 'url' && onUpdateFile && (isCreator || att.kind === 'excel');
-  const acceptTypes = isCreator
-    ? '.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv'
-    : '.xls,.xlsx,.xlsm,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
+  // สิทธิ์: ต้องมี upload permission — อัปเดตได้ทุกชนิดไฟล์ ไม่จำกัดเฉพาะ Excel
+  const canUpdateFile = (att) => att.kind !== 'url' && onUpdateFile && canUpload;
+  const acceptTypes = '.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
 
   const fileInputRef = useRef(null);
   const pendingAttId = useRef(null);
@@ -272,14 +270,6 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
       return;
     }
 
-    // Admin/User อัปโหลดได้เฉพาะ Excel — กันไว้ตั้งแต่ฝั่งหน้าเว็บ (backend ตรวจซ้ำอีกชั้น)
-    if (!isCreator) {
-      const ext = (file.name.split('.').pop() || '').toLowerCase();
-      if (!EXCEL_EXT.includes(ext)) {
-        window.alert('บทบาทของคุณอัปเดตได้เฉพาะไฟล์ Excel (.xlsx, .xls, .csv) เท่านั้น');
-        return;
-      }
-    }
     if (!window.confirm('แทนที่ไฟล์เดิมด้วยไฟล์ใหม่นี้? ระบบจะเพิ่มเลขแก้ไข (rev) และบันทึกประวัติให้อัตโนมัติ')) return;
     setUpdatingId(attId);
     try {
@@ -769,20 +759,20 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
             </div>
           </Card>
 
-          {/* Workflow — Creator (docs:edit) only */}
-          {canEdit && (
+          {/* Workflow — ประกาศใช้ (publish) / บันทึกแก้ไข (revise) / ยกเลิกใช้งาน (register) แยกสิทธิ์กันตามการเปลี่ยนสถานะ */}
+          {(canPublish || canRevise || canRegister) && (
             <Card padding="md">
               <div role="heading" aria-level={2} style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>การดำเนินการ (Workflow)</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Button variant="secondary" block size="md" onClick={publish} disabled={doc.status === 'effective'} iconLeft={<Icon name="Megaphone" size={15} color="var(--brand-700)" />}>บันทึกประกาศใช้</Button>
-                <Button variant="secondary" block size="md" onClick={recordEdit} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="PencilLine" size={15} color="var(--brand-700)" />}>บันทึกแก้ไข</Button>
-                <Button variant="secondary" block size="md" onClick={obsolete} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="Ban" size={15} color="var(--brand-700)" />}>ยกเลิกการใช้งาน</Button>
+                {canPublish && <Button variant="secondary" block size="md" onClick={publish} disabled={doc.status === 'effective'} iconLeft={<Icon name="Megaphone" size={15} color="var(--brand-700)" />}>บันทึกประกาศใช้</Button>}
+                {canRevise && <Button variant="secondary" block size="md" onClick={recordEdit} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="PencilLine" size={15} color="var(--brand-700)" />}>บันทึกแก้ไข</Button>}
+                {canRegister && <Button variant="secondary" block size="md" onClick={obsolete} disabled={doc.status === 'obsolete'} iconLeft={<Icon name="Ban" size={15} color="var(--brand-700)" />}>ยกเลิกการใช้งาน</Button>}
               </div>
             </Card>
           )}
 
-          {/* Delete — Creator & Admin (docs:delete) */}
-          {canDelete && (
+          {/* Delete — register permission */}
+          {canRegister && (
             <Card padding="md">
               <div role="heading" aria-level={2} style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 12 }}>จัดการเอกสาร</div>
               <Button variant="danger" block size="md" onClick={removeDoc} iconLeft={<Icon name="Trash2" size={15} color="#fff" />}>ลบเอกสารออกจากทะเบียน</Button>
