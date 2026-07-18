@@ -70,6 +70,39 @@ code, kbd, samp { font-family: var(--font-mono); }
   .qms-rise, .qms-stagger > *, .qms-spin, .qms-grow { animation: none !important; }
 }
 
+/* ── Masthead Logo Badge (top nav) — bordered badge that lifts + glows on hover ── */
+.masthead-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 1.5px solid var(--slate-100);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard),
+              border-color var(--dur-base) var(--ease-standard);
+}
+.masthead-badge img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  transition: transform var(--dur-base) var(--ease-standard);
+}
+.masthead-link:hover .masthead-badge {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-brand-soft);
+  border-color: var(--brand-400);
+}
+.masthead-link:hover .masthead-badge img {
+  transform: scale(1.08) rotate(5deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .masthead-badge, .masthead-badge img { transition: none !important; }
+}
+
 /* ── Document List & Table Hover States ──────────────────────────────────── */
 .qms-doc-row {
   display: flex;
