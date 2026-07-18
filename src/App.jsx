@@ -197,7 +197,7 @@ export default function App() {
   };
 
   const titles = {
-    dashboard: { e: 'OVERVIEW', t: 'แดชบอร์ด', s: 'ภาพรวมทะเบียนเอกสารคุณภาพห้องปฏิบัติการ' },
+    dashboard: { e: 'OVERVIEW', t: 'Dashboard', s: 'ภาพรวมทะเบียนเอกสารคุณภาพห้องปฏิบัติการ' },
     register: { e: 'REGISTER', t: 'ทะเบียนเอกสาร', s: 'ค้นหา กรอง และเปิดดูเอกสารคุณภาพ' },
     create: { e: 'NEW ENTRY', t: 'ลงทะเบียนเอกสาร', s: 'นำเข้าเอกสารคุณภาพ (Word/PDF/ลิงก์) เข้าสู่ระบบ' },
     users: { e: 'ACCESS CONTROL', t: 'จัดการผู้ใช้งาน', s: 'เพิ่ม ลบ และกำหนดสิทธิ์ผู้ใช้งานระบบ' },
@@ -240,7 +240,7 @@ export default function App() {
         title={head.t}
         subtitle={head.s}
         docCount={docs.length}
-        actions={['dashboard', 'register'].includes(view) ? RegisterBtn : null}
+        actions={view === 'register' ? RegisterBtn : null}
       >
         {body}
       </AppShell>
