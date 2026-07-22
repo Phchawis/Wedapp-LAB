@@ -12,7 +12,7 @@ import {
   Check, Megaphone, PencilLine, Download, Ban, FileText, FilePen, Link, Search,
   UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
   TrendingUp, Users, HelpCircle, ShieldCheck, ShieldAlert, AlertCircle,
-  Compass, List, Menu, X,
+  Compass, List, Menu, X, Monitor, Server, Database, KeyRound,
 } from 'lucide-react';
 
 const ICONS = {
@@ -22,7 +22,7 @@ const ICONS = {
   Check, Megaphone, PencilLine, Download, Ban, FileText, FilePen, Link, Search,
   UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
   TrendingUp, Users, HelpCircle, ShieldCheck, ShieldAlert, AlertCircle,
-  Compass, List, Menu, X,
+  Compass, List, Menu, X, Monitor, Server, Database, KeyRound,
 };
 
 export function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {
