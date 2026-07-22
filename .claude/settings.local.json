@@ -80,7 +80,17 @@
       "Bash(git clone *)",
       "Bash(npx tsc *)",
       "Bash(echo \"=== tsc exit: $? ===\")",
-      "Bash(grep -niE \"password|username|admin|'[a-z0-9]{4,}'\" server/seed.js)"
+      "Bash(grep -niE \"password|username|admin|'[a-z0-9]{4,}'\" server/seed.js)",
+      "Bash(lsof -i :5173 -i :3001 -sTCP:LISTEN -n -P)",
+      "Bash(curl -s -m 8 -X POST http://localhost:3001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"sysadmin\",\"password\":\"sysadmin123\"}' -w \"\\\\nHTTP %{http_code} · %{time_total}s\\\\n\")",
+      "Bash(kill 80361)",
+      "Bash(env -u SUPABASE_URL -u SUPABASE_SERVICE_ROLE_KEY node server/seed.js)",
+      "Bash(env -u SUPABASE_URL -u SUPABASE_SERVICE_ROLE_KEY QMS_API_PORT=3001 node server/index.js)",
+      "Bash(curl -s -m 8 -X POST http://localhost:3001/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"sysadmin\",\"password\":\"sysadmin123\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(xargs -r kill -9)",
+      "Bash(lsof -i :3001 -sTCP:LISTEN -n -P)",
+      "Bash(git check-ignore *)",
+      "Bash(xargs -r kill)"
     ]
   }
 }
