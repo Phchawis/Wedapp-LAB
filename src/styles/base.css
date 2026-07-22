@@ -177,6 +177,88 @@ code, kbd, samp { font-family: var(--font-mono); }
   font-feature-settings: "tnum";
 }
 
+/* ── Architecture / infographic motion (คู่มือ – ส่วน IT) ──────────────────── */
+/* เส้นเชื่อมแบบประ "ไหล" เพื่อสื่อทิศทางข้อมูล — เลื่อน background-position ของเส้นประ */
+@keyframes qms-flow-dash {
+  to { background-position: 18px 0; }
+}
+.qms-flow {
+  background-image: repeating-linear-gradient(90deg, var(--brand-400) 0 7px, transparent 7px 15px);
+  animation: qms-flow-dash 0.9s linear infinite;
+}
+.qms-flow-v {
+  background-image: repeating-linear-gradient(180deg, var(--brand-400) 0 7px, transparent 7px 15px);
+  animation: qms-flow-dash 0.9s linear infinite;
+}
+
+/* จุด/แพ็กเก็ตข้อมูลเต้นเป็นจังหวะบนโหนดสถาปัตยกรรม */
+@keyframes qms-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.35); opacity: 1; }
+}
+.qms-pulse { animation: qms-pulse 1.8s var(--ease-standard) infinite; }
+
+/* วงแหวนกระเพื่อมรอบโหนดสำคัญ (เซิร์ฟเวอร์/ฐานข้อมูล) */
+@keyframes qms-ripple {
+  0%   { transform: scale(0.75); opacity: 0.5; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+.qms-ripple { animation: qms-ripple 2.4s var(--ease-out) infinite; }
+
+/* แพ็กเก็ตข้อมูลวิ่งไปตามท่อ (request lifecycle) */
+@keyframes qms-travel {
+  0%   { left: 0;   opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+.qms-travel { animation: qms-travel 3s var(--ease-standard) infinite; }
+
+/* การ์ด/โหนดยกตัวเมื่อ hover ในไดอะแกรม */
+.qms-node {
+  transition: transform var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard),
+              border-color var(--dur-base) var(--ease-standard);
+}
+.qms-node:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand-400);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qms-flow, .qms-flow-v, .qms-pulse, .qms-ripple, .qms-travel { animation: none !important; }
+  .qms-node { transition: none !important; }
+}
+
+/* ── พิมพ์คู่มือเป็น PDF (Ctrl/Cmd+P หรือปุ่มดาวน์โหลด) ─────────────────────── */
+.qms-print-only { display: none; }
+
+@media print {
+  @page { margin: 14mm; }
+  html, body { background: #fff !important; }
+
+  /* ซ่อนทุกอย่างยกเว้นเนื้อหาคู่มือ แล้วดึงคู่มือขึ้นเต็มหน้ากระดาษ */
+  body * { visibility: hidden; }
+  #qms-help-doc, #qms-help-doc * { visibility: visible; }
+  #qms-help-doc {
+    position: absolute; left: 0; top: 0; width: 100%;
+    max-width: none; padding: 0;
+  }
+
+  /* งดอนิเมชัน/ทรานส์ฟอร์มตอนพิมพ์ ให้ภาพนิ่งคมชัด */
+  #qms-help-doc * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+  }
+  .qms-print-only { display: block !important; }
+  .qms-no-print { display: none !important; }
+  .qms-help-section { break-inside: avoid; page-break-inside: avoid; }
+}
+
 
 
 
