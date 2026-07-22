@@ -77,7 +77,9 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(ls -la ~/.claude/skills 2>/dev/null | head -20; echo \"---plugins---\"; ls -la ~/.claude/plugins 2>/dev/null | head -20; echo \"---project claude---\"; ls -la \".claude\" 2>/dev/null)",
-      "Bash(git clone *)"
+      "Bash(git clone *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"=== tsc exit: $? ===\")"
     ]
   }
 }
