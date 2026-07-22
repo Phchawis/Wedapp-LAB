@@ -214,6 +214,13 @@ export default function App() {
     </Button>
   ) : null;
 
+  // พิมพ์/บันทึกคู่มือเป็น PDF — CSS @media print จะพิมพ์เฉพาะเนื้อหาคู่มือ (#qms-help-doc)
+  const HelpPdfBtn = (
+    <Button variant="secondary" onClick={() => window.print()} iconLeft={<Icon name="Download" size={17} />}>
+      ดาวน์โหลด PDF
+    </Button>
+  );
+
   let body;
   if (view === 'dashboard') body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
   else if (view === 'register') body = <RegisterScreen docs={docs} cat={cat} onOpen={openDoc} />;
@@ -238,7 +245,7 @@ export default function App() {
         title={head.t}
         subtitle={head.s}
         docCount={docs.length}
-        actions={view === 'register' ? RegisterBtn : null}
+        actions={view === 'register' ? RegisterBtn : view === 'help' ? HelpPdfBtn : null}
       >
         {body}
       </AppShell>
