@@ -79,7 +79,8 @@
       "Bash(ls -la ~/.claude/skills 2>/dev/null | head -20; echo \"---plugins---\"; ls -la ~/.claude/plugins 2>/dev/null | head -20; echo \"---project claude---\"; ls -la \".claude\" 2>/dev/null)",
       "Bash(git clone *)",
       "Bash(npx tsc *)",
-      "Bash(echo \"=== tsc exit: $? ===\")"
+      "Bash(echo \"=== tsc exit: $? ===\")",
+      "Bash(grep -niE \"password|username|admin|'[a-z0-9]{4,}'\" server/seed.js)"
     ]
   }
 }
