@@ -80,6 +80,17 @@ else
   log "❌ ไม่พบที่เก็บไฟล์แนบ: $UPLOADS_VOLUME"
 fi
 
+# ── 2.5) อัปโหลดขึ้น Google Drive ด้วย rclone (รองรับไฟล์ใหญ่ ไม่ติดเพดาน ~35MB) ──
+# ตั้งค่าครั้งเดียวด้วย  rclone config  (สร้าง remote ชื่อ gdrive) — ถ้ายังไม่ตั้งจะข้ามไป
+# ใช้วิธี base64 เดิมเป็น fallback สำหรับไฟล์เล็ก (DB) อยู่แล้วด้านบน
+if command -v rclone >/dev/null 2>&1 && rclone listremotes 2>/dev/null | grep -q "^gdrive:"; then
+  RCLONE_DEST="gdrive:Masterlist_Backups/labqms"
+  ok=0
+  [ "$DB_OK" = 1 ]    && rclone copy "${DB_FILE}.gz" "$RCLONE_DEST/" --max-time 600 2>/dev/null && ok=$((ok+1))
+  [ "$FILES_OK" = 1 ] && rclone copy "$FILES_FILE"   "$RCLONE_DEST/" --max-time 900 2>/dev/null && ok=$((ok+1))
+  log "☁️  rclone → Google Drive: อัปโหลดแล้ว $ok ไฟล์ (ไม่จำกัดขนาด)"
+fi
+
 # ── 3) ลบไฟล์เก่าเกิน 30 วัน — เฉพาะเมื่อสำรองวันนี้สำเร็จทั้งคู่ ──
 # (กันกรณีสำรองพังเงียบ ๆ แล้วไฟล์เก่าถูกลบจนไม่เหลือ backup เลย)
 if [ "$DB_OK" = 1 ] && [ "$FILES_OK" = 1 ]; then
