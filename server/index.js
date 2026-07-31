@@ -17,9 +17,14 @@ import { ROLE_ORDER, can } from '../src/auth/roles.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // dev: ใช้ QMS_API_PORT (เลี่ยงชน vite); production (โฮสต์): ใช้ PORT ที่โฮสต์กำหนด
 const PORT = process.env.QMS_API_PORT || process.env.PORT || 3001;
-// บน production ต้องตั้ง JWT_SECRET จริงเสมอ — ห้ามใช้ค่าตัวอย่างในซอร์ส (ปลอม token ได้)
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  console.error('FATAL: ต้องตั้ง JWT_SECRET บน production'); process.exit(1);
+// บน production ต้องตั้ง secret จริงและยาวพอ (กุญแจ HS256 ที่สั้นถูก brute-force ได้)
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    console.error('FATAL: ต้องตั้ง JWT_SECRET อย่างน้อย 32 ตัวอักษรบน production'); process.exit(1);
+  }
+  if (process.env.SSO_SHARED_SECRET && process.env.SSO_SHARED_SECRET.length < 32) {
+    console.error('FATAL: SSO_SHARED_SECRET สั้นเกินไป (อย่างน้อย 32 ตัวอักษร)'); process.exit(1);
+  }
 }
 const JWT_SECRET = process.env.JWT_SECRET || 'tuh-qms-dev-secret-change-me';
 // เชื่อถือ token ที่เซ็นมาจากระบบ Masterlist (ฝ่ายสหเวชศาสตร์) เท่านั้น — คนละ secret กับ JWT_SECRET
