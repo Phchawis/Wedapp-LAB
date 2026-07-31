@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.github
+.env
+.env.*
+!.env.example
+server/data
+.DS_Store
+*.local
+.vite
+.claude
+.impeccable
+npm-debug.log*

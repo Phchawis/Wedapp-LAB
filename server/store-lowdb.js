@@ -14,19 +14,21 @@ const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const db = await JSONFilePreset(path.join(DATA_DIR, 'db.json'), {
-  users: [], documents: [], attachments: [], logs: [],
+  users: [], documents: [], attachments: [], logs: [], acknowledgments: [],
 });
 
-// Seed on first run
+// Seed on first run — แต่ห้าม seed บัญชีรหัสผ่านตัวอย่างบน production (ช่องโหว่)
+// อนุญาตเฉพาะ dev หรือเมื่อจงใจตั้ง ALLOW_SEED=1
+const allowSeed = process.env.ALLOW_SEED === '1' || process.env.NODE_ENV !== 'production';
 let changed = false;
-if (db.data.users.length === 0) {
+if (allowSeed && db.data.users.length === 0) {
   db.data.users = SEED_USERS.map((u) => ({
     username: u.username, passwordHash: bcrypt.hashSync(u.password, 8),
     name: u.name, role: u.role, cat: u.cat || null, createdAt: new Date().toISOString(),
   }));
   changed = true;
 }
-if (db.data.documents.length === 0) {
+if (allowSeed && db.data.documents.length === 0) {
   db.data.documents = SEED_DOCS.map((d) => ({ ...d, createdAt: new Date().toISOString() }));
   changed = true;
 }
@@ -138,6 +140,23 @@ export const lowdbStore = {
     const safe = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${path.extname(file.originalname)}`;
     fs.writeFileSync(path.join(UPLOAD_DIR, safe), file.buffer);
     return safe;
+  },
+
+  // ── ลายมือชื่อรับทราบ (เก็บถาวรในไฟล์) ──
+  async listAcknowledgments(docNo) {
+    return (db.data.acknowledgments || []).filter((a) => a.docNo === docNo);
+  },
+  async hasAcknowledged(docNo, username, version) {
+    return (db.data.acknowledgments || []).some(
+      (a) => a.docNo === docNo && a.username === username && a.version === String(version),
+    );
+  },
+  async addAcknowledgment(entry) {
+    if (!db.data.acknowledgments) db.data.acknowledgments = [];
+    if (await this.hasAcknowledged(entry.docNo, entry.username, entry.version)) return false;
+    db.data.acknowledgments.unshift({ id: newId(), ...entry, version: String(entry.version) });
+    await db.write();
+    return true;
   },
 
   async addLog(entry) {

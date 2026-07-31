@@ -29,8 +29,10 @@ export function LogScreen({ logs }) {
 
   // สรุปภาพรวม — เติมพื้นที่ฝั่งขวาด้วยข้อมูลที่มีประโยชน์ แทนที่จะปล่อยว่าง
   const todayCount = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return logs.filter((e) => (e.ts || '').startsWith(today)).length;
+    // นับ "กิจกรรมวันนี้" ตามเวลาไทย — แปลง ts (เก็บเป็น UTC) เป็นวันที่ไทยก่อนเทียบ
+    const th = (v) => new Date(v).toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+    return logs.filter((e) => e.ts && th(e.ts) === today).length;
   }, [logs]);
 
   const topUsers = useMemo(() => {

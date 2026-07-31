@@ -17,6 +17,10 @@ import { ROLE_ORDER, can } from '../src/auth/roles.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // dev: ใช้ QMS_API_PORT (เลี่ยงชน vite); production (โฮสต์): ใช้ PORT ที่โฮสต์กำหนด
 const PORT = process.env.QMS_API_PORT || process.env.PORT || 3001;
+// บน production ต้องตั้ง JWT_SECRET จริงเสมอ — ห้ามใช้ค่าตัวอย่างในซอร์ส (ปลอม token ได้)
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('FATAL: ต้องตั้ง JWT_SECRET บน production'); process.exit(1);
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'tuh-qms-dev-secret-change-me';
 // เชื่อถือ token ที่เซ็นมาจากระบบ Masterlist (ฝ่ายสหเวชศาสตร์) เท่านั้น — คนละ secret กับ JWT_SECRET
 // เพื่อไม่ให้ secret รั่วจากฝั่งหนึ่งปลอมเซสชันของอีกฝั่งได้โดยตรง
@@ -26,26 +30,51 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+// อนุญาตเฉพาะชนิดไฟล์เอกสารที่ระบบต้องใช้ — กันอัปโหลดไฟล์สคริปต์/โปรแกรมอันตราย
+const ALLOWED_EXT = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'xlsm', 'csv', 'ppt', 'pptx', 'png', 'jpg', 'jpeg', 'gif', 'webp']);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const name = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    if (ALLOWED_EXT.has(ext)) return cb(null, true);
+    cb(new Error(`ชนิดไฟล์ไม่รองรับ (.${ext}) — อนุญาตเฉพาะเอกสาร/รูปภาพเท่านั้น`));
+  },
+});
 
 const logAction = (actor, action, target = '') =>
   store.addLog({ id: newId(), ts: new Date().toISOString(), username: actor.username, name: actor.name, role: actor.role, action, target, detail: '' });
 
 // ── Auth ─────────────────────────────────────────────────────
-function authMw(req, res, next) {
+async function authMw(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'ต้องเข้าสู่ระบบก่อน' });
-  try { req.user = jwt.verify(token, JWT_SECRET); next(); }
-  catch { res.status(401).json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' }); }
+  let payload;
+  try { payload = jwt.verify(token, JWT_SECRET); }
+  catch { return res.status(401).json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' }); }
+  try {
+    // ตรวจซ้ำกับฐานข้อมูลทุกครั้ง — บัญชีที่ถูกลบหรือเปลี่ยนสิทธิ์จะมีผลทันที
+    // (เดิมเชื่อ role ใน token ทำให้ลด/ถอนสิทธิ์ไม่มีผลจนกว่า token จะหมดอายุ ~12 ชม.)
+    const u = await store.getUserByUsername(payload.username);
+    if (!u) return res.status(401).json({ error: 'บัญชีนี้ถูกปิดหรือถูกลบแล้ว กรุณาเข้าสู่ระบบใหม่' });
+    req.user = { username: u.username, name: u.name, role: u.role, cat: u.cat || null };
+    next();
+  } catch (e) { console.error(e); res.status(500).json({ error: 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' }); }
 }
 const requirePerm = (action) => (req, res, next) =>
   can(req.user.role, action) ? next() : res.status(403).json({ error: 'ไม่มีสิทธิ์ดำเนินการนี้' });
 
-// แปลง error เป็น 500 พร้อมข้อความ
-const wrap = (fn) => (req, res) => fn(req, res).catch((e) => {
+// วันที่วันนี้ตามเวลาไทย (YYYY-MM-DD) — ห้ามใช้ toISOString().slice(0,10) เพราะเป็น UTC
+const todayTH = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+
+// แปลง error เป็น 500 — ถ้าส่ง response ไปแล้วต้องไม่ส่งซ้ำ (กัน ERR_HTTP_HEADERS_SENT → unhandled)
+// และไม่เปิดเผยข้อความ error ดิบจากฐานข้อมูล (กันข้อมูลโครงสร้างตารางรั่ว)
+const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => {
   console.error(e);
-  res.status(500).json({ error: e.message || 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' });
+  if (res.headersSent) return; // ส่ง response ไปแล้ว — จบ ไม่ต้องทำอะไรต่อ
+  res.status(500).json({ error: 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' });
 });
 
 app.post('/api/auth/login', wrap(async (req, res) => {
@@ -85,63 +114,21 @@ app.post('/api/auth/sso', wrap(async (req, res) => {
   res.json({ token, user: actor });
 }));
 
-// In-memory training acknowledgments storage
-let acknowledgments = [
-  { id: 'ack-1', docNo: 'QM-CMTL-001', username: 'head_work', name: 'หัวหน้างานเทคนิคการแพทย์', role: 'head_work', ts: '2026-06-23T08:12:00.000Z', version: '4' },
-  { id: 'ack-2', docNo: 'QM-CMTL-001', username: 'med_tech', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech', ts: '2026-06-24T09:45:00.000Z', version: '4' },
-  { id: 'ack-3', docNo: 'SOP-IMM-014', username: 'med_tech', name: 'นักเทคนิคการแพทย์ทั่วไป', role: 'med_tech', ts: '2026-06-25T11:20:00.000Z', version: '2' },
-];
-
 // ── Documents ────────────────────────────────────────────────
 app.get('/api/documents', authMw, wrap(async (req, res) => {
   res.json(await store.listDocuments());
 }));
 
+// ประวัติการเปลี่ยนแปลงของเอกสาร — คืน "บันทึกกิจกรรมจริง" (audit log) ของเอกสารนี้เท่านั้น
+// ไม่มีการสร้างเวอร์ชัน/เนื้อหาปลอมขึ้นเอง (ระบบไม่ได้จัดเก็บสแนปช็อตเนื้อหารายเวอร์ชัน)
 app.get('/api/documents/:no/history', authMw, wrap(async (req, res) => {
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
-
-  const history = [];
-  const totalRevs = doc.rev || 1;
-  const originalUpdated = new Date(doc.updated);
-  
-  for (let r = 1; r <= totalRevs; r++) {
-    const revOffsetYears = totalRevs - r;
-    const revDate = new Date(originalUpdated);
-    revDate.setFullYear(revDate.getFullYear() - revOffsetYears);
-    
-    let title = doc.th;
-    if (r < totalRevs) {
-      title = `${doc.th} (ฉบับแก้ไขร่างครั้งที่ ${r})`;
-    }
-    
-    history.push({
-      no: doc.no,
-      rev: r,
-      th: title,
-      type: doc.type,
-      cat: doc.cat,
-      status: r === totalRevs ? doc.status : 'obsolete',
-      updated: revDate.toISOString().slice(0, 10),
-      owner: doc.owner,
-      retention: doc.retention,
-      files: doc.files,
-      content: `คู่มือระเบียบการปฏิบัติตามมาตรฐานห้องแล็บ TUH\nรหัสควบคุม: ${doc.no}\n\nครั้งที่แก้ไข: revision ${r}\nผู้รับผิดชอบงาน: ${doc.owner}\nวันที่จัดเก็บ: ${revDate.toISOString().slice(0, 10)}\n\nรายละเอียดระเบียบข้อกำหนด:\n1. เจ้าหน้าที่ทุกคนต้องปฏิบัติตามขั้นตอน ISO 15189 อย่างเคร่งครัด\n${
-        r >= 2 ? '2. การนำเข้าสิ่งส่งตรวจจากภายนอกต้องลงบันทึกในเอกสารควบคุมทุกครั้ง\n' : ''
-      }${
-        r >= 3 ? '3. ต้องตรวจสอบความผิดปกติของตัวตรวจวิเคราะห์ก่อนเริ่มรันงานแล็บทุกเช้า\n' : ''
-      }${
-        r >= 4 ? '4. อัปเดตแนวทางการรายงานผลวิกฤตด่วนแก่แพทย์ผู้รับผิดชอบภายใน 15 นาที\n' : ''
-      }\nจบเอกสารควบคุมฉบับราชการโรงพยาบาลธรรมศาสตร์`
-    });
-  }
-  
-  res.json(history.reverse());
+  res.json(doc.history || []);
 }));
 
 app.get('/api/documents/:no/acknowledgments', authMw, wrap(async (req, res) => {
-  const filtered = acknowledgments.filter((ack) => ack.docNo === req.params.no);
-  res.json(filtered);
+  res.json(await store.listAcknowledgments(req.params.no));
 }));
 
 app.post('/api/documents/:no/acknowledge', authMw, wrap(async (req, res) => {
@@ -156,27 +143,20 @@ app.post('/api/documents/:no/acknowledge', authMw, wrap(async (req, res) => {
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
 
-  const exists = acknowledgments.some(
-    (ack) => ack.docNo === req.params.no && ack.username === req.user.username && ack.version === String(doc.rev)
-  );
-  if (exists) {
-    return res.status(400).json({ error: 'คุณได้ลงชื่อรับทราบเอกสารเวอร์ชันปัจจุบันเรียบร้อยแล้ว' });
-  }
-
-  const newAck = {
-    id: `ack-${Date.now()}`,
+  const added = await store.addAcknowledgment({
     docNo: req.params.no,
     username: req.user.username,
     name: req.user.name,
     role: req.user.role,
     ts: new Date().toISOString(),
     version: String(doc.rev),
-  };
+  });
+  if (!added) {
+    return res.status(400).json({ error: 'คุณได้ลงชื่อรับทราบเอกสารเวอร์ชันปัจจุบันเรียบร้อยแล้ว' });
+  }
 
-  acknowledgments.unshift(newAck);
   await logAction(req.user, 'doc:acknowledge', req.params.no);
-
-  res.status(201).json(acknowledgments.filter((ack) => ack.docNo === req.params.no));
+  res.status(201).json(await store.listAcknowledgments(req.params.no));
 }));
 
 app.get('/api/documents/:no', authMw, wrap(async (req, res) => {
@@ -217,22 +197,52 @@ app.post('/api/documents', authMw, requirePerm('register'), upload.array('files'
 }));
 
 // การเปลี่ยนสถานะเอกสารแต่ละแบบต้องใช้สิทธิ์เฉพาะ — ตรวจจากสถานะปัจจุบัน→สถานะใหม่ ไม่ใช่สิทธิ์เดียวครอบทุกกรณี
+// ต้องครอบคลุมทุกสถานะที่ฟอร์มลงทะเบียนเลือกได้ (draft/review/approved/effective/obsolete/controlled)
+// ไม่งั้นเอกสารที่เริ่มด้วย approved/controlled จะเปลี่ยนสถานะไม่ได้เลย (ล็อกตายถาวร)
 const STATUS_TRANSITIONS = {
-  draft: { review: 'revise', effective: 'publish' },
-  review: { effective: 'publish', draft: 'revise' },
-  effective: { review: 'revise', obsolete: 'register' },
+  draft:      { review: 'revise', effective: 'publish' },
+  review:     { effective: 'publish', draft: 'revise', approved: 'approve' },
+  approved:   { effective: 'publish', review: 'revise' },
+  effective:  { review: 'revise', obsolete: 'register', controlled: 'register' },
+  controlled: { review: 'revise', obsolete: 'register', effective: 'publish' },
+  obsolete:   { review: 'revise' },
 };
 app.patch('/api/documents/:no', authMw, wrap(async (req, res) => {
   const { status, rev, updated, action } = req.body;
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
-  if (status && status !== doc.status) {
+
+  const statusChanging = status != null && status !== doc.status;
+  if (statusChanging) {
     const needPerm = STATUS_TRANSITIONS[doc.status]?.[status];
     if (!needPerm || !can(req.user.role, needPerm)) {
       return res.status(403).json({ error: 'ไม่มีสิทธิ์เปลี่ยนสถานะเอกสารนี้' });
     }
   }
-  const updatedDoc = await store.updateDocument(req.params.no, { status, rev, updated });
+
+  // rev / updated เป็นเมทาดาทาที่ระบบปรับให้พร้อมกับการเปลี่ยนสถานะเท่านั้น
+  // (ดู flow publish/revise/obsolete) — ห้ามแก้ตรง ๆ โดยไม่มีการเปลี่ยนสถานะที่ได้รับอนุญาต
+  // กันผู้ใช้สิทธิ์ต่ำ (เช่น assistant) ยิง PATCH แก้เลขเวอร์ชัน/วันประกาศใช้เอง
+  if ((rev != null || updated != null) && !statusChanging) {
+    return res.status(403).json({ error: 'ไม่มีสิทธิ์แก้ไขข้อมูลเอกสารนี้' });
+  }
+
+  // ตรวจชนิดข้อมูลก่อนเขียน (กัน 500 จาก Postgres และค่าขยะ)
+  const patch = {};
+  if (status != null) patch.status = status;
+  if (rev != null) {
+    const n = Number(rev);
+    if (!Number.isInteger(n) || n < 1) return res.status(400).json({ error: 'เลขเวอร์ชันไม่ถูกต้อง' });
+    patch.rev = n;
+  }
+  if (updated != null) {
+    if (typeof updated !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(updated)) {
+      return res.status(400).json({ error: 'รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)' });
+    }
+    patch.updated = updated;
+  }
+
+  const updatedDoc = await store.updateDocument(req.params.no, patch);
   if (!updatedDoc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   await logAction(req.user, action || 'doc:edit', req.params.no);
   res.json(await store.getDocument(req.params.no)); // ส่งกลับพร้อมประวัติล่าสุด
@@ -258,7 +268,7 @@ app.post('/api/documents/:no/attachments/:id/version', authMw, requirePerm('uplo
   // เพิ่มเลขแก้ไข + ปรับวันที่ + ปรับชุดชนิดไฟล์ของเอกสาร
   const fresh = await store.getDocument(req.params.no);
   const kinds = [...new Set((fresh.attachments || []).map((a) => a.kind))];
-  await store.updateDocument(req.params.no, { rev: (doc.rev || 1) + 1, updated: new Date().toISOString().slice(0, 10), files: kinds });
+  await store.updateDocument(req.params.no, { rev: (doc.rev || 1) + 1, updated: todayTH(), files: kinds });
   await logAction(req.user, 'doc:file-update', req.params.no);
   res.json(await store.getDocument(req.params.no));
 }));
@@ -278,6 +288,8 @@ app.get('/api/attachments/:id/download', authMw, wrap(async (req, res) => {
   const buf = await store.readAttachmentData(a);
   if (!buf) return res.status(404).json({ error: 'ไฟล์หาย' });
   res.setHeader('Content-Type', a.mime || 'application/octet-stream');
+  // กันเบราว์เซอร์เดา content-type แล้วรันไฟล์ (เช่น .html แฝง) — บังคับดาวน์โหลดอย่างเดียว
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(a.name)}`);
   res.send(buf);
 }));
@@ -294,7 +306,7 @@ app.post('/api/users', authMw, requirePerm('manage'), wrap(async (req, res) => {
   if (!ROLE_ORDER.includes(role)) return res.status(400).json({ error: 'ระดับสิทธิ์ไม่ถูกต้อง' });
   if (role === 'sysadmin' && req.user.role !== 'sysadmin') return res.status(403).json({ error: 'เฉพาะ SysAdmin เท่านั้นที่สร้างบัญชี SysAdmin ได้' });
   if (await store.getUserByUsername(uname)) return res.status(409).json({ error: 'ชื่อผู้ใช้งานนี้มีอยู่แล้ว' });
-  const created = await store.createUser({ username: uname, passwordHash: bcrypt.hashSync(password, 8), name: name.trim(), role, cat: cat.trim() || null });
+  const created = await store.createUser({ username: uname, passwordHash: bcrypt.hashSync(password, 10), name: name.trim(), role, cat: cat.trim() || null });
   await logAction(req.user, 'user:add', uname);
   res.status(201).json(created);
 }));
@@ -334,7 +346,7 @@ app.post('/api/users/:username/reset-password', authMw, requirePerm('manage'), w
   if (!target) return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
   const { password = '' } = req.body;
   if (password.length < 6) return res.status(400).json({ error: 'รหัสผ่านอย่างน้อย 6 ตัวอักษร' });
-  await store.resetUserPassword(req.params.username, bcrypt.hashSync(password, 8));
+  await store.resetUserPassword(req.params.username, bcrypt.hashSync(password, 10));
   await logAction(req.user, 'user:reset-password', req.params.username);
   res.json({ ok: true });
 }));
@@ -356,48 +368,68 @@ app.get('/api/logs', authMw, requirePerm('audit'), wrap(async (req, res) => {
 
 // ── Emergency Kit Export (ZIP) ───────────────────────────────
 // ไม่มีสิทธิ์ใดโดยเฉพาะครอบคลุมฟีเจอร์นี้ใน Masterlist — เปิดให้ผู้ใช้งานที่ล็อกอินทุกคนใช้ได้ (เหมือนพฤติกรรมเดิม)
-app.get('/api/documents/export/zip', authMw, wrap(async (req, res) => {
+// escape ข้อความก่อนยัดลง HTML — กัน HTML/script injection ในไฟล์ที่ export ออกไป
+const escHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+// ชื่อไฟล์ปลอดภัยสำหรับ zip entry — ตัด path separator และ .. ทิ้ง (กัน Zip Slip ตอนแตกไฟล์)
+const safeZipName = (name) => String(name || 'file')
+  .replace(/[\\/]/g, '_').replace(/\.\.+/g, '_').replace(/[\x00-\x1f]/g, '').slice(0, 120) || 'file';
+
+app.get('/api/documents/export/zip', authMw, requirePerm('audit'), wrap(async (req, res) => {
   const docs = await store.listDocuments();
   const zip = new SimpleZip();
   let rowsHtml = '';
   const nowStr = new Date().toLocaleString('th-TH');
-  
+
+  // จำกัดขนาดรวมของไฟล์ที่แพ็ก กัน out-of-memory บน VPS ที่แชร์กับระบบอื่น (กัน DoS)
+  // ไฟล์ที่เกินเพดานจะไม่ถูกใส่ แต่ยังแสดงในตารางพร้อมหมายเหตุ
+  const MAX_PACK_BYTES = 200 * 1024 * 1024;
+  let packedBytes = 0;
+
   for (const d of docs) {
     let attachmentsLinks = [];
     for (const a of d.attachments || []) {
       if (a.kind === 'url') {
-        attachmentsLinks.push(`<a href="${a.url}" target="_blank" rel="noopener noreferrer">🔗 ลิงก์ภายนอก</a>`);
+        // อนุญาตเฉพาะลิงก์ http/https — กัน javascript:/data: และ escape ค่า
+        const safeUrl = /^https?:\/\//i.test(a.url || '') ? a.url : '#';
+        attachmentsLinks.push(`<a href="${escHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">🔗 ${escHtml(a.name || 'ลิงก์ภายนอก')}</a>`);
       } else if (a.storage) {
         try {
+          if (packedBytes >= MAX_PACK_BYTES) {
+            attachmentsLinks.push(`<span style="color:#70758C">⚠️ ไฟล์ใหญ่เกินขีดจำกัดชุดกู้ชีพ (${escHtml(a.name)}) — ดาวน์โหลดจากระบบโดยตรง</span>`);
+            continue;
+          }
           const buf = await store.readAttachmentData(a);
           if (buf) {
-            const zipPath = `files/${a.id}_${a.name}`;
+            packedBytes += buf.length;
+            const zipPath = `files/${safeZipName(a.id + '_' + a.name)}`;
             zip.addFile(zipPath, buf);
-            attachmentsLinks.push(`<a href="${zipPath}" download>${a.name}</a>`);
+            attachmentsLinks.push(`<a href="${escHtml(zipPath)}" download>${escHtml(a.name)}</a>`);
           } else {
-            attachmentsLinks.push(`<span style="color:#70758C">⚠️ ไฟล์ขัดข้อง (${a.name})</span>`);
+            attachmentsLinks.push(`<span style="color:#70758C">⚠️ ไฟล์ขัดข้อง (${escHtml(a.name)})</span>`);
           }
         } catch (e) {
           console.error(`Failed to pack file ${a.name}:`, e);
-          attachmentsLinks.push(`<span style="color:#70758C">⚠️ โหลดไม่สำเร็จ (${a.name})</span>`);
+          attachmentsLinks.push(`<span style="color:#70758C">⚠️ โหลดไม่สำเร็จ (${escHtml(a.name)})</span>`);
         }
       }
     }
-    
-    const typeLabel = d.type;
-    const statusClass = `badge badge-${d.status}`;
+
+    const typeLabel = escHtml(d.type);
+    const statusClass = `badge badge-${escHtml(d.status)}`;
     const statusLabel = d.status === 'effective' ? 'ประกาศใช้' :
                         d.status === 'review' ? 'รอทบทวน' :
                         d.status === 'draft' ? 'ร่าง' : 'ยกเลิก';
-                        
+
     rowsHtml += `
       <tr>
         <td><span class="type-tag">${typeLabel}</span></td>
-        <td style="font-family:monospace; font-weight:600;">${d.no}</td>
-        <td><strong>${d.th}</strong></td>
+        <td style="font-family:monospace; font-weight:600;">${escHtml(d.no)}</td>
+        <td><strong>${escHtml(d.th)}</strong></td>
         <td style="text-align:center;">${String(d.rev).padStart(2, '0')}</td>
         <td><span class="${statusClass}">${statusLabel}</span></td>
-        <td>${d.owner}</td>
+        <td>${escHtml(d.owner)}</td>
         <td><div style="display:flex; flex-direction:column; gap:4px;">${attachmentsLinks.join('')}</div></td>
       </tr>
     `;
@@ -510,13 +542,14 @@ app.get('/api/documents/export/zip', authMw, wrap(async (req, res) => {
 </html>`;
 
   zip.addFile('index.html', template);
-  
+
   const zipBuffer = zip.toBuffer();
+  // บันทึก log ก่อนส่ง response — ถ้าเขียน log พังจะได้ยังจับ error ได้ตามปกติ
+  // (ห้ามทำ await หลัง res.send เพราะถ้า throw จะกลายเป็น unhandled rejection)
+  await logAction(req.user, 'register:emergency-export');
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', 'attachment; filename="TUH-QMS-Emergency-Kit.zip"');
   res.send(zipBuffer);
-  
-  await logAction(req.user, 'register:emergency-export');
 }));
 
 
@@ -528,6 +561,20 @@ if (fs.existsSync(distDir)) {
   // ทุก path ที่ไม่ใช่ /api ให้ส่ง index.html (SPA)
   app.get(/^(?!\/api).*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')));
 }
+
+// error handler สุดท้าย — แปลง error ที่หลุดมาถึง Express (เช่น multer ปฏิเสธไฟล์)
+// ให้เป็น JSON ที่อ่านง่าย แทนหน้า HTML error ยาว ๆ ของ Express
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  if (res.headersSent) return;
+  res.status(400).json({ error: err?.message || 'คำขอไม่ถูกต้อง' });
+});
+
+// กันเซิร์ฟเวอร์ตายเงียบ ๆ จาก error ที่หลุดออกมานอก try/catch — log ไว้แล้วให้ทำงานต่อ
+// (เดิมไม่มีตัวกัน ทำให้ 1 error หลัง res.send ทำให้ทั้ง process ตายและ restart)
+process.on('unhandledRejection', (reason) => console.error('UnhandledRejection:', reason));
+process.on('uncaughtException', (err) => console.error('UncaughtException:', err));
 
 app.listen(PORT, () => console.log(`TUH QMS API on :${PORT} · data store: ${store.label}`));
 
@@ -557,7 +604,7 @@ class SimpleZip {
       const lh = Buffer.alloc(30 + nameBuf.length);
       lh.writeUInt32LE(0x04034b50, 0);
       lh.writeUInt16LE(10, 4);
-      lh.writeUInt16LE(0, 6);
+      lh.writeUInt16LE(0x0800, 6); // general purpose bit 11 = ชื่อไฟล์เป็น UTF-8 (กันภาษาไทยเพี้ยนตอนแตกไฟล์)
       lh.writeUInt16LE(0, 8);
       lh.writeUInt16LE(timeVal, 10);
       lh.writeUInt16LE(dateVal, 12);
@@ -575,7 +622,7 @@ class SimpleZip {
       ch.writeUInt32LE(0x02014b50, 0);
       ch.writeUInt16LE(20, 4);
       ch.writeUInt16LE(10, 6);
-      ch.writeUInt16LE(0, 8);
+      ch.writeUInt16LE(0x0800, 8); // general purpose bit 11 = UTF-8 (ให้ตรงกับ local header)
       ch.writeUInt16LE(0, 10);
       ch.writeUInt16LE(timeVal, 12);
       ch.writeUInt16LE(dateVal, 14);

@@ -4,7 +4,8 @@ import { Button, Card, Input, Select, Alert, DocTypeTag, StatusBadge, IconButton
 import { Icon } from '../components/Icon.jsx';
 import { QMS, RETENTION_OPTIONS } from '../data/taxonomy.js';
 
-const TODAY = '2026-06-22';
+// วันที่วันนี้ตามเวลาไทย (YYYY-MM-DD) — เดิม hardcode ไว้ ทำให้เอกสารใหม่ลงวันที่ผิด
+const TODAY = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
 
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' B';

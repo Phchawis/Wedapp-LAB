@@ -8,57 +8,10 @@ import { can } from '../auth/users.js';
 import { LOG_ACTIONS } from '../auth/activityLog.js';
 import { api } from '../api.js';
 
-// Line-by-line diffing algorithm for revision comparisons
-function diffLines(oldStr, newStr) {
-  const oldLines = (oldStr || '').split('\n');
-  const newLines = (newStr || '').split('\n');
-  const diffResult = [];
-  let i = 0, j = 0;
-  
-  while (i < oldLines.length || j < newLines.length) {
-    if (i < oldLines.length && j < newLines.length) {
-      if (oldLines[i] === newLines[j]) {
-        diffResult.push({ type: 'normal', text: oldLines[i] });
-        i++; j++;
-      } else {
-        let foundMatch = false;
-        for (let k = 1; k < 5; k++) {
-          if (i + k < oldLines.length && oldLines[i + k] === newLines[j]) {
-            for (let d = 0; d < k; d++) {
-              diffResult.push({ type: 'del', text: oldLines[i + d] });
-            }
-            i += k;
-            foundMatch = true;
-            break;
-          }
-          if (j + k < newLines.length && oldLines[i] === newLines[j + k]) {
-            for (let a = 0; a < k; a++) {
-              diffResult.push({ type: 'add', text: newLines[j + a] });
-            }
-            j += k;
-            foundMatch = true;
-            break;
-          }
-        }
-        if (!foundMatch) {
-          diffResult.push({ type: 'del', text: oldLines[i] });
-          diffResult.push({ type: 'add', text: newLines[j] });
-          i++; j++;
-        }
-      }
-    } else if (i < oldLines.length) {
-      diffResult.push({ type: 'del', text: oldLines[i] });
-      i++;
-    } else if (j < newLines.length) {
-      diffResult.push({ type: 'add', text: newLines[j] });
-      j++;
-    }
-  }
-  return diffResult;
-}
-
 const seal = '/lab-seal.png';
-const today = () => new Date().toISOString().slice(0, 10); // วันที่จริงตอนดำเนินการ workflow
+// วันที่จริงตอนดำเนินการ workflow — ใช้เวลาไทย (en-CA ให้รูปแบบ YYYY-MM-DD)
+// ห้ามใช้ toISOString().slice(0,10) เพราะเป็น UTC จะเพี้ยนถอย 1 วันช่วงเช้ามืด
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
 
 function fmtTs(iso) {
   const d = new Date(iso);
@@ -97,34 +50,15 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   const [loadingPreviewId, setLoadingPreviewId] = useState(null);
 
   const [activeTab, setActiveTab] = useState('detail');
-  const [historyList, setHistoryList] = useState([]);
   const [acks, setAcks] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [loadingAcks, setLoadingAcks] = useState(false);
   const [ackPassword, setAckPassword] = useState('');
   const [ackChecked, setAckChecked] = useState(false);
   const [ackError, setAckError] = useState('');
   const [ackSuccess, setAckSuccess] = useState(false);
-  const [leftRev, setLeftRev] = useState('');
-  const [rightRev, setRightRev] = useState('');
-  const [diffMode, setDiffMode] = useState('unified');
 
   const fetchHistoryAndAcks = async () => {
-    setLoadingHistory(true);
     setLoadingAcks(true);
-    try {
-      const hist = await api.getDocumentHistory(doc.no);
-      setHistoryList(hist);
-      if (hist.length > 1) {
-        setLeftRev(String(hist[1].rev));
-        setRightRev(String(hist[0].rev));
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingHistory(false);
-    }
-
     try {
       const acknowledgments = await api.getDocumentAcknowledgments(doc.no);
       setAcks(acknowledgments);
@@ -376,7 +310,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                   <StatusBadge status={doc.status} size="sm" />
                 </div>
                 <h1 style={{ font: 'var(--fw-bold) var(--text-2xl)/1.2 var(--font-display)', color: 'var(--text-primary)', marginBottom: 4 }}>{doc.th}</h1>
-                <div style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)' }}>{typeObj.th} · หมวดงาน{catObj.th}</div>
+                <div style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)' }}>{typeObj?.th || doc.type} · หมวดงาน{catObj?.th || doc.cat}</div>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 16, padding: '16px 18px', background: 'var(--slate-50)' }}>
@@ -395,7 +329,6 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
               onChange={setActiveTab}
               items={[
                 { code: 'detail', label: 'ข้อมูลและประวัติ' },
-                { code: 'diff', label: 'เปรียบเทียบเวอร์ชัน' },
                 { code: 'training', label: `การฝึกอบรม & รับทราบ (${acks.length})` },
               ]}
             />
@@ -536,116 +469,6 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                 )}
               </Card>
             </div>
-          )}
-
-          {activeTab === 'diff' && (
-            <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="History" size={16} color="var(--text-secondary)" /> เปรียบเทียบสองเวอร์ชัน (Version Diff)</span>}>
-              {historyList.length <= 1 ? (
-                <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-                  <Icon name="AlertCircle" size={28} color="var(--slate-300)" style={{ margin: '0 auto 10px' }} />
-                  <div style={{ font: 'var(--type-body)' }}>เอกสารอยู่ในรุ่นแรก (ไม่มีเวอร์ชันอื่นสำหรับเปรียบเทียบ)</div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {/* Selectors */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 14 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>เปรียบเทียบ:</span>
-                      <select
-                        value={leftRev}
-                        onChange={(e) => setLeftRev(e.target.value)}
-                        style={{ padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)', font: 'var(--text-xs) var(--font-mono)' }}
-                      >
-                        {historyList.map(h => (
-                          <option key={h.rev} value={h.rev}>Rev {String(h.rev).padStart(2, '0')} ({h.updated})</option>
-                        ))}
-                      </select>
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>กับ</span>
-                      <select
-                        value={rightRev}
-                        onChange={(e) => setRightRev(e.target.value)}
-                        style={{ padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)', font: 'var(--text-xs) var(--font-mono)' }}
-                      >
-                        {historyList.map(h => (
-                          <option key={h.rev} value={h.rev}>Rev {String(h.rev).padStart(2, '0')} ({h.updated})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <Button
-                        size="sm"
-                        variant={diffMode === 'unified' ? 'primary' : 'secondary'}
-                        onClick={() => setDiffMode('unified')}
-                      >
-                        Unified
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={diffMode === 'split' ? 'primary' : 'secondary'}
-                        onClick={() => setDiffMode('split')}
-                      >
-                        Split (เคียงข้าง)
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Render Diff Tree */}
-                  {(() => {
-                    const leftDoc = historyList.find(h => String(h.rev) === leftRev);
-                    const rightDoc = historyList.find(h => String(h.rev) === rightRev);
-                    if (!leftDoc || !rightDoc) return null;
-                    const diffTree = diffLines(leftDoc.content, rightDoc.content);
-
-                    if (diffMode === 'unified') {
-                      return (
-                        <div className="qms-numeric" style={{ font: '12px/1.6 var(--font-mono)', background: 'var(--slate-900)', color: 'var(--slate-200)', padding: 14, borderRadius: 'var(--radius-md)', overflowX: 'auto', whiteSpace: 'pre-wrap', maxHeight: 500 }}>
-                          {diffTree.map((line, idx) => {
-                            let bg = 'transparent';
-                            let cl = 'inherit';
-                            let prefix = '  ';
-                            if (line.type === 'add') { bg = '#163625'; cl = '#4ade80'; prefix = '+ '; }
-                            else if (line.type === 'del') { bg = '#4c1d24'; cl = '#f87171'; prefix = '- '; }
-                            return (
-                              <div key={idx} style={{ background: bg, color: cl, padding: '2px 6px', borderRadius: 2 }}>
-                                {prefix}{line.text}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                          <div style={{ font: '11px/1.5 var(--font-mono)', background: 'var(--slate-50)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', overflowX: 'auto', maxHeight: 500 }}>
-                            <div style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 8, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 4 }}>ฉบับ Rev {String(leftRev).padStart(2, '0')}</div>
-                            {diffTree.map((line, idx) => {
-                              if (line.type === 'add') return <div key={idx} style={{ height: 18, background: 'var(--slate-100)' }} />;
-                              return (
-                                <div key={idx} style={{ color: line.type === 'del' ? 'var(--red-700)' : 'var(--text-primary)', background: line.type === 'del' ? 'var(--red-50)' : 'transparent', padding: '1px 4px' }}>
-                                  {line.text || ' '}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div style={{ font: '11px/1.5 var(--font-mono)', background: 'var(--slate-50)', padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', overflowX: 'auto', maxHeight: 500 }}>
-                            <div style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)', marginBottom: 8, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 4 }}>ฉบับ Rev {String(rightRev).padStart(2, '0')}</div>
-                            {diffTree.map((line, idx) => {
-                              if (line.type === 'del') return <div key={idx} style={{ height: 18, background: 'var(--slate-100)' }} />;
-                              return (
-                                <div key={idx} style={{ color: line.type === 'add' ? 'var(--green-700)' : 'var(--text-primary)', background: line.type === 'add' ? 'var(--green-50)' : 'transparent', padding: '1px 4px' }}>
-                                  {line.text || ' '}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    }
-                  })()}
-                </div>
-              )}
-            </Card>
           )}
 
           {activeTab === 'training' && (

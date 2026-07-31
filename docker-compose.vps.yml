@@ -1,0 +1,49 @@
+# ════════════════════════════════════════════════════════════════
+# TUH Lab QMS — deploy บน VPS เดียวกับระบบ Masterlist (ฝ่ายสหเวชศาสตร์)
+#
+# ใช้ Postgres และ Caddy "คนละชุด" ไม่ได้ — จึงออกแบบให้ไปเกาะของเดิม:
+#   - ฐานข้อมูล : ใช้ Postgres container เดิมของ Masterlist (แยกเป็น database ชื่อ labqms)
+#   - HTTPS     : ใช้ Caddy เดิมของ Masterlist (เพิ่ม block โดเมนใหม่)
+#   → ระบบ Masterlist ไม่ได้รับผลกระทบ (คนละ database / คนละ container / คนละ volume)
+#
+# วิธีใช้ (รันบน VPS):
+#   1. วางโฟลเดอร์โปรเจกต์นี้ไว้ที่  /opt/labqms
+#   2. สร้าง database + user ใหม่ (ดู DEPLOY-VPS.md ขั้นที่ 2)
+#   3. cp .env.vps.example .env  แล้วเติมค่าให้ครบ
+#   4. docker compose -f docker-compose.vps.yml up -d --build
+# ════════════════════════════════════════════════════════════════
+services:
+  qms:
+    build:
+      context: .
+    image: tuh-lab-qms:latest
+    container_name: labqms-app
+    restart: unless-stopped
+    environment:
+      # ชี้ไปที่ Postgres container ของ Masterlist (ชื่อ service คือ db ใน compose ของ Masterlist)
+      DATABASE_URL: ${DATABASE_URL:?ตั้ง DATABASE_URL ใน .env}
+      JWT_SECRET: ${JWT_SECRET:?ตั้ง JWT_SECRET ใน .env (openssl rand -base64 32)}
+      # ต้องตรงกับ SSO_SHARED_SECRET ฝั่ง Masterlist เป๊ะ ๆ
+      SSO_SHARED_SECRET: ${SSO_SHARED_SECRET:?ตั้ง SSO_SHARED_SECRET ใน .env}
+      UPLOAD_DIR: /app/uploads
+      PORT: 3001
+    volumes:
+      - labqms_uploads:/app/uploads
+    networks:
+      - masterlist_net
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  labqms_uploads:
+
+# เกาะเครือข่ายเดิมของ Masterlist เพื่อคุยกับ Postgres และให้ Caddy เดิม proxy เข้ามาได้
+# (ตรวจชื่อจริงด้วย:  docker network ls | grep -i masterlist)
+networks:
+  masterlist_net:
+    external: true
+    name: ${MASTERLIST_NETWORK:-masterlist_default}

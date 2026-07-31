@@ -132,7 +132,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
   // คิว "ต้องดำเนินการ": รอทบทวน + ร่าง (รอทบทวนมาก่อน แล้วเรียงตามวันที่ล่าสุด)
   const actionDocs = docs
     .filter((d) => d.status === 'review' || d.status === 'draft')
-    .sort((a, b) => (a.status !== b.status ? (a.status === 'review' ? -1 : 1) : b.updated.localeCompare(a.updated)));
+    .sort((a, b) => (a.status !== b.status ? (a.status === 'review' ? -1 : 1) : (b.updated || '').localeCompare(a.updated || '')));
   const actionShown = actionDocs.slice(0, 6);
 
   // ตรวจสอบการทบทวนรายปีและวันหมดอายุจัดเก็บ (Compliance warning engine)
@@ -181,7 +181,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
       const aHasDanger = a.alerts.some(al => al.type === 'danger');
       const bHasDanger = b.alerts.some(al => al.type === 'danger');
       if (aHasDanger !== bHasDanger) return aHasDanger ? -1 : 1;
-      return b.doc.updated.localeCompare(a.doc.updated);
+      return (b.doc.updated || '').localeCompare(a.doc.updated || '');
     });
 
   // ── ตัวเลขสรุป (KPI ledger) — เมตริกเชิงดำเนินการ เสริมจาก breakdown รายสถานะในโดนัท ──
@@ -202,7 +202,7 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
   const maxCat = Math.max(...byCat.map((c) => c.n), 1);
 
   // ปรับปรุงล่าสุด
-  const recent = docs.slice().sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 5);
+  const recent = docs.slice().sort((a, b) => (b.updated || '').localeCompare(a.updated || '')).slice(0, 5);
 
   const currentUser = api.decodeToken();
   const isAdminOrCreator = can(currentUser?.role, 'audit');
@@ -318,15 +318,17 @@ export function DashboardScreen({ docs = QMS.DOCS, onOpen, onGoRegister, onCreat
           </div>
         </div>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleExportEmergencyKit}
-          disabled={exporting}
-          iconLeft={<Icon name={exporting ? "Loader2" : "Download"} size={15} color="var(--brand-700)" className={exporting ? "qms-spin" : ""} />}
-        >
-          {exporting ? 'กำลังสร้างชุดกู้ชีพ…' : 'ชุดกู้ชีพออฟไลน์'}
-        </Button>
+        {isAdminOrCreator && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleExportEmergencyKit}
+            disabled={exporting}
+            iconLeft={<Icon name={exporting ? "Loader2" : "Download"} size={15} color="var(--brand-700)" className={exporting ? "qms-spin" : ""} />}
+          >
+            {exporting ? 'กำลังสร้างชุดกู้ชีพ…' : 'ชุดกู้ชีพออฟไลน์'}
+          </Button>
+        )}
       </div>
 
       {/* ── Onboarding: แถบเดียวปิดได้ ไม่ใช่การ์ดอธิบายยาว ── */}
