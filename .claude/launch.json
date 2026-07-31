@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:web"],
       "port": 5173
+    },
+    {
+      "name": "portal-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/Users/gpharkchawisp/Documents/tuh-portal/serve.mjs"],
+      "port": 5199
     }
   ]
 }
