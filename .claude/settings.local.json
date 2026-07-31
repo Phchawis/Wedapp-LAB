@@ -171,7 +171,11 @@
       "Bash(curl -s -m 20 -o /dev/null -w \"  labtuhqms: HTTP %{http_code}\\\\n\" https://labtuhqms.duckdns.org/)",
       "Bash(bash -n backup.sh)",
       "Bash(curl -s -m 20 -o /dev/null -w \"  เว็บ labtuhqms: HTTP %{http_code}\\\\n\" https://labtuhqms.duckdns.org/)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(rsync -a backup.sh ahs-droplet:/opt/labqms/backup.sh)",
+      "Bash(git push *)",
+      "Skill(impeccable)",
+      "Skill(impeccable:*)"
     ]
   }
 }
