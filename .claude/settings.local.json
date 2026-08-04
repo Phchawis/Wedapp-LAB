@@ -185,7 +185,12 @@
       "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55441/ml\" SESSION_SECRET=\"test-secret-that-is-long-enough-32ch!!\" SEED_DEMO=1 SEED_ON_START=1 ADMIN_PASSWORD=admin12345)",
       "Bash(npx tsx *)",
       "Bash(cd \"/Users/gpharkchawisp/Documents/ทะเบียนเอกสารสหเวชศาสตร์/webapp\" && rm -f .env.local && echo \"✅ ลบ .env.local ชั่วคราวแล้ว\" *)",
-      "Bash(curl -s -m 20 https://labtuhqms.duckdns.org/)"
+      "Bash(curl -s -m 20 https://labtuhqms.duckdns.org/)",
+      "Bash(rsync -a prisma/seed.ts ahs-droplet:/opt/masterlist/prisma/seed.ts)",
+      "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55442/ml\" SESSION_SECRET=\"local-test-secret-at-least-32-characters!\" SEED_DEMO=1 ADMIN_PASSWORD=admin12345)",
+      "Bash(curl -s -m 20 -o /dev/null -w \"login page: HTTP %{http_code}\\\\n\" http://localhost:5310/login)",
+      "Bash(curl -s -m 20 http://localhost:5310/login)",
+      "Bash(curl -s -m 20 -o /dev/null -w \"  เว็บ: HTTP %{http_code}\\\\n\" https://ashtuhdoc.duckdns.org/login)"
     ]
   }
 }
