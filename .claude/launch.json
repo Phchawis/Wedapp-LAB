@@ -18,6 +18,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["/Users/gpharkchawisp/Documents/tuh-portal/serve.mjs"],
       "port": 5199
+    },
+    {
+      "name": "masterlist-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/gpharkchawisp/Documents/ทะเบียนเอกสารสหเวชศาสตร์/webapp", "run", "dev", "--", "--port", "5310"],
+      "port": 5310
     }
   ]
 }

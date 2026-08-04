@@ -175,7 +175,17 @@
       "Bash(rsync -a backup.sh ahs-droplet:/opt/labqms/backup.sh)",
       "Bash(git push *)",
       "Skill(impeccable)",
-      "Skill(impeccable:*)"
+      "Skill(impeccable:*)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(rsync -a \"/Users/gpharkchawisp/Documents/ทะเบียนเอกสารสหเวชศาสตร์/webapp/prisma/seed.ts\" ahs-droplet:/opt/masterlist/prisma/seed.ts)",
+      "Bash(sed -n '/export const fieldInput/,/};/p' src/components/Modal.tsx)",
+      "Bash(sed -n '/export const fieldLabel/,/};/p' src/components/Modal.tsx)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"eslint exit=$?\")",
+      "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55441/ml\" SESSION_SECRET=\"test-secret-that-is-long-enough-32ch!!\" SEED_DEMO=1 SEED_ON_START=1 ADMIN_PASSWORD=admin12345)",
+      "Bash(npx tsx *)",
+      "Bash(cd \"/Users/gpharkchawisp/Documents/ทะเบียนเอกสารสหเวชศาสตร์/webapp\" && rm -f .env.local && echo \"✅ ลบ .env.local ชั่วคราวแล้ว\" *)",
+      "Bash(curl -s -m 20 https://labtuhqms.duckdns.org/)"
     ]
   }
 }
