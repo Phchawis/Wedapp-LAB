@@ -213,7 +213,11 @@
       "Bash(bash -c ' *)",
       "Bash(gh auth *)",
       "Bash(git reset *)",
-      "Bash(git restore *)"
+      "Bash(git restore *)",
+      "Bash(curl -s -m 20 -o /dev/null -w \"  Masterlist: HTTP %{http_code}\\\\n\" https://ashtuhdoc.duckdns.org/login)",
+      "Bash(curl -s -m 20 -o /dev/null -w \"  Lab QMS: HTTP %{http_code}\\\\n\" https://labtuhqms.duckdns.org/)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)"
     ]
   }
 }
