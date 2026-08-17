@@ -1,4 +1,4 @@
-import { Card, DocTypeTag, StatusBadge } from '../components/ds/index.js';
+import { Button, Card, DocTypeTag, StatusBadge } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { QMS } from '../data/taxonomy.js';
 import { PermMatrix } from '../components/PermMatrix.jsx';
@@ -91,9 +91,167 @@ function FlowLink({ label }) {
   );
 }
 
+/* ── 05 — แผนรับมือเมื่อระบบใช้งานไม่ได้ ────────────────────────────────────
+   คู่มือหน้านี้อ่านไม่ได้ตอนระบบล่ม จึงมี "การ์ดฉุกเฉิน" หน้าเดียวให้พิมพ์ติดหน้างานแยกต่างหาก
+   จุดเด่นของระบบนี้คือ "ชุดกู้ชีพออฟไลน์" (ZIP เปิดอ่านได้โดยไม่ต้องมีเน็ต) ซึ่งเป็นหัวใจของแผนนี้ */
+
+const CONTACT = {
+  name: 'ทนพ.ภาคย์ชวิศ พรประสิทธิ์แสง',
+  role: 'ผู้ดูแลระบบสารสนเทศฝ่ายสหเวชศาสตร์',
+  phone: '(กรอกเบอร์ติดต่อ)',
+};
+
+const DOWNTIME_LEVELS = [
+  { color: 'var(--status-review-fg, #9A6800)', title: 'ระดับ 1 · เข้าใช้งานไม่ได้ชั่วคราว', when: 'ไม่เกิน 30 นาที',
+    action: 'รอสักครู่แล้วลองใหม่ — ระบบเฝ้าระวังอัตโนมัติทุก 3 นาทีและกู้ตัวเองได้ในหลายกรณี ถ้าเกิน 30 นาทีให้แจ้งผู้ดูแล' },
+  { color: 'var(--accent-600)', title: 'ระดับ 2 · ใช้งานไม่ได้ต่อเนื่อง', when: 'เกิน 30 นาที',
+    action: 'เปิดชุดกู้ชีพออฟไลน์ที่ดาวน์โหลดเก็บไว้เพื่อใช้เอกสารต่อ · หัวหน้าหมวดแจ้งทีม · จดงานลงกระดาษไว้ก่อน แล้วบันทึกย้อนหลังเมื่อระบบกลับมา' },
+  { color: 'var(--danger, #C42330)', title: 'ระดับ 3 · ข้อมูลเสียหาย', when: 'เอกสารหาย / ข้อมูลผิดเพี้ยน',
+    action: 'หยุดแก้ไขข้อมูลทั้งหมดทันที (การแก้ต่อทำให้กู้คืนยากขึ้น) แล้วแจ้งผู้ดูแลระบบทันที — มีข้อมูลสำรองรายวันย้อนหลัง 30 วัน' },
+];
+
+const DOWNTIME_ROLES = [
+  { who: 'เจ้าหน้าที่ผู้ใช้งาน', icon: 'Users', steps: [
+    'ตรวจก่อนว่าเป็นที่เครื่องเราหรือระบบ — ลองเปิดเว็บอื่น หรือเปิดด้วยมือถือ',
+    'ถ้าระบบล่มจริง เปิดชุดกู้ชีพออฟไลน์ที่หมวดงานเก็บไว้ ใช้เอกสารทำงานต่อ',
+    'จดงานที่ทำระหว่างระบบล่มไว้ในกระดาษ เพื่อบันทึกย้อนหลัง',
+    'แจ้งหัวหน้าหมวดงานจุดเดียว ไม่ต้องแจ้งซ้ำหลายคน',
+  ] },
+  { who: 'หัวหน้างาน / หัวหน้าหมวดงาน', icon: 'ShieldCheck', steps: [
+    'แจ้งทีมทราบและสั่งให้ใช้ชุดกู้ชีพออฟไลน์แทน',
+    'แจ้งผู้ดูแลระบบ ระบุเวลาที่เริ่มเปิดไม่ได้ · ข้อความที่ขึ้น · จำนวนคนที่เจอ',
+    'เมื่อระบบกลับมา ตรวจว่าเอกสารและการลงนามรับทราบครบถ้วน',
+  ] },
+  { who: 'ผู้ดูแลระบบ', icon: 'Server', steps: [
+    'ตรวจสถานะเซิร์ฟเวอร์และบริการทั้งหมด ดูบันทึกการเฝ้าระวังเพื่อหาเวลาที่เริ่มขัดข้อง',
+    'ถ้าเป็นที่แอปพลิเคชัน — รีสตาร์ทเฉพาะบริการนั้น ไม่กระทบระบบอื่น',
+    'ถ้าข้อมูลเสียหาย — กู้คืนจากข้อมูลสำรองรายวัน (ทดสอบกู้คืนแล้ว)',
+    'แจ้งผลกลับหัวหน้างานทุกครั้งเมื่อระบบกลับมาใช้งานได้',
+  ] },
+];
+
+function DowntimeSection() {
+  const printCard = () => {
+    document.body.classList.add('qms-printing-card');
+    const cleanup = () => {
+      document.body.classList.remove('qms-printing-card');
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  };
+
+  return (
+    <Section n="05" title="แผนรับมือเมื่อระบบใช้งานไม่ได้ (Downtime Plan)">
+      <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', marginBottom: 18, maxWidth: '72ch' }}>
+        งานห้องปฏิบัติการต้องดำเนินต่อได้เสมอแม้ระบบสารสนเทศขัดข้อง หัวข้อนี้กำหนดว่าแต่ละบทบาททำอะไร
+        เพื่อให้บริการไม่หยุดชะงักและเอกสารที่ใช้อ้างอิงยังคงถูกต้อง
+      </p>
+
+      {/* คำเตือน + ปุ่มพิมพ์การ์ด */}
+      <div className="qms-no-print" style={{
+        display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap',
+        background: 'var(--accent-50)', border: '1px solid var(--accent-400)',
+        borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: 24,
+      }}>
+        <Icon name="AlertTriangle" size={18} color="var(--accent-700)" style={{ flexShrink: 0, marginTop: 2 }} />
+        <p style={{ font: 'var(--text-sm)/1.65 var(--font-body)', color: 'var(--text-secondary)', margin: 0, flex: '1 1 300px', minWidth: 0 }}>
+          <b style={{ color: 'var(--text-primary)' }}>คู่มือหน้านี้อ่านไม่ได้ตอนระบบล่ม</b> —
+          กรุณาพิมพ์การ์ดฉุกเฉินด้านล่างติดไว้ที่จุดปฏิบัติงาน และดาวน์โหลด “ชุดกู้ชีพออฟไลน์” เก็บไว้ล่วงหน้าทุกเดือน
+        </p>
+        <Button size="sm" variant="secondary" onClick={printCard} iconLeft={<Icon name="Printer" size={15} />}>
+          พิมพ์การ์ดฉุกเฉิน
+        </Button>
+      </div>
+
+      {/* ระดับความรุนแรง */}
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>5.1 · ระดับความรุนแรงและการปฏิบัติ</div>
+      <Card padding="none" style={{ marginBottom: 26 }}>
+        {DOWNTIME_LEVELS.map((l, i) => (
+          <div key={l.title} style={{ padding: '14px 16px', borderBottom: i === DOWNTIME_LEVELS.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap', marginBottom: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: l.color, flexShrink: 0 }} />
+              <span style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{l.title}</span>
+              <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{l.when}</span>
+            </div>
+            <div style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-secondary)' }}>{l.action}</div>
+          </div>
+        ))}
+      </Card>
+
+      {/* แยกตามบทบาท */}
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>5.2 · ขั้นตอนปฏิบัติแยกตามบทบาท</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 26 }}>
+        {DOWNTIME_ROLES.map((r, i) => (
+          <div key={r.who} className="qms-rise-stagger" style={{
+            '--i': i, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-md)', padding: '16px 16px 18px', minWidth: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+              <Icon name={r.icon} size={17} color="var(--brand-700)" />
+              <span style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{r.who}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {r.steps.map((s) => (
+                <div key={s} style={{ display: 'flex', gap: 8, font: 'var(--text-xs)/1.6 var(--font-body)', color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--brand-600)', flexShrink: 0 }}>·</span>
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* การ์ดฉุกเฉิน */}
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 8px' }}>5.3 · การ์ดฉุกเฉินสำหรับติดหน้างาน</div>
+      <p style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginBottom: 14, maxWidth: '70ch' }}>
+        พิมพ์ติดไว้ที่จุดปฏิบัติงาน ห้องเวร และข้างเครื่องตรวจวิเคราะห์ — อ่านได้ทันทีโดยไม่ต้องเปิดคอมพิวเตอร์
+      </p>
+
+      <div id="qms-emergency-card" className="qms-emg">
+        <div className="qms-emg-head">
+          <div>
+            <div className="qms-emg-kicker">แผนรับมือเมื่อระบบสารสนเทศใช้งานไม่ได้</div>
+            <div className="qms-emg-title">ระบบเปิดไม่ได้ ทำอย่างไร?</div>
+          </div>
+          <div className="qms-emg-org">
+            ห้องปฏิบัติการเทคนิคการแพทย์<br />
+            <span>โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ</span>
+          </div>
+        </div>
+
+        <ol className="qms-emg-steps">
+          <li><b>ตรวจก่อนว่าเป็นที่เราหรือระบบ</b><span>ลองเปิดเว็บอื่น หรือเปิดด้วยมือถือ/เครื่องอื่น ถ้าเปิดได้แสดงว่าเป็นที่เครื่องของเรา</span></li>
+          <li><b>ถ้าระบบล่มจริง — เปิดชุดกู้ชีพออฟไลน์</b><span>ไฟล์ ZIP ที่หัวหน้าหมวดดาวน์โหลดเก็บไว้ เปิดไฟล์ index.html อ่านเอกสารได้โดยไม่ต้องมีอินเทอร์เน็ต</span></li>
+          <li><b>จดงานลงกระดาษไว้ก่อน</b><span>สิ่งที่ทำระหว่างระบบล่ม ให้จดไว้แล้วบันทึกเข้าระบบย้อนหลังเมื่อกลับมาใช้งานได้</span></li>
+          <li><b>แจ้งหัวหน้าหมวดงาน</b><span>แจ้งจุดเดียวพอ · ระบุเวลาที่เริ่มเปิดไม่ได้และข้อความที่ขึ้นบนหน้าจอ</span></li>
+        </ol>
+
+        <div className="qms-emg-warn">
+          <b>ห้ามทำ:</b> ถ้าสงสัยว่าข้อมูลผิดเพี้ยนหรือเอกสารหาย — หยุดแก้ไขข้อมูลทั้งหมดทันที แล้วแจ้งผู้ดูแลระบบ (การแก้ต่อจะทำให้กู้คืนยากขึ้น)
+        </div>
+
+        <div className="qms-emg-contact">
+          <div className="qms-emg-contact-l">ติดต่อผู้ดูแลระบบ</div>
+          <div>
+            <div style={{ font: 'var(--text-sm)/1.6 var(--font-body)' }}>{CONTACT.name} — {CONTACT.role}</div>
+            <div className="qms-emg-phone">โทร. {CONTACT.phone}</div>
+          </div>
+        </div>
+
+        <div className="qms-emg-foot">
+          <span>สำรองข้อมูลอัตโนมัติทุกวัน · เฝ้าระวังสถานะทุก 3 นาที</span>
+          <span>ISO 15189:2022</span>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 function ArchitectureSection() {
   return (
-    <Section n="05" title="สถาปัตยกรรมระบบและการทำงานเบื้องหลัง (สำหรับ Programmer / เจ้าหน้าที่ IT)">
+    <Section n="06" title="สถาปัตยกรรมระบบและการทำงานเบื้องหลัง (สำหรับ Programmer / เจ้าหน้าที่ IT)">
       <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', marginBottom: 20, maxWidth: '72ch' }}>
         ส่วนนี้อธิบายภาพรวมทางเทคนิคของระบบสำหรับผู้พัฒนาและเจ้าหน้าที่ไอที ตั้งแต่ชุดเทคโนโลยีที่ใช้
         เส้นทางการไหลของข้อมูล ไปจนถึงการเชื่อมต่อกับระบบ Masterlist ฝ่ายสหเวชศาสตร์
@@ -299,6 +457,9 @@ export function HelpScreen() {
       </Section>
 
       {/* 05 — สถาปัตยกรรมระบบสำหรับ Programmer / เจ้าหน้าที่ IT */}
+      {/* 05 — แผนรับมือเมื่อระบบใช้งานไม่ได้ (ทุกบทบาทต้องอ่าน) */}
+      <DowntimeSection />
+
       <ArchitectureSection />
     </div>
   );

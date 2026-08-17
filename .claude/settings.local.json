@@ -190,7 +190,11 @@
       "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55442/ml\" SESSION_SECRET=\"local-test-secret-at-least-32-characters!\" SEED_DEMO=1 ADMIN_PASSWORD=admin12345)",
       "Bash(curl -s -m 20 -o /dev/null -w \"login page: HTTP %{http_code}\\\\n\" http://localhost:5310/login)",
       "Bash(curl -s -m 20 http://localhost:5310/login)",
-      "Bash(curl -s -m 20 -o /dev/null -w \"  เว็บ: HTTP %{http_code}\\\\n\" https://ashtuhdoc.duckdns.org/login)"
+      "Bash(curl -s -m 20 -o /dev/null -w \"  เว็บ: HTTP %{http_code}\\\\n\" https://ashtuhdoc.duckdns.org/login)",
+      "Bash(grep -oE 'title=\"[^\"]{5,70}\"' src/screens/HelpScreen.jsx)",
+      "Bash(grep -oE '<h[23][^>]*>[^<{]{5,60}<' \"src/app/\\(app\\)/guide/page.tsx\" src/components/GuideTutorials.tsx)",
+      "Bash(sed -i '' 's|import PrintGuideButton from \"@/components/PrintGuideButton\";|import PrintGuideButton from \"@/components/PrintGuideButton\";\\\\nimport DowntimePlan from \"@/components/DowntimePlan\";|' \"src/app/\\(app\\)/guide/page.tsx\")",
+      "Bash(sed -i '' 's|      <ArchitectureGuide />|      <DowntimePlan />\\\\n\\\\n      <ArchitectureGuide />|' \"src/app/\\(app\\)/guide/page.tsx\")"
     ]
   }
 }
