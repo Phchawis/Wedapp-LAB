@@ -1,0 +1,52 @@
+name: CI
+
+# ตรวจคุณภาพโค้ดทุกครั้งที่ push หรือเปิด pull request
+# จับปัญหาให้ได้ "ก่อน" ขึ้นระบบจริง แทนที่จะไปเจอตอนผู้ใช้ใช้งาน
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+# ถ้า push ซ้ำระหว่างที่ยังรันอยู่ ให้ยกเลิกรอบเก่า ไม่ต้องรันซ้อน
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ทดสอบและ build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ติดตั้ง Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: ติดตั้ง dependencies
+        run: npm ci
+
+      - name: รันชุดทดสอบ (สิทธิ์ + API)
+        run: npm test
+
+      - name: Build เว็บ (ตรวจว่า build ผ่านจริง)
+        run: npm run build
+
+  docker:
+    name: ตรวจว่า Docker image build ได้
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # build image ที่นี่แทนบนเซิร์ฟเวอร์จริง — VPS มี RAM 2GB
+      # การ build บนเครื่องจริงเคยทำให้บริการอื่นบนเครื่องเดียวกันสะดุด
+      - name: Build Docker image
+        run: docker build -t tuh-lab-qms:ci .

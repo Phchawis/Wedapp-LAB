@@ -1,0 +1,44 @@
+name: เฝ้าระวังระบบจากภายนอก
+
+# เฝ้าระวังชั้นที่สอง — ตรวจจาก GitHub (นอกเครือข่ายโรงพยาบาล)
+# เสริมกับตัวเฝ้าระวังบน VPS ที่ตรวจทุก 3 นาที:
+# ถ้า VPS ล่มทั้งเครื่อง ตัวบนเครื่องจะแจ้งไม่ได้ แต่ตัวนี้ยังเห็นและขึ้นเป็น workflow ล้มเหลว
+#
+# หมายเหตุ: เดิม workflow นี้ใช้ปลุกระบบเดิมบน Render ไม่ให้หลับ
+# หลังย้ายมา VPS แล้วไม่จำเป็นอีก จึงเปลี่ยนหน้าที่มาเป็นการเฝ้าระวังแทน
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # ทุก 30 นาที (เวลา UTC)
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: ตรวจสถานะเว็บทั้ง 3 ระบบ
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: ตรวจสถานะ
+        run: |
+          fail=0
+          check() {
+            name="$1"; url="$2"
+            code=$(curl -fsS --max-time 25 --retry 2 --retry-delay 10 \
+                     -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
+            if [ "$code" = "200" ] || [ "$code" = "307" ] || [ "$code" = "302" ]; then
+              echo "✅ $name — HTTP $code"
+            else
+              echo "🔴 $name — HTTP $code  ($url)"
+              fail=1
+            fi
+          }
+
+          check "ทะเบียนเอกสารเทคนิคการแพทย์" "https://labtuhqms.duckdns.org/"
+          check "ทะเบียนเอกสารกลาง (Masterlist)" "https://ashtuhdoc.duckdns.org/login"
+          check "ระบบบุคลากร" "https://ashtuhstaff.duckdns.org/"
+
+          if [ "$fail" = "1" ]; then
+            echo ""
+            echo "มีระบบที่เข้าใช้งานไม่ได้ — ดูแผนรับมือในคู่มือหัวข้อ 'แผนรับมือเมื่อระบบใช้งานไม่ได้'"
+            exit 1
+          fi
