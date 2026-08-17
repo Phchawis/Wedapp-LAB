@@ -9,8 +9,10 @@ import { SEED_USERS, SEED_DOCS, newId } from './seed.js';
 import { R2_ENABLED, isR2Ref, r2Upload, r2Download, r2Delete } from './r2.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
+// ตั้งที่เก็บข้อมูลผ่าน env ได้ เพื่อให้เทสต์อัตโนมัติใช้โฟลเดอร์ชั่วคราวแยกจากข้อมูลจริง
+// ไม่ตั้ง = ใช้ server/data ตามเดิม
+const DATA_DIR = process.env.QMS_DATA_DIR || path.join(__dirname, 'data');
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(DATA_DIR, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const db = await JSONFilePreset(path.join(DATA_DIR, 'db.json'), {

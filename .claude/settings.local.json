@@ -194,7 +194,26 @@
       "Bash(grep -oE 'title=\"[^\"]{5,70}\"' src/screens/HelpScreen.jsx)",
       "Bash(grep -oE '<h[23][^>]*>[^<{]{5,60}<' \"src/app/\\(app\\)/guide/page.tsx\" src/components/GuideTutorials.tsx)",
       "Bash(sed -i '' 's|import PrintGuideButton from \"@/components/PrintGuideButton\";|import PrintGuideButton from \"@/components/PrintGuideButton\";\\\\nimport DowntimePlan from \"@/components/DowntimePlan\";|' \"src/app/\\(app\\)/guide/page.tsx\")",
-      "Bash(sed -i '' 's|      <ArchitectureGuide />|      <DowntimePlan />\\\\n\\\\n      <ArchitectureGuide />|' \"src/app/\\(app\\)/guide/page.tsx\")"
+      "Bash(sed -i '' 's|      <ArchitectureGuide />|      <DowntimePlan />\\\\n\\\\n      <ArchitectureGuide />|' \"src/app/\\(app\\)/guide/page.tsx\")",
+      "Bash(node --test tests/)",
+      "Bash(node --test \"tests/roles.test.js\")",
+      "Bash(node --test tests/api.test.js)",
+      "Bash(node --test tests/*.test.js)",
+      "Bash(sed -n '/export function can/,/^}/p' src/lib/reference.ts)",
+      "Bash(sed -n '/export function canUserEdit/,/^}/p' src/lib/reference.ts)",
+      "Bash(npm i *)",
+      "Bash(npm audit *)",
+      "Bash(npx vitest *)",
+      "Bash(sed -i '' 's|import { createSessionCookie, destroySessionCookie, readSession } from \"@/lib/session\";|import { createSessionCookie, destroySessionCookie, readSession } from \"@/lib/session\";\\\\nimport { safeNext } from \"@/lib/security\";|' src/app/actions/auth.ts)",
+      "Bash(python3 -)",
+      "Bash(export DATABASE_URL=\"postgresql://ci:ci@localhost:5432/ci\" SESSION_SECRET=\"ci-only-secret-at-least-32-characters-long\" SSO_SHARED_SECRET=\"\")",
+      "Bash(npm test *)",
+      "Bash(echo \"  exit=$?\")",
+      "Bash(git mv *)",
+      "Bash(bash -c ' *)",
+      "Bash(gh auth *)",
+      "Bash(git reset *)",
+      "Bash(git restore *)"
     ]
   }
 }
