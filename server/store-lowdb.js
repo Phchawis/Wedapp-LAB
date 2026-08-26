@@ -60,11 +60,22 @@ export const lowdbStore = {
     await db.write();
     return { username: u.username, name: u.name, role: u.role, cat: u.cat || null, createdAt: u.createdAt };
   },
+  // ผู้ดูแลตั้งรหัสให้ผู้ใช้ → ถือเป็นรหัสชั่วคราว เจ้าตัวต้องตั้งใหม่เองก่อนใช้งาน
   async resetUserPassword(username, passwordHash) {
-    const u = db.data.users.find((x) => x.username === username);
+    const u = db.data.users.find((x) => x.username.toLowerCase() === username.toLowerCase());
     if (!u) return;
     u.passwordHash = passwordHash;
+    u.mustChangePassword = true;
     await db.write();
+  },
+  // ผู้ใช้เปลี่ยนรหัสของตัวเอง → ล้างธง
+  async setOwnPassword(username, passwordHash) {
+    const u = db.data.users.find((x) => x.username.toLowerCase() === username.toLowerCase());
+    if (!u) return false;
+    u.passwordHash = passwordHash;
+    u.mustChangePassword = false;
+    await db.write();
+    return true;
   },
   async deleteUser(username) {
     db.data.users = db.data.users.filter((u) => u.username !== username);

@@ -196,3 +196,55 @@ describe('ลายมือชื่อรับทราบต้องเก�
     assert.equal(again.status, 400, 'ลงนามซ้ำเวอร์ชันเดิมต้องไม่ได้');
   });
 });
+
+describe('บังคับตั้งรหัสผ่านใหม่เมื่อยังใช้รหัสชั่วคราว', () => {
+  const NEWUSER = '90001';
+  const TEMP = 'medtechtuh';
+
+  test('บัญชีที่ผู้ดูแลตั้งรหัสให้ ต้องติดธง และถูกบล็อกทุก endpoint', async () => {
+    const admin = await login('sysadmin', 'sysadmin123');
+    // สร้างบัญชีใหม่แล้วให้ผู้ดูแลตั้งรหัสชั่วคราว
+    await api('/api/users', {
+      method: 'POST', headers: auth(admin),
+      body: JSON.stringify({ username: NEWUSER, password: TEMP, name: 'ทดสอบ รหัสชั่วคราว', role: 'med_tech', cat: 'HEM' }),
+    });
+    await api(`/api/users/${NEWUSER}/reset-password`, {
+      method: 'POST', headers: auth(admin), body: JSON.stringify({ password: TEMP }),
+    });
+
+    const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: NEWUSER, password: TEMP }) });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.user.mustChangePassword, true, 'ต้องติดธงว่ายังใช้รหัสชั่วคราว');
+
+    const token = res.body.token;
+    const docs = await api('/api/documents', { headers: auth(token) });
+    assert.equal(docs.status, 403, 'ต้องถูกบล็อกจนกว่าจะตั้งรหัสใหม่');
+    assert.equal(docs.body.mustChangePassword, true);
+  });
+
+  test('เปลี่ยนรหัสแล้วใช้งานได้ และรหัสชั่วคราวเดิมใช้ไม่ได้', async () => {
+    const token = await login(NEWUSER, TEMP);
+    assert.ok(token);
+
+    const short = await api('/api/auth/change-password', {
+      method: 'POST', headers: auth(token), body: JSON.stringify({ currentPassword: TEMP, newPassword: '123' }),
+    });
+    assert.equal(short.status, 400, 'รหัสสั้นเกินต้องไม่ผ่าน');
+
+    const same = await api('/api/auth/change-password', {
+      method: 'POST', headers: auth(token), body: JSON.stringify({ currentPassword: TEMP, newPassword: TEMP }),
+    });
+    assert.equal(same.status, 400, 'รหัสใหม่ซ้ำของเดิมต้องไม่ผ่าน');
+
+    const ok = await api('/api/auth/change-password', {
+      method: 'POST', headers: auth(token), body: JSON.stringify({ currentPassword: TEMP, newPassword: 'RahatMai2569x' }),
+    });
+    assert.equal(ok.status, 200);
+
+    const after = await api('/api/documents', { headers: auth(token) });
+    assert.equal(after.status, 200, 'เปลี่ยนรหัสแล้วต้องใช้งานได้');
+
+    const old = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: NEWUSER, password: TEMP }) });
+    assert.equal(old.status, 401, 'รหัสชั่วคราวเดิมต้องใช้ไม่ได้แล้ว');
+  });
+});

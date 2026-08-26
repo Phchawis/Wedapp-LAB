@@ -65,6 +65,11 @@ async function authMw(req, res, next) {
     const u = await store.getUserByUsername(payload.username);
     if (!u) return res.status(401).json({ error: 'บัญชีนี้ถูกปิดหรือถูกลบแล้ว กรุณาเข้าสู่ระบบใหม่' });
     req.user = { username: u.username, name: u.name, role: u.role, cat: u.cat || null };
+    // บัญชีที่ยังใช้รหัสชั่วคราว: บล็อกทุกอย่างที่ฝั่งเซิร์ฟเวอร์จนกว่าจะตั้งรหัสใหม่
+    // (บังคับที่ API ไม่ใช่แค่ซ่อนหน้าจอ — กันการเรียก API ตรงข้ามหน้าเปลี่ยนรหัส)
+    if (u.mustChangePassword && req.path !== '/api/auth/change-password' && req.path !== '/api/auth/logout') {
+      return res.status(403).json({ error: 'ต้องตั้งรหัสผ่านใหม่ก่อนใช้งานระบบ', mustChangePassword: true });
+    }
     next();
   } catch (e) { console.error(e); res.status(500).json({ error: 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' }); }
 }
@@ -91,7 +96,26 @@ app.post('/api/auth/login', wrap(async (req, res) => {
   const actor = { username: u.username, name: u.name, role: u.role };
   const token = jwt.sign(actor, JWT_SECRET, { expiresIn: '12h' });
   await logAction(actor, 'login');
-  res.json({ token, user: actor });
+  // mustChangePassword = บัญชีที่ผู้ดูแลสร้าง/รีเซ็ตรหัสให้ ต้องตั้งรหัสใหม่ก่อนใช้งานจริง
+  res.json({ token, user: { ...actor, mustChangePassword: !!u.mustChangePassword } });
+}));
+
+// ผู้ใช้ตั้งรหัสผ่านใหม่ของตัวเอง (ยืนยันรหัสเดิมก่อน) — ใช้ปลดล็อกบัญชีที่ยังใช้รหัสชั่วคราว
+app.post('/api/auth/change-password', authMw, wrap(async (req, res) => {
+  const { currentPassword = '', newPassword = '' } = req.body;
+  if (String(newPassword).length < 8) {
+    return res.status(400).json({ error: 'รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร' });
+  }
+  const u = await store.getUserByUsername(req.user.username);
+  if (!u || !bcrypt.compareSync(currentPassword, u.passwordHash)) {
+    return res.status(401).json({ error: 'รหัสผ่านเดิมไม่ถูกต้อง' });
+  }
+  if (bcrypt.compareSync(newPassword, u.passwordHash)) {
+    return res.status(400).json({ error: 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม' });
+  }
+  await store.setOwnPassword(req.user.username, bcrypt.hashSync(newPassword, 10));
+  await logAction(req.user, 'user:change-password');
+  res.json({ ok: true });
 }));
 
 app.post('/api/auth/logout', authMw, wrap(async (req, res) => {

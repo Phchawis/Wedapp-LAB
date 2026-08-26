@@ -61,9 +61,12 @@ async function req(path, { method = 'GET', body, isForm } = {}) {
   });
   if (!res.ok) {
     let msg = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
-    try { msg = (await res.json()).error || msg; } catch { /* non-json */ }
+    let payload = null;
+    try { payload = await res.json(); msg = payload?.error || msg; } catch { /* non-json */ }
     const err = new Error(msg);
     err.status = res.status;
+    // เซิร์ฟเวอร์แจ้งว่าบัญชีนี้ต้องตั้งรหัสผ่านใหม่ก่อนใช้งาน
+    err.mustChangePassword = !!payload?.mustChangePassword;
     throw err;
   }
   if (res.status === 204) return null;
@@ -75,6 +78,8 @@ export const api = {
   decodeToken,
   login: (username, password) => req('/auth/login', { method: 'POST', body: { username, password } }),
   logout: () => req('/auth/logout', { method: 'POST' }).catch(() => {}),
+  changeOwnPassword: (currentPassword, newPassword) =>
+    req('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } }),
   // เข้าสู่ระบบผ่านลิงก์จาก Masterlist ด้วย token อายุสั้นที่เซ็นมาแล้ว
   ssoLogin: (ssoToken) => req('/auth/sso', { method: 'POST', body: { token: ssoToken } }),
 

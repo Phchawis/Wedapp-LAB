@@ -13,6 +13,7 @@ const RegisterDocScreen = lazy(() => import('./screens/RegisterDocScreen.jsx'));
 const UsersScreen = lazy(() => import('./screens/UsersScreen.jsx'));
 const LogScreen = lazy(() => import('./screens/LogScreen.jsx'));
 const HelpScreen = lazy(() => import('./screens/HelpScreen.jsx'));
+const ChangePasswordScreen = lazy(() => import('./screens/ChangePasswordScreen.jsx'));
 
 function Loader({ text = 'กำลังโหลดข้อมูล...' }) {
   return (
@@ -37,6 +38,8 @@ export default function App() {
   const [logs, setLogs] = useState([]);
   const [currentUser, setCurrentUser] = useState(() => decodeToken());
   const [booting, setBooting] = useState(true);
+  // บัญชีที่ยังใช้รหัสผ่านชั่วคราว — ต้องตั้งรหัสใหม่ก่อนจึงใช้งานระบบได้
+  const [mustChangePw, setMustChangePw] = useState(false);
   const [ssoError, setSsoError] = useState('');
 
   const role = currentUser?.role;
@@ -53,6 +56,7 @@ export default function App() {
 
   const handleAuthError = useCallback((e) => {
     if (e?.status === 401) { setToken(null); setCurrentUser(null); }
+    else if (e?.mustChangePassword) setMustChangePw(true);
     else window.alert(e?.message || 'เกิดข้อผิดพลาด');
   }, []);
 
@@ -86,6 +90,7 @@ export default function App() {
 
       const u = decodeToken();
       if (u) {
+        // ถ้าบัญชียังใช้รหัสชั่วคราว เซิร์ฟเวอร์จะตอบ 403 พร้อมธง — จับไว้แล้วพาไปหน้าตั้งรหัสใหม่
         try { await refreshAll(u.role); } catch (e) { handleAuthError(e); }
       }
       setBooting(false);
@@ -124,6 +129,8 @@ export default function App() {
             setToken(token);
             setCurrentUser(user);
             setView('dashboard');
+            // ยังใช้รหัสชั่วคราว → ไปหน้าตั้งรหัสใหม่ก่อน (ยังโหลดข้อมูลไม่ได้ เซิร์ฟเวอร์บล็อกอยู่)
+            if (user.mustChangePassword) { setMustChangePw(true); return; }
             await refreshAll(user.role);
           }}
         />
@@ -131,6 +138,27 @@ export default function App() {
     );
   }
 
+
+  // บัญชีที่ยังใช้รหัสชั่วคราว — บังคับตั้งรหัสใหม่ก่อนเข้าใช้งานส่วนอื่นของระบบ
+  if (mustChangePw) {
+    return (
+      <Suspense fallback={<Loader text="กำลังเตรียมหน้าจอ..." />}>
+        <ChangePasswordScreen
+          user={currentUser}
+          onDone={async () => {
+            setMustChangePw(false);
+            try { await refreshAll(currentUser.role); } catch (e) { handleAuthError(e); }
+          }}
+          onLogout={async () => {
+            await api.logout();
+            setToken(null);
+            setCurrentUser(null);
+            setMustChangePw(false);
+          }}
+        />
+      </Suspense>
+    );
+  }
 
   const transitionTo = (fn) => {
     if (document.startViewTransition) {

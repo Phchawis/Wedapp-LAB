@@ -99,7 +99,7 @@ export async function createPostgresStore() {
       const { rows } = await q('select * from app_users where lower(username) = lower($1)', [username.trim()]);
       if (!rows[0]) return null;
       const r = rows[0];
-      return { username: r.username, passwordHash: r.password_hash, name: r.name, role: r.role, cat: r.cat, createdAt: r.created_at };
+      return { username: r.username, passwordHash: r.password_hash, name: r.name, role: r.role, cat: r.cat, createdAt: r.created_at, mustChangePassword: !!r.must_change_password };
     },
     async listUsers() {
       const { rows } = await q('select username, name, role, cat, created_at from app_users order by created_at');
@@ -107,12 +107,12 @@ export async function createPostgresStore() {
     },
     async createUser(u) {
       const { rows } = await q(
-        `insert into app_users (username, password_hash, name, role, cat)
-         values ($1,$2,$3,$4,$5) returning username, name, role, cat, created_at`,
-        [u.username, u.passwordHash, u.name, u.role, u.cat || null],
+        `insert into app_users (username, password_hash, name, role, cat, must_change_password)
+         values ($1,$2,$3,$4,$5,$6) returning username, name, role, cat, created_at, must_change_password`,
+        [u.username, u.passwordHash, u.name, u.role, u.cat || null, !!u.mustChangePassword],
       );
       const r = rows[0];
-      return { username: r.username, name: r.name, role: r.role, cat: r.cat || null, createdAt: r.created_at };
+      return { username: r.username, name: r.name, role: r.role, cat: r.cat || null, createdAt: r.created_at, mustChangePassword: !!r.must_change_password };
     },
     async updateUser(username, patch) {
       const sets = [];
@@ -137,8 +137,17 @@ export async function createPostgresStore() {
       const r = rows[0];
       return r ? { username: r.username, name: r.name, role: r.role, cat: r.cat || null, createdAt: r.created_at } : null;
     },
+    // ผู้ดูแลตั้งรหัสให้ผู้ใช้ → ถือเป็นรหัสชั่วคราว เจ้าตัวต้องตั้งใหม่เองก่อนใช้งาน
     async resetUserPassword(username, passwordHash) {
-      await q('update app_users set password_hash = $1 where lower(username) = lower($2)', [passwordHash, username]);
+      await q('update app_users set password_hash = $1, must_change_password = true where lower(username) = lower($2)', [passwordHash, username]);
+    },
+    // ผู้ใช้เปลี่ยนรหัสของตัวเอง → ล้างธง ใช้งานระบบได้ตามปกติ
+    async setOwnPassword(username, passwordHash) {
+      const { rows } = await q(
+        'update app_users set password_hash = $1, must_change_password = false where lower(username) = lower($2) returning username',
+        [passwordHash, username],
+      );
+      return rows.length > 0;
     },
     async deleteUser(username) {
       await q('delete from app_users where lower(username) = lower($1)', [username]);

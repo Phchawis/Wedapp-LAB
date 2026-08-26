@@ -16,8 +16,13 @@ create table if not exists app_users (
   name          text not null,
   role          text not null check (role in ('sysadmin','head_work','head_cat','med_tech','assistant','admin_staff','doc_manager')),
   cat           text,
-  created_at    timestamptz not null default now()
+  created_at    timestamptz not null default now(),
+  -- true = ต้องตั้งรหัสผ่านใหม่ก่อนใช้งาน (ใช้กับบัญชีที่ผู้ดูแลสร้างให้พร้อมรหัสชั่วคราว)
+  must_change_password boolean not null default false
 );
+
+-- เพิ่มคอลัมน์ให้ฐานข้อมูลที่สร้างไว้ก่อนหน้า (ปลอดภัยเมื่อรันซ้ำ)
+alter table app_users add column if not exists must_change_password boolean not null default false;
 
 -- เอกสารคุณภาพ
 create table if not exists documents (

@@ -221,7 +221,12 @@
       "Bash(curl -sI -m 20 https://labtuhqms.duckdns.org/)",
       "Bash(openssl s_client -connect labtuhqms.duckdns.org:443 -servername labtuhqms.duckdns.org)",
       "Bash(openssl x509 *)",
-      "Bash(openssl s_client -connect ashtuhdoc.duckdns.org:443 -servername ashtuhdoc.duckdns.org)"
+      "Bash(openssl s_client -connect ashtuhdoc.duckdns.org:443 -servername ashtuhdoc.duckdns.org)",
+      "Bash(sed -n '/create table if not exists app_users/,/\\);/p' server/schema.postgres.sql)",
+      "Bash(sed -n '/api\\\\/auth\\\\/login/,/^}\\)\\);/p' server/index.js)",
+      "Bash(sed -n '/async getUserByUsername/,/},/p' server/store-lowdb.js)",
+      "Bash(sed -n '/async resetUserPassword/,/},/p' server/store-lowdb.js)",
+      "Bash(sed -n '/async createUser/,/},/p' server/store-lowdb.js)"
     ]
   }
 }
