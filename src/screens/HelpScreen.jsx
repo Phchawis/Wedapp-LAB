@@ -22,24 +22,108 @@ function Section({ n, title, children }) {
   );
 }
 
-/* ── ส่วนที่ 05 — สถาปัตยกรรมระบบสำหรับ Programmer / เจ้าหน้าที่ IT ──────────────
-   เขียนตามระบบจริง: React+Vite (SPA) ↔ Express API (Node 22) ↔ Supabase (Postgres + Storage),
-   ยืนยันตัวตนด้วย JWT + bcrypt, เชื่อม SSO กับระบบ Masterlist ฝ่ายสหเวชศาสตร์, ดีพลอยบน Render. */
+/* ── ส่วนที่ 01 — เข้าใช้งานครั้งแรก ───────────────────────────────────────────
+   บัญชีส่วนใหญ่นำเข้าจากทะเบียนบุคลากรพร้อมกันทั้งชุด จึงเริ่มด้วยรหัสผ่านชั่วคราว
+   "ชุดเดียวกันทุกคน" — ข้อนี้จึงต้องเป็นข้อแรกที่ผู้ใช้ใหม่อ่านก่อนทำอย่างอื่น
+   หมายเหตุ: ไม่พิมพ์ตัวรหัสชั่วคราวไว้ในคู่มือ เพราะคู่มือเปิดอ่านได้ทุกบทบาท */
+
+const FIRST_LOGIN = [
+  { icon: 'User', title: 'เข้าสู่ระบบด้วยรหัสเจ้าหน้าที่',
+    desc: 'ชื่อผู้ใช้คือ “รหัสเจ้าหน้าที่” ของท่าน ส่วนรหัสผ่านคือรหัสชั่วคราวที่ผู้ดูแลระบบแจ้งให้ทราบ' },
+  { icon: 'KeyRound', title: 'ตั้งรหัสผ่านของตัวเอง',
+    desc: 'ระบบพาไปหน้าตั้งรหัสผ่านทันที — กรอกรหัสชั่วคราว แล้วตั้งรหัสใหม่อย่างน้อย 8 ตัวอักษร' },
+  { icon: 'Eye', title: 'ตรวจรหัสก่อนบันทึก',
+    desc: 'กดปุ่มรูปตาท้ายช่องเพื่อดูรหัสที่พิมพ์ไป ป้องกันการพิมพ์ผิดโดยไม่รู้ตัว' },
+  { icon: 'CircleCheck', title: 'เริ่มใช้งานได้เต็มรูปแบบ',
+    desc: 'เมื่อตั้งรหัสใหม่สำเร็จ ระบบเปิดเมนูตามสิทธิ์ของท่านทั้งหมด และจะไม่ถามอีก' },
+];
+
+const ACCOUNT_FAQ = [
+  { icon: 'ShieldAlert', q: 'ยังไม่ตั้งรหัสใหม่ ใช้งานอะไรได้บ้าง',
+    a: 'ไม่ได้เลย — ระบบปิดกั้นทุกเมนูจนกว่าจะตั้งรหัสของตัวเอง รวมถึงการลงนามรับทราบเอกสารด้วย' },
+  { icon: 'Lock', q: 'ลืมรหัสผ่านของตัวเอง',
+    a: 'แจ้งผู้ดูแลระบบเพื่อรีเซ็ต ระบบจะตั้งกลับเป็นรหัสชั่วคราวและบังคับให้ท่านตั้งรหัสใหม่อีกครั้งเมื่อเข้าระบบ' },
+  { icon: 'UserCog', q: 'เปลี่ยนรหัสผ่านภายหลัง',
+    a: 'เปลี่ยนเองได้ตลอดเวลาที่เมนูบัญชีของท่าน โดยต้องยืนยันรหัสเดิมก่อนทุกครั้ง' },
+  { icon: 'Users', q: 'ใช้บัญชีร่วมกันหลายคนได้ไหม',
+    a: 'ไม่ได้ — การลงนามรับทราบผูกกับชื่อเจ้าของบัญชี การใช้ร่วมกันทำให้หลักฐานการอบรม/รับทราบใช้อ้างอิงไม่ได้' },
+];
+
+function FirstLoginSection() {
+  return (
+    <Section n="01" title="เริ่มต้นใช้งานครั้งแรก (สำหรับผู้ใช้ใหม่ทุกท่าน)">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 20, marginBottom: 22 }}>
+        {FIRST_LOGIN.map((s, i) => (
+          <div key={s.title} className="qms-rise-stagger" style={{ '--i': i, minWidth: 0 }}>
+            <div className="qms-grow" style={{ '--i': i, height: 3, borderRadius: 2, background: 'var(--brand-600)', marginBottom: 16, transformOrigin: 'left' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <span style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                width: 26, height: 26, borderRadius: '50%', background: 'var(--brand-700)',
+                font: 'var(--fw-bold) var(--text-xs)/1 var(--font-mono)', color: '#fff',
+              }}>{i + 1}</span>
+              <Icon name={s.icon} size={17} color="var(--brand-700)" />
+            </div>
+            <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)', marginBottom: 6 }}>{s.title}</div>
+            <div style={{ font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--text-secondary)' }}>{s.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* เหตุผลของการบังคับเปลี่ยนรหัส — ผูกกับข้อกำหนดจริง ไม่ใช่กฎที่ตั้งขึ้นลอย ๆ */}
+      <div style={{
+        display: 'flex', gap: 13, alignItems: 'flex-start', marginBottom: 22,
+        background: 'var(--accent-50)', border: '1px solid var(--accent-600)',
+        borderRadius: 'var(--radius-md)', padding: '14px 16px',
+      }}>
+        <Icon name="ShieldAlert" size={19} color="var(--accent-600)" style={{ flexShrink: 0, marginTop: 1 }} />
+        <div style={{ font: 'var(--text-xs)/1.6 var(--font-body)', color: 'var(--text-secondary)', minWidth: 0 }}>
+          <b style={{ color: 'var(--text-primary)', font: 'var(--fw-semibold) var(--text-sm)/1.5 var(--font-body)' }}>ทำไมต้องบังคับเปลี่ยนรหัสก่อนใช้งาน</b><br />
+          รหัสชั่วคราวเป็นชุดเดียวกันทั้งหน่วยงาน หากไม่เปลี่ยน ผู้อื่นที่ทราบรหัสสามารถเข้าบัญชีของท่านและ
+          <b style={{ color: 'var(--text-primary)' }}>ลงนามรับทราบเอกสารแทนท่านได้</b> ซึ่งทำให้หลักฐานการรับทราบใช้อ้างอิงในการตรวจประเมินไม่ได้
+          ตามข้อกำหนด ISO 15189:2022 ที่ต้องระบุตัวผู้ปฏิบัติได้ชัดเจน
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+        {ACCOUNT_FAQ.map((x, i) => (
+          <div key={x.q} className="qms-node qms-rise-stagger" style={{
+            '--i': i, display: 'flex', gap: 12, background: 'var(--surface-card)',
+            border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '14px 16px',
+          }}>
+            <div style={{ flexShrink: 0, width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: 'var(--brand-50)', display: 'grid', placeItems: 'center' }}>
+              <Icon name={x.icon} size={18} color="var(--brand-700)" />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)', marginBottom: 4 }}>{x.q}</div>
+              <div style={{ font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--text-secondary)' }}>{x.a}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+/* ── ส่วนที่ 07 — สถาปัตยกรรมระบบสำหรับ Programmer / เจ้าหน้าที่ IT ──────────────
+   เขียนตามระบบจริงหลังย้ายออกจาก Supabase/Render (ส.ค. 2569):
+   React+Vite (SPA) ↔ Express API (Node 22) ↔ PostgreSQL บน VPS เครื่องเดียวกับ Masterlist,
+   ไฟล์แนบเก็บบนดิสก์ใน Docker volume, ยืนยันตัวตนด้วย JWT + bcrypt, เชื่อม SSO กับ Masterlist. */
 
 const STACK = [
   { layer: 'Frontend', name: 'React 18 + Vite 5', desc: 'Single-Page App โหลดหน้าจอแบบ lazy, ธีมด้วย Design Tokens (CSS variables)' },
   { layer: 'Backend', name: 'Node 22 + Express 4', desc: 'REST API เสิร์ฟทั้ง API และไฟล์เว็บที่ build แล้วจากบริการเดียว' },
-  { layer: 'Database', name: 'Supabase PostgreSQL', desc: 'จัดเก็บทะเบียนเอกสาร ผู้ใช้งาน และบันทึกกิจกรรม (audit log)' },
-  { layer: 'File Storage', name: 'Supabase Storage', desc: 'เก็บไฟล์แนบจริง (PDF/Word/Excel) ในบัคเก็ต qms-files แยกจากฐานข้อมูล' },
+  { layer: 'Database', name: 'PostgreSQL (VPS)', desc: 'อินสแตนซ์เดียวกับระบบ Masterlist แต่แยกฐานข้อมูลและผู้ใช้ฐานข้อมูลออกจากกัน' },
+  { layer: 'File Storage', name: 'Docker volume', desc: 'ไฟล์แนบจริง (PDF/Word/Excel) เก็บบนดิสก์ที่ /app/uploads เสิร์ฟผ่าน API ที่ตรวจสิทธิ์ก่อนทุกครั้ง' },
   { layer: 'Auth', name: 'JWT + bcryptjs', desc: 'เซสชันเป็น JSON Web Token, รหัสผ่านแฮชด้วย bcrypt ไม่เก็บเป็นข้อความจริง' },
-  { layer: 'Deploy', name: 'Render (Node)', desc: 'บริการเว็บเดียว build ด้วย npm run build แล้ว start ด้วย npm start' },
+  { layer: 'Deploy', name: 'Docker · Caddy · VPS', desc: 'รันเป็นคอนเทนเนอร์หลัง Caddy (ออกใบรับรอง HTTPS อัตโนมัติ) build ผ่าน CI ไม่ build บนเครื่องจริง' },
 ];
 
 // ท่อการทำงานของ 1 คำขอ (request lifecycle) เมื่อผู้ใช้ "ลงทะเบียนเอกสาร"
 const LIFECYCLE = [
   { t: 'ผู้ใช้กดบันทึก', d: 'ฟอร์มรวมไฟล์แนบเป็น FormData ส่งผ่าน HTTPS' },
-  { t: 'ตรวจ JWT + สิทธิ์', d: 'มิดเดิลแวร์ยืนยัน token และเช็ก RBAC (can(role, "register"))' },
-  { t: 'อัปโหลดไฟล์', d: 'ไฟล์เข้าสู่ Supabase Storage คืนค่า path อ้างอิง' },
+  { t: 'ตรวจ JWT + สิทธิ์', d: 'มิดเดิลแวร์ยืนยัน token, เช็กสถานะบัญชีในฐานข้อมูล และเช็ก RBAC (can(role, "register"))' },
+  { t: 'อัปโหลดไฟล์', d: 'multer ตรวจชนิด/ขนาดไฟล์ แล้วเขียนลงดิสก์ คืนค่า path อ้างอิง' },
   { t: 'เขียนฐานข้อมูล', d: 'บันทึกแถวเอกสาร + เขียน audit log ผู้ทำรายการ' },
   { t: 'ตอบกลับ + รีเฟรช', d: 'ส่ง JSON เอกสารใหม่ หน้าจอรีเฟรชทะเบียนทันที' },
 ];
@@ -142,7 +226,7 @@ function DowntimeSection() {
   };
 
   return (
-    <Section n="05" title="แผนรับมือเมื่อระบบใช้งานไม่ได้ (Downtime Plan)">
+    <Section n="06" title="แผนรับมือเมื่อระบบใช้งานไม่ได้ (Downtime Plan)">
       <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', marginBottom: 18, maxWidth: '72ch' }}>
         งานห้องปฏิบัติการต้องดำเนินต่อได้เสมอแม้ระบบสารสนเทศขัดข้อง หัวข้อนี้กำหนดว่าแต่ละบทบาททำอะไร
         เพื่อให้บริการไม่หยุดชะงักและเอกสารที่ใช้อ้างอิงยังคงถูกต้อง
@@ -165,7 +249,7 @@ function DowntimeSection() {
       </div>
 
       {/* ระดับความรุนแรง */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>5.1 · ระดับความรุนแรงและการปฏิบัติ</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>6.1 · ระดับความรุนแรงและการปฏิบัติ</div>
       <Card padding="none" style={{ marginBottom: 26 }}>
         {DOWNTIME_LEVELS.map((l, i) => (
           <div key={l.title} style={{ padding: '14px 16px', borderBottom: i === DOWNTIME_LEVELS.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
@@ -180,7 +264,7 @@ function DowntimeSection() {
       </Card>
 
       {/* แยกตามบทบาท */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>5.2 · ขั้นตอนปฏิบัติแยกตามบทบาท</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>6.2 · ขั้นตอนปฏิบัติแยกตามบทบาท</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 26 }}>
         {DOWNTIME_ROLES.map((r, i) => (
           <div key={r.who} className="qms-rise-stagger" style={{
@@ -204,7 +288,7 @@ function DowntimeSection() {
       </div>
 
       {/* การ์ดฉุกเฉิน */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 8px' }}>5.3 · การ์ดฉุกเฉินสำหรับติดหน้างาน</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 8px' }}>6.3 · การ์ดฉุกเฉินสำหรับติดหน้างาน</div>
       <p style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginBottom: 14, maxWidth: '70ch' }}>
         พิมพ์ติดไว้ที่จุดปฏิบัติงาน ห้องเวร และข้างเครื่องตรวจวิเคราะห์ — อ่านได้ทันทีโดยไม่ต้องเปิดคอมพิวเตอร์
       </p>
@@ -251,40 +335,40 @@ function DowntimeSection() {
 
 function ArchitectureSection() {
   return (
-    <Section n="06" title="สถาปัตยกรรมระบบและการทำงานเบื้องหลัง (สำหรับ Programmer / เจ้าหน้าที่ IT)">
+    <Section n="07" title="สถาปัตยกรรมระบบและการทำงานเบื้องหลัง (สำหรับ Programmer / เจ้าหน้าที่ IT)">
       <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', marginBottom: 20, maxWidth: '72ch' }}>
         ส่วนนี้อธิบายภาพรวมทางเทคนิคของระบบสำหรับผู้พัฒนาและเจ้าหน้าที่ไอที ตั้งแต่ชุดเทคโนโลยีที่ใช้
         เส้นทางการไหลของข้อมูล ไปจนถึงการเชื่อมต่อกับระบบ Masterlist ฝ่ายสหเวชศาสตร์
       </p>
 
       {/* 5.1 Tech stack */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>5.1 · ชุดเทคโนโลยี (Technology Stack)</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>7.1 · ชุดเทคโนโลยี (Technology Stack)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: 28 }}>
         {STACK.map((s, i) => <StackChip key={s.layer} {...s} i={i} />)}
       </div>
 
       {/* 5.2 Architecture diagram (animated) */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>5.2 · แผนผังสถาปัตยกรรม (Architecture Overview)</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>7.2 · แผนผังสถาปัตยกรรม (Architecture Overview)</div>
       <Card>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 4, flexWrap: 'wrap' }}>
           <ArchNode icon="Monitor" title="เบราว์เซอร์ผู้ใช้" sub="React SPA" tone="slate" />
           <FlowLink label="HTTPS · JWT" />
           <ArchNode icon="Server" title="Express API" sub="Node 22" ripple />
           <FlowLink label="query" />
-          <ArchNode icon="Database" title="PostgreSQL" sub="Supabase" ripple />
+          <ArchNode icon="Database" title="PostgreSQL" sub="VPS · ฐานแยก" ripple />
           <FlowLink label="files" />
-          <ArchNode icon="FolderClosed" title="File Storage" sub="qms-files" tone="accent" />
+          <ArchNode icon="FolderClosed" title="ไฟล์แนบ" sub="Docker volume" tone="accent" />
         </div>
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span className="qms-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-500)', flexShrink: 0 }} />
           <span style={{ font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--text-secondary)' }}>
-            บริการเดียวบน Render ทำหน้าที่ทั้งเสิร์ฟไฟล์เว็บที่ build แล้ว และรับคำขอ API — ฐานข้อมูลและไฟล์แนบแยกไปอยู่บน Supabase
+            คอนเทนเนอร์เดียวหลัง Caddy ทำหน้าที่ทั้งเสิร์ฟไฟล์เว็บที่ build แล้วและรับคำขอ API — อยู่บน VPS เครื่องเดียวกับระบบ Masterlist และระบบบุคลากร แต่แยกคอนเทนเนอร์ ฐานข้อมูล และพื้นที่ไฟล์ออกจากกัน
           </span>
         </div>
       </Card>
 
       {/* 5.3 Request lifecycle (animated pipeline) */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>5.3 · เส้นทางการทำงานของหนึ่งคำขอ — ตัวอย่าง “ลงทะเบียนเอกสาร”</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>7.3 · เส้นทางการทำงานของหนึ่งคำขอ — ตัวอย่าง “ลงทะเบียนเอกสาร”</div>
       <div className="qms-no-print" style={{ position: 'relative', height: 3, borderRadius: 2, background: 'var(--slate-100)', margin: '0 0 18px', overflow: 'hidden' }}>
         <span className="qms-travel" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: 46, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, transparent, var(--brand-500))' }} />
       </div>
@@ -302,7 +386,7 @@ function ArchitectureSection() {
       </div>
 
       {/* 5.4 Security + SSO */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>5.4 · ความปลอดภัยและการเชื่อมต่อระบบ Masterlist (SSO)</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>7.4 · ความปลอดภัยและการเชื่อมต่อระบบ Masterlist (SSO)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
         {[
           { icon: 'ShieldCheck', t: 'RBAC ตามบทบาท', d: 'ทุก endpoint ตรวจสิทธิ์ด้วย can(role, action) — สิทธิ์ผู้ควบคุมเอกสารกับผู้ใช้ทั่วไปแยกกันชัดเจน' },
@@ -374,8 +458,11 @@ export function HelpScreen() {
         <div style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)', marginTop: 4 }}>โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ · มาตรฐาน ISO 15189:2022</div>
       </div>
 
-      {/* 01 — Coding standards + lifecycle */}
-      <Section n="01" title="ข้อกำหนดรหัสเอกสารควบคุมและวงจรสถานะ">
+      {/* 01 — First login: ทุกบัญชีที่นำเข้าจากทะเบียนบุคลากรต้องอ่านข้อนี้ก่อน */}
+      <FirstLoginSection />
+
+      {/* 02 — Coding standards + lifecycle */}
+      <Section n="02" title="ข้อกำหนดรหัสเอกสารควบคุมและวงจรสถานะ">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px 32px' }}>
           <div>
             <div style={{ font: 'var(--type-ui)', color: 'var(--text-secondary)', marginBottom: 12 }}>
@@ -406,8 +493,8 @@ export function HelpScreen() {
         </div>
       </Section>
 
-      {/* 02 — How to register a document: animated step infographic */}
-      <Section n="02" title="วิธีการลงทะเบียนเอกสารใหม่">
+      {/* 03 — How to register a document: animated step infographic */}
+      <Section n="03" title="วิธีการลงทะเบียนเอกสารใหม่">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
           {REGISTER_STEPS.map((s, i) => (
             <div key={s.title} className="qms-rise-stagger" style={{ '--i': i, minWidth: 0 }}>
@@ -427,15 +514,15 @@ export function HelpScreen() {
         </div>
       </Section>
 
-      {/* 03 — Permissions matrix (real tabular data keeps the register's own table treatment) */}
-      <Section n="03" title="ตารางสิทธิ์และการเข้าถึง (Role & Permissions Matrix)">
+      {/* 04 — Permissions matrix (real tabular data keeps the register's own table treatment) */}
+      <Section n="04" title="ตารางสิทธิ์และการเข้าถึง (Role & Permissions Matrix)">
         <Card padding="none">
           <PermMatrix />
         </Card>
       </Section>
 
-      {/* 04 — Shortcuts + printing */}
-      <Section n="04" title="คีย์ลัดนำทางด่วนและการพิมพ์เอกสาร">
+      {/* 05 — Shortcuts + printing */}
+      <Section n="05" title="คีย์ลัดนำทางด่วนและการพิมพ์เอกสาร">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px 32px' }}>
           <div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -458,8 +545,7 @@ export function HelpScreen() {
         </div>
       </Section>
 
-      {/* 05 — สถาปัตยกรรมระบบสำหรับ Programmer / เจ้าหน้าที่ IT */}
-      {/* 05 — แผนรับมือเมื่อระบบใช้งานไม่ได้ (ทุกบทบาทต้องอ่าน) */}
+      {/* 06 — แผนรับมือเมื่อระบบใช้งานไม่ได้ (ทุกบทบาทต้องอ่าน) */}
       <DowntimeSection />
 
       <ArchitectureSection />
