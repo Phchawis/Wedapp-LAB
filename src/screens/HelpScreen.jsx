@@ -155,7 +155,7 @@ function DowntimeSection() {
         borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: 24,
       }}>
         <Icon name="AlertTriangle" size={18} color="var(--accent-700)" style={{ flexShrink: 0, marginTop: 2 }} />
-        <p style={{ font: 'var(--text-sm)/1.65 var(--font-body)', color: 'var(--text-secondary)', margin: 0, flex: '1 1 300px', minWidth: 0 }}>
+        <p style={{ font: 'var(--text-sm)/1.65 var(--font-body)', color: 'var(--text-secondary)', margin: 0, flex: '1 1 300px', minWidth: 0, maxWidth: '86ch' }}>
           <b style={{ color: 'var(--text-primary)' }}>คู่มือหน้านี้อ่านไม่ได้ตอนระบบล่ม</b> —
           กรุณาพิมพ์การ์ดฉุกเฉินด้านล่างติดไว้ที่จุดปฏิบัติงาน และดาวน์โหลด “ชุดกู้ชีพออฟไลน์” เก็บไว้ล่วงหน้าทุกเดือน
         </p>
@@ -174,7 +174,7 @@ function DowntimeSection() {
               <span style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{l.title}</span>
               <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{l.when}</span>
             </div>
-            <div style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-secondary)' }}>{l.action}</div>
+            <div style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-secondary)', maxWidth: '86ch' }}>{l.action}</div>
           </div>
         ))}
       </Card>
@@ -364,7 +364,9 @@ export function HelpScreen() {
   };
 
   return (
-    <div id="qms-help-doc" className="qms-rise" style={{ maxWidth: 'var(--container-max)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+    // คู่มือเป็นเอกสารสำหรับ "อ่าน" จึงจำกัดความกว้างไว้ ไม่ยืดเต็มจอเหมือนหน้าตาราง
+    // (บรรทัดยาวเกินไปทำให้สายตาไล่บรรทัดถัดไปลำบาก)
+    <div id="qms-help-doc" className="qms-rise" style={{ maxWidth: 1180, display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* ปกเฉพาะตอนพิมพ์ PDF — ไม่แสดงบนหน้าจอ */}
       <div className="qms-print-only" style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '2px solid var(--brand-700)' }}>
         <div style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.14em', color: 'var(--brand-700)', textTransform: 'uppercase', marginBottom: 8 }}>User Guide · คู่มือการใช้งาน</div>

@@ -390,11 +390,13 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                   <DocTypeTag type={doc.type} />
                   <StatusBadge status={doc.status} size="sm" />
                 </div>
-                <h1 style={{ font: 'var(--fw-bold) var(--text-2xl)/1.2 var(--font-display)', color: 'var(--text-primary)', marginBottom: 4 }}>{doc.th}</h1>
+                {/* จำกัดความยาวบรรทัดของชื่อเอกสาร — บนจอกว้างบรรทัดยาวเกินไปจะอ่านยาก */}
+                <h1 style={{ font: 'var(--fw-bold) var(--text-2xl)/1.2 var(--font-display)', color: 'var(--text-primary)', marginBottom: 4, maxWidth: '38ch' }}>{doc.th}</h1>
                 <div style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)' }}>{typeObj?.th || doc.type} · หมวดงาน{catObj?.th || doc.cat}</div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 16, padding: '16px 18px', background: 'var(--slate-50)' }}>
+            {/* จำกัดความกว้างของแต่ละช่อง (ไม่ใช้ 1fr) — บนจอกว้างข้อมูลจะได้ไม่ถูกยืดกระจายจนอ่านยาก */}
+            <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(130px, 210px))', gap: '16px 28px', justifyContent: 'start', padding: '16px 18px', background: 'var(--slate-50)' }}>
               <Field k="เลขที่เอกสาร" v={doc.no} />
               <Field k="แก้ไขครั้งที่" v={String(doc.rev).padStart(2, '0')} />
               <Field k="ประกาศใช้" v={doc.updated} />
