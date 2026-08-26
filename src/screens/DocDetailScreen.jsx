@@ -300,7 +300,9 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   }
 
   return (
-    <div className="qms-rise" style={{ maxWidth: 1080 }}>
+    // ใช้ความกว้างเดียวกับหน้าอื่นในระบบ — เดิมจำกัด 1080px ทำให้เหลือที่ว่างด้านขวาเยอะบนจอกว้าง
+    // และบีบตัวแสดงเอกสารให้เล็กกว่าที่ควร
+    <div className="qms-rise" style={{ maxWidth: 'var(--container-max)' }}>
       <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-secondary)', font: 'var(--type-ui)', padding: '6px 8px', margin: '0 -8px 12px', minHeight: 40 }}>
         <Icon name="ArrowLeft" size={16} /> กลับสู่ทะเบียนเอกสาร
       </button>
