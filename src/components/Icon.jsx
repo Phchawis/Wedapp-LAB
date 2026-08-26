@@ -13,6 +13,7 @@ import {
   UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
   TrendingUp, Users, HelpCircle, ShieldCheck, ShieldAlert, AlertCircle,
   Compass, List, Menu, X, Monitor, Server, Database, KeyRound, EyeOff,
+  Maximize2, Minimize2,
 } from 'lucide-react';
 
 const ICONS = {
@@ -23,6 +24,7 @@ const ICONS = {
   UserCog, Trash2, Printer, FileSpreadsheet, Upload, Droplet, Microscope,
   TrendingUp, Users, HelpCircle, ShieldCheck, ShieldAlert, AlertCircle,
   Compass, List, Menu, X, Monitor, Server, Database, KeyRound, EyeOff,
+  Maximize2, Minimize2,
 };
 
 export function Icon({ name, size = 18, color = 'currentColor', sw = 2, style }) {

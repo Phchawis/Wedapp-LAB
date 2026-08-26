@@ -9,6 +9,13 @@ import { LOG_ACTIONS } from '../auth/activityLog.js';
 import { api } from '../api.js';
 
 const seal = '/lab-seal.png';
+// ปุ่มไอคอนบนแถบหัวของตัวแสดงเอกสาร (ขยายเต็มจอ / ปิด)
+const previewBtnStyle = {
+  border: 'none', background: 'transparent', cursor: 'pointer',
+  padding: 5, display: 'flex', alignItems: 'center',
+  color: 'var(--text-secondary)', borderRadius: 'var(--radius-sm)',
+  transition: 'background var(--dur-fast) var(--ease-standard)',
+};
 // วันที่จริงตอนดำเนินการ workflow — ใช้เวลาไทย (en-CA ให้รูปแบบ YYYY-MM-DD)
 // ห้ามใช้ toISOString().slice(0,10) เพราะเป็น UTC จะเพี้ยนถอย 1 วันช่วงเช้ามืด
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
@@ -45,6 +52,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   const attachments = doc.attachments || [];
   const history = doc.history || [];
 
+  const previewRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewName, setPreviewName] = useState('');
   const [loadingPreviewId, setLoadingPreviewId] = useState(null);
@@ -85,6 +94,23 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
       }
     };
   }, [previewUrl]);
+
+  // ติดตามสถานะเต็มจอ — ผู้ใช้กด Esc ออกเองได้ ปุ่มต้องเปลี่ยนตาม
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === previewRef.current);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      previewRef.current?.requestFullscreen?.().catch(() => {
+        window.alert('เบราว์เซอร์ไม่อนุญาตให้ขยายเต็มจอ — ใช้ปุ่ม "ดาวน์โหลดเอกสาร" เปิดอ่านแทนได้');
+      });
+    }
+  };
 
   // การดำเนินการ workflow — เปลี่ยนสถานะเอกสาร (ส่ง patch + action ให้ backend บันทึก log)
   const publish = () => {
@@ -295,6 +321,59 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
         ))}
       </div>
 
+      {/* ตัวแสดงเอกสาร — กว้างเต็มหน้าเพื่อให้อ่านรายละเอียดได้ชัด (กดขยายเต็มจอได้) */}
+      {previewUrl && (
+        <div ref={previewRef} className="qms-preview" style={{ marginBottom: 20 }}>
+          <Card
+            padding="none"
+            header={
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+                  <Icon name="FileText" size={16} color="var(--brand-700)" />
+                  <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    แสดงเอกสาร: {previewName}
+                  </span>
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    title={isFullscreen ? 'ออกจากเต็มจอ (Esc)' : 'ขยายเต็มจอ'}
+                    aria-label={isFullscreen ? 'ออกจากเต็มจอ' : 'ขยายเต็มจอ'}
+                    style={previewBtnStyle}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--slate-100)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <Icon name={isFullscreen ? 'Minimize2' : 'Maximize2'} size={17} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (document.fullscreenElement) document.exitFullscreen?.();
+                      URL.revokeObjectURL(previewUrl);
+                      setPreviewUrl(null);
+                      setPreviewName('');
+                    }}
+                    title="ปิดตัวแสดงเอกสาร"
+                    aria-label="ปิดตัวแสดงเอกสาร"
+                    style={previewBtnStyle}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--slate-100)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <Icon name="X" size={18} />
+                  </button>
+                </span>
+              </div>
+            }
+          >
+            {/* ไม่ใส่ #toolbar=0 เพื่อให้ผู้ใช้ซูม/เลื่อนหน้าเอกสารได้ตามปกติ */}
+            <div className="qms-preview-body">
+              <iframe src={previewUrl} title={previewName} />
+            </div>
+          </Card>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24, alignItems: 'start' }}>
         {/* Main column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -336,50 +415,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
 
           {activeTab === 'detail' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {/* Inline PDF Viewer */}
-              {previewUrl && (
-                <Card
-                  padding="none"
-                  header={
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                        <Icon name="FileText" size={16} color="var(--brand-700)" />
-                        <span style={{ font: 'var(--type-card-title)', color: 'var(--text-primary)' }}>แสดงเอกสาร: {previewName}</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          URL.revokeObjectURL(previewUrl);
-                          setPreviewUrl(null);
-                          setPreviewName('');
-                        }}
-                        style={{
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          padding: 4,
-                          display: 'flex',
-                          alignItems: 'center',
-                          color: 'var(--text-secondary)',
-                          borderRadius: 'var(--radius-sm)',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--slate-100)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <Icon name="X" size={18} />
-                      </button>
-                    </div>
-                  }
-                >
-                  <div style={{ background: 'var(--slate-100)', display: 'grid', placeItems: 'center', height: 600 }}>
-                    <iframe
-                      src={`${previewUrl}#toolbar=0`}
-                      title={previewName}
-                      style={{ width: '100%', height: '100%', border: 'none' }}
-                    />
-                  </div>
-                </Card>
-              )}
+              {/* ตัวแสดงเอกสารย้ายไปอยู่เต็มความกว้างเหนือคอลัมน์ (ดูด้านบน) */}
 
               {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
               <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>

@@ -231,6 +231,33 @@ code, kbd, samp { font-family: var(--font-mono); }
   .qms-node { transition: none !important; }
 }
 
+/* ── ตัวแสดงเอกสาร PDF ──────────────────────────────────────────────────────
+   ให้พื้นที่อ่านมากที่สุด: กว้างเต็มหน้า สูงตามจอ และกดขยายเต็มจอได้
+   (เดิมถูกบีบอยู่ในคอลัมน์แคบ สูงตายตัว 600px อ่านรายละเอียดไม่ออก) */
+.qms-preview-body {
+  background: var(--slate-100);
+  height: clamp(520px, 78vh, 1200px);
+}
+.qms-preview-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+/* ตอนเต็มจอ ให้เอกสารกินพื้นที่ทั้งหมดที่เหลือจากแถบหัว */
+.qms-preview:fullscreen {
+  background: var(--surface-card);
+  padding: 0;
+}
+.qms-preview:fullscreen .qms-preview-body {
+  height: calc(100vh - 57px);
+  max-height: none;
+}
+/* ซาฟารีรุ่นเก่าใช้ prefix แยก */
+.qms-preview:-webkit-full-screen .qms-preview-body {
+  height: calc(100vh - 57px);
+}
+
 /* ── การ์ดฉุกเฉิน (แผนรับมือระบบล่ม) — พิมพ์ลง A4 ติดหน้างาน ─────────────── */
 .qms-emg {
   border: 2px solid var(--slate-900);
