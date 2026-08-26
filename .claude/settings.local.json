@@ -226,7 +226,26 @@
       "Bash(sed -n '/api\\\\/auth\\\\/login/,/^}\\)\\);/p' server/index.js)",
       "Bash(sed -n '/async getUserByUsername/,/},/p' server/store-lowdb.js)",
       "Bash(sed -n '/async resetUserPassword/,/},/p' server/store-lowdb.js)",
-      "Bash(sed -n '/async createUser/,/},/p' server/store-lowdb.js)"
+      "Bash(sed -n '/async createUser/,/},/p' server/store-lowdb.js)",
+      "Bash(sed -i '' 's|import { changeOwnPassword, } from \"@/app/actions/users\";|import { changeOwnPassword } from \"@/app/actions/users\";|' src/components/ForcePasswordForm.tsx)",
+      "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55491/ml\" SESSION_SECRET=\"local-test-secret-at-least-32-characters!\" SEED_DEMO=1 ADMIN_PASSWORD=admin12345)",
+      "Bash(curl -s -m 30 -o /dev/null -w \"login page: HTTP %{http_code}\\\\n\" http://localhost:5310/login)",
+      "Bash(sed -i '' 's|^import { useRouter } from \"next/navigation\";$||' src/components/ForcePasswordForm.tsx)",
+      "Bash(sed -i '' 's|^ const router = useRouter\\(\\);$||' src/components/ForcePasswordForm.tsx)",
+      "Bash(echo \"tsc exit=$?\")",
+      "Bash(scp -q /private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/create-users.mjs ahs-droplet:/tmp/create-users.mjs)",
+      "Bash(node mk-handout.mjs)",
+      "Bash(node -e 'const h=require\\(\"fs\"\\).readFileSync\\(\"รายชื่อบัญชีผู้ใช้ใหม่.html\",\"utf8\"\\);const o=\\(h.match\\(/<table/g\\)||[]\\).length,c=\\(h.match\\(/<\\\\/table>/g\\)||[]\\).length;const bo=\\(h.match\\(/<tbody/g\\)||[]\\).length,bc=\\(h.match\\(/<\\\\/tbody>/g\\)||[]\\).length;console.log\\(`table ${o}/${c} · tbody ${bo}/${bc} · ${o===c&&bo===bc?\"ok\":\"ไม่ครบ\"}`\\)')",
+      "Bash(M=\"/Users/gpharkchawisp/.claude/projects/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/memory\"; ls \"$M\" 2>/dev/null && echo \"--- MEMORY.md ---\" && cat \"$M/MEMORY.md\" 2>/dev/null)",
+      "Bash(node -e 'const p=require\\(\"./package.json\"\\);console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\)')",
+      "Bash(node --env-file-if-exists=.env server/index.js)",
+      "Bash(curl -s -m 5 http://localhost:3001/api/health -o /dev/null -w \"http %{http_code}\\\\n\")",
+      "Bash(curl -s -m 8 http://localhost:3001/api/health -w \"\\\\nhttp %{http_code}\\\\n\")",
+      "Bash(SUPABASE_URL= SUPABASE_SERVICE_ROLE_KEY= QMS_DATA_DIR=\"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qmsdata\" UPLOAD_DIR=\"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qmsdata/uploads\" node --env-file-if-exists=.env server/index.js)",
+      "Bash(curl -s -m 10 http://localhost:3001/api/health -w \"\\\\nhttp %{http_code}\\\\n\")",
+      "Bash(git checkout *)",
+      "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55492/ml\" SESSION_SECRET=\"local-guide-check-secret-at-least-32-chars!\" SEED_DEMO=1 ADMIN_PASSWORD=admin12345)",
+      "Bash(DATABASE_URL=\"postgresql://ml:t@localhost:55492/ml\" SESSION_SECRET=\"local-guide-check-secret-at-least-32-chars!\" ADMIN_PASSWORD=admin12345 npx next dev --port 5311)"
     ]
   }
 }
