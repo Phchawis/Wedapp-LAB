@@ -29,7 +29,10 @@ COPY --from=deps    /app/node_modules ./node_modules
 COPY --from=builder /app/dist         ./dist
 COPY --chown=qms:nodejs server        ./server
 # server/index.js import ตารางสิทธิ์จาก src/auth/roles.js (ใช้ร่วมกับฝั่งเว็บ)
+# server/ import โมดูลใน src/ ที่ใช้ร่วมกับฝั่งหน้าจอ — ต้องคัดลอกเข้า image ด้วย
+# ไม่งั้นคอนเทนเนอร์ start ไม่ขึ้น (ERR_MODULE_NOT_FOUND) ทั้งที่ build ผ่าน
 COPY --chown=qms:nodejs src/auth      ./src/auth
+COPY --chown=qms:nodejs src/data      ./src/data
 COPY package.json ./
 
 # ไฟล์แนบเก็บที่นี่ (map เป็น docker volume — ข้อมูลไม่หายตอน rebuild)
