@@ -88,6 +88,12 @@ export const api = {
   createDocument: (formData) => req('/documents', { method: 'POST', body: formData, isForm: true }).then(normalizeDoc),
   updateDocument: (no, patch) => req('/documents/' + encodeURIComponent(no), { method: 'PATCH', body: patch }).then(normalizeDoc),
   deleteDocument: (no) => req('/documents/' + encodeURIComponent(no), { method: 'DELETE' }),
+  // แนบไฟล์ใหม่เข้าเอกสารที่ลงทะเบียนไว้แล้ว (ไม่ใช่การทับไฟล์เดิม จึงไม่เพิ่มเลข rev)
+  addAttachment: (no, file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return req('/documents/' + encodeURIComponent(no) + '/attachments', { method: 'POST', body: fd, isForm: true });
+  },
   // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ (แทนที่ไฟล์เดิม) — ส่งไฟล์เดียวแบบ FormData
   updateAttachmentFile: (no, id, file) => {
     const fd = new FormData();

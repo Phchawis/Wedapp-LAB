@@ -245,7 +245,22 @@
       "Bash(curl -s -m 10 http://localhost:3001/api/health -w \"\\\\nhttp %{http_code}\\\\n\")",
       "Bash(git checkout *)",
       "Bash(export DATABASE_URL=\"postgresql://ml:t@localhost:55492/ml\" SESSION_SECRET=\"local-guide-check-secret-at-least-32-chars!\" SEED_DEMO=1 ADMIN_PASSWORD=admin12345)",
-      "Bash(DATABASE_URL=\"postgresql://ml:t@localhost:55492/ml\" SESSION_SECRET=\"local-guide-check-secret-at-least-32-chars!\" ADMIN_PASSWORD=admin12345 npx next dev --port 5311)"
+      "Bash(DATABASE_URL=\"postgresql://ml:t@localhost:55492/ml\" SESSION_SECRET=\"local-guide-check-secret-at-least-32-chars!\" ADMIN_PASSWORD=admin12345 npx next dev --port 5311)",
+      "Bash(scp -q \"/Users/gpharkchawisp/Documents/Wedapp ระบบจัดการเอกสาร LAB/src/screens/HelpScreen.jsx\" ahs-droplet:/opt/labqms/src/screens/HelpScreen.jsx)",
+      "Bash(scp -q src/components/GuideTutorials.tsx ahs-droplet:/opt/masterlist/src/components/GuideTutorials.tsx)",
+      "Bash(scp -q \"src/app/\\(app\\)/guide/page.tsx\" \"ahs-droplet:/opt/masterlist/src/app/\\(app\\)/guide/page.tsx\")",
+      "Bash(curl -s -m 25 -o /dev/null -w \"http %{http_code} -> %{redirect_url}\\\\n\" https://ashtuhdoc.duckdns.org/guide)",
+      "Bash(curl -s -m 25 -o /dev/null -w \"http %{http_code}\\\\n\" https://labtuhqms.duckdns.org/)",
+      "Bash(SUPABASE_URL= SUPABASE_SERVICE_ROLE_KEY= QMS_DATA_DIR=\"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qms2\" UPLOAD_DIR=\"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qms2/uploads\" node --env-file-if-exists=.env server/index.js)",
+      "Bash(curl -s -m 5 -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/api/documents)",
+      "Bash(curl -s -m 5 -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5311/login)",
+      "Bash(pkill -f \"next dev --port 5311\")",
+      "Bash(curl -s -m 3 -o /dev/null -w \"5311: %{http_code}\\\\n\" http://localhost:5311/login)",
+      "Bash(ADMIN_PASSWORD=admin12345 npx next dev --port 5310)",
+      "Bash(SUPABASE_URL= SUPABASE_SERVICE_ROLE_KEY= QMS_DATA_DIR=\"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qms3\" UPLOAD_DIR=\"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qms3/uploads\" node --env-file-if-exists=.env server/index.js)",
+      "Bash(node -e 'let d=\"\";process.stdin.on\\(\"data\",c=>d+=c\\).on\\(\"end\",\\(\\)=>{JSON.parse\\(d\\).forEach\\(u=>console.log\\(\"  \"+u.username+\" · \"+u.role\\)\\)}\\)')",
+      "Bash(pkill -f \"node --env-file-if-exists=.env server/index.js\")",
+      "Bash(rm -rf \"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/qms3\")"
     ]
   }
 }

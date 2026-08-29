@@ -6,6 +6,10 @@ export const FILE_META = {
   word: { label: 'Word', icon: 'FilePen', note: 'แก้ไข', c: 'var(--blue-700)', bg: 'var(--blue-100)' },
   excel: { label: 'Excel', icon: 'FileSpreadsheet', note: 'ตารางข้อมูล', c: 'var(--green-700)', bg: 'var(--green-100)' },
   url: { label: 'URL', icon: 'Link', note: 'แนบลิงก์', c: 'var(--violet-700)', bg: 'var(--violet-100)' },
+  // ต้องมีครบทุกค่าที่ kindFromFile คืนได้ ไม่งั้น FileChip คืน null แล้วป้ายชนิดไฟล์หายไปเงียบ ๆ
+  image: { label: 'รูปภาพ', icon: 'Eye', note: 'เปิดดู', c: 'var(--blue-700)', bg: 'var(--blue-100)' },
+  slide: { label: 'สไลด์', icon: 'Files', note: 'ดาวน์โหลด', c: 'var(--amber-700)', bg: 'var(--amber-100)' },
+  other: { label: 'ไฟล์แนบ', icon: 'Paperclip', note: 'ดาวน์โหลด', c: 'var(--slate-600)', bg: 'var(--slate-100)' },
 };
 
 export function FileChip({ kind, size = 'md' }) {

@@ -125,6 +125,13 @@ export const lowdbStore = {
     await db.write();
   },
 
+  // เพิ่มไฟล์แนบใหม่เข้าเอกสารที่ลงทะเบียนไว้แล้ว
+  async addAttachment(docNo, a) {
+    const att = { id: newId(), createdAt: new Date().toISOString(), ...a, docNo };
+    db.data.attachments.push(att);
+    await db.write();
+    return att;
+  },
   async getAttachment(id) {
     return db.data.attachments.find((a) => a.id === id) || null;
   },

@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { store } from './store.js';
 import { newId, kindFromFile } from './seed.js';
 import { ROLE_ORDER, can } from '../src/auth/roles.js';
+import { ALLOWED_EXT_SET, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL, UNSUPPORTED_MSG } from '../src/data/file-types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // dev: ใช้ QMS_API_PORT (เลี่ยงชน vite); production (โฮสต์): ใช้ PORT ที่โฮสต์กำหนด
@@ -35,16 +36,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// อนุญาตเฉพาะชนิดไฟล์เอกสารที่ระบบต้องใช้ — กันอัปโหลดไฟล์สคริปต์/โปรแกรมอันตราย
-const ALLOWED_EXT = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'xlsm', 'csv', 'ppt', 'pptx', 'png', 'jpg', 'jpeg', 'gif', 'webp']);
+// ชนิด/ขนาดไฟล์ที่อนุญาต อ่านจากโมดูลกลางที่ฝั่งหน้าจอใช้ร่วมกัน (src/data/file-types.js)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter: (req, file, cb) => {
     const name = Buffer.from(file.originalname, 'latin1').toString('utf8');
     const ext = (name.split('.').pop() || '').toLowerCase();
-    if (ALLOWED_EXT.has(ext)) return cb(null, true);
-    cb(new Error(`ชนิดไฟล์ไม่รองรับ (.${ext}) — อนุญาตเฉพาะเอกสาร/รูปภาพเท่านั้น`));
+    if (ALLOWED_EXT_SET.has(ext)) return cb(null, true);
+    cb(new Error(UNSUPPORTED_MSG(ext)));
   },
 });
 
@@ -275,6 +275,40 @@ app.patch('/api/documents/:no', authMw, wrap(async (req, res) => {
   if (!updatedDoc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
   await logAction(req.user, action || 'doc:edit', req.params.no);
   res.json(await store.getDocument(req.params.no)); // ส่งกลับพร้อมประวัติล่าสุด
+}));
+
+/* แนบไฟล์ใหม่เข้าเอกสารที่ลงทะเบียนไว้แล้ว
+   เดิมระบบแนบไฟล์ได้เฉพาะตอนลงทะเบียนครั้งแรกกับตอนทับไฟล์เดิมเท่านั้น
+   เอกสารที่ลงทะเบียนไว้โดยยังไม่มีไฟล์จึงแนบทีหลังไม่ได้เลย และแนบไฟล์ที่สองไม่ได้
+   (ระบบ Masterlist มีความสามารถนี้อยู่แล้ว — ทำให้สองระบบทำงานต่างกัน)
+
+   จงใจไม่เพิ่มเลข rev เหมือนตอนทับไฟล์ เพราะ "เพิ่มไฟล์ประกอบ" ไม่ใช่การแก้ไข
+   ตัวเอกสาร การเด้ง rev จะทำให้ผู้ที่ลงนามรับทราบไว้ต้องลงนามใหม่โดยไม่จำเป็น */
+app.post('/api/documents/:no/attachments', authMw, requirePerm('upload'), upload.single('file'), wrap(async (req, res) => {
+  const doc = await store.getDocument(req.params.no);
+  if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
+
+  const link = (req.body?.url || '').trim();
+  if (!req.file && !link) return res.status(400).json({ error: 'กรุณาแนบไฟล์หรือระบุลิงก์' });
+
+  if (req.file) {
+    const name = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    const storage = await store.saveFile(req.file);
+    await store.addAttachment(doc.no, {
+      docNo: doc.no, kind: kindFromFile(name, req.file.mimetype),
+      name, mime: req.file.mimetype, size: req.file.size, storage,
+    });
+  } else {
+    if (!/^https?:\/\//i.test(link)) return res.status(400).json({ error: 'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://' });
+    await store.addAttachment(doc.no, { docNo: doc.no, kind: 'url', name: link, url: link });
+  }
+
+  // อัปเดตชุดชนิดไฟล์ของเอกสารให้ตรงกับไฟล์แนบจริง (ใช้แสดงป้ายในทะเบียน)
+  const fresh = await store.getDocument(doc.no);
+  const kinds = [...new Set((fresh.attachments || []).map((a) => a.kind))];
+  await store.updateDocument(doc.no, { files: kinds, updated: todayTH() });
+  await logAction(req.user, 'doc:file-add', doc.no);
+  res.status(201).json(await store.getDocument(doc.no));
 }));
 
 // อัปเดตไฟล์แนบเป็นเวอร์ชันใหม่ — แทนที่ไฟล์เดิม + เพิ่มเลขแก้ไข (rev) + บันทึกประวัติ
@@ -597,7 +631,13 @@ if (fs.existsSync(distDir)) {
 app.use((err, req, res, next) => {
   console.error(err);
   if (res.headersSent) return;
-  res.status(400).json({ error: err?.message || 'คำขอไม่ถูกต้อง' });
+  // multer ตอบเป็นภาษาอังกฤษล้วน ("File too large") ผู้ใช้อ่านแล้วไม่รู้ว่าต้องทำอะไรต่อ
+  const MULTER_TH = {
+    LIMIT_FILE_SIZE: `ไฟล์ใหญ่เกิน ${MAX_UPLOAD_LABEL} — กรุณาบีบอัดไฟล์หรือแยกเป็นหลายไฟล์`,
+    LIMIT_FILE_COUNT: 'แนบไฟล์ได้ครั้งละไม่เกิน 10 ไฟล์',
+    LIMIT_UNEXPECTED_FILE: 'ช่องอัปโหลดไฟล์ไม่ถูกต้อง',
+  };
+  res.status(400).json({ error: MULTER_TH[err?.code] || err?.message || 'คำขอไม่ถูกต้อง' });
 });
 
 // กันเซิร์ฟเวอร์ตายเงียบ ๆ จาก error ที่หลุดออกมานอก try/catch — log ไว้แล้วให้ทำงานต่อ

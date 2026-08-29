@@ -6,6 +6,7 @@ import { useNarrow } from '../hooks/useNarrow.js';
 import { QMS } from '../data/taxonomy.js';
 import { can } from '../auth/users.js';
 import { LOG_ACTIONS } from '../auth/activityLog.js';
+import { ACCEPT_ATTR, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../data/file-types.js';
 import { api } from '../api.js';
 
 const seal = '/lab-seal.png';
@@ -39,7 +40,7 @@ function Field({ k, v }) {
 
 /* DocDetailScreen — controlled-document view: header band, attachments,
    revision history, and permission-gated workflow / export actions. */
-export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onDelete }) {
+export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onAddFile, onDelete }) {
   const Q = QMS;
   const catObj = Q.WORK_CATEGORIES.find((c) => c.code === doc.cat);
   const typeObj = Q.DOC_TYPES.find((t) => t.code === doc.type);
@@ -209,27 +210,50 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
   // อัปเดตไฟล์เป็นเวอร์ชันใหม่ — เลือกไฟล์ใหม่แทนที่ไฟล์เดิม (เพิ่มเลขแก้ไขอัตโนมัติ)
   // สิทธิ์: ต้องมี upload permission — อัปเดตได้ทุกชนิดไฟล์ ไม่จำกัดเฉพาะ Excel
   const canUpdateFile = (att) => att.kind !== 'url' && onUpdateFile && canUpload;
-  const acceptTypes = '.pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
+  // accept ต้องมาจากรายการกลาง ไม่งั้นช่องเลือกไฟล์จะซ่อนไฟล์ที่เซิร์ฟเวอร์รับได้จริง
+  const acceptTypes = ACCEPT_ATTR;
 
   const fileInputRef = useRef(null);
-  const pendingAttId = useRef(null);
+  const pendingAttId = useRef(null);   // null = แนบไฟล์ใหม่, มีค่า = ทับไฟล์เดิม
   const [updatingId, setUpdatingId] = useState(null);
+  const [addingFile, setAddingFile] = useState(false);
 
   const askUpdateFile = (att) => {
     pendingAttId.current = att.id;
     if (fileInputRef.current) fileInputRef.current.click();
   };
+  const canAddFile = onAddFile && canUpload;
+  const askAddFile = () => {
+    pendingAttId.current = null;
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
   const onFilePicked = async (e) => {
     const file = e.target.files?.[0];
     const attId = pendingAttId.current;
+    pendingAttId.current = null;
     e.target.value = '';
-    if (!file || !attId || !onUpdateFile) return;
-    
-    if (file.size > 25 * 1024 * 1024) {
-      window.alert('ขนาดไฟล์เกินกำหนด (สูงสุด 25 MB ต่อไฟล์)');
+    if (!file) return;
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      window.alert(`ขนาดไฟล์เกินกำหนด (สูงสุด ${MAX_UPLOAD_LABEL} ต่อไฟล์)`);
       return;
     }
 
+    // ไม่มี attId = แนบไฟล์ใหม่เข้าเอกสาร (ไม่เพิ่มเลขแก้ไข)
+    if (!attId) {
+      if (!onAddFile) return;
+      setAddingFile(true);
+      try {
+        await onAddFile(doc.no, file);
+      } catch (err) {
+        window.alert(err.message || 'แนบไฟล์ไม่สำเร็จ');
+      } finally {
+        setAddingFile(false);
+      }
+      return;
+    }
+
+    if (!onUpdateFile) return;
     if (!window.confirm('แทนที่ไฟล์เดิมด้วยไฟล์ใหม่นี้? ระบบจะเพิ่มเลขแก้ไข (rev) และบันทึกประวัติให้อัตโนมัติ')) return;
     setUpdatingId(attId);
     try {
@@ -477,7 +501,23 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onD
                         );
                       })}
                     </div>
-                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>เอกสารตัวอย่าง — ยังไม่มีไฟล์จริงในระบบ (ลงทะเบียนใหม่เพื่อแนบไฟล์)</div>
+                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>
+                      {canAddFile
+                        ? 'ยังไม่มีไฟล์จริงในระบบ — กดปุ่ม “แนบไฟล์” เพื่ออัปโหลดได้เลย'
+                        : 'ยังไม่มีไฟล์จริงในระบบ — ผู้มีสิทธิ์แนบไฟล์ (หัวหน้างาน · หัวหน้าหมวดงาน · ผู้จัดการเอกสาร) เป็นผู้อัปโหลด'}
+                    </div>
+                  </div>
+                )}
+
+                {/* แนบไฟล์เพิ่มเข้าเอกสารเดิม — เดิมทำไม่ได้เลย ต้องลงทะเบียนเอกสารใหม่เท่านั้น */}
+                {canAddFile && (
+                  <div style={{ marginTop: attachments.length > 0 ? 14 : 12, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <Button variant="secondary" size="sm" disabled={addingFile} onClick={askAddFile} iconLeft={<Icon name="Paperclip" size={15} color="var(--brand-700)" />}>
+                      {addingFile ? 'กำลังแนบไฟล์…' : 'แนบไฟล์'}
+                    </Button>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)' }}>
+                      PDF · Word · Excel · PowerPoint · รูปภาพ (ไม่เกิน {MAX_UPLOAD_LABEL} ต่อไฟล์)
+                    </span>
                   </div>
                 )}
               </Card>

@@ -209,6 +209,13 @@ export default function App() {
     await refreshAll(role);
   };
 
+  // แนบไฟล์ใหม่เข้าเอกสารเดิม — โยน error กลับให้หน้าจอแสดงเอง
+  const addDocFile = async (no, file) => {
+    const updated = await api.addAttachment(no, file);
+    setDoc(updated);
+    await refreshAll(role);
+  };
+
   const deleteDoc = async (target) => {
     try {
       await api.deleteDocument(target.no);
@@ -255,7 +262,7 @@ export default function App() {
   else if (view === 'users' && canViewUsers) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onEdit={editUser} onResetPassword={resetUserPassword} onDelete={deleteUser} />;
   else if (view === 'log' && canAudit) body = <LogScreen logs={logs} />;
   else if (view === 'help') body = <HelpScreen />;
-  else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
+  else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onAddFile={addDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
   else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
 
   const shellView = view === 'detail' ? (cat ? 'register' : 'dashboard') : view;

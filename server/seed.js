@@ -33,7 +33,11 @@ export function kindFromFile(name, mime) {
   const ext = path.extname(name || '').toLowerCase();
   const m = mime || '';
   if (ext === '.pdf' || m === 'application/pdf') return 'pdf';
-  if (['.doc', '.docx'].includes(ext) || m.includes('word')) return 'word';
-  if (['.xls', '.xlsx', '.xlsm', '.csv'].includes(ext) || m.includes('sheet') || m.includes('excel') || m.includes('csv')) return 'excel';
+  if (['.doc', '.docx', '.docm', '.dot', '.dotx', '.odt', '.rtf'].includes(ext) || m.includes('word')) return 'word';
+  if (['.xls', '.xlsx', '.xlsm', '.xlt', '.xltx', '.ods', '.csv'].includes(ext) || m.includes('sheet') || m.includes('excel') || m.includes('csv')) return 'excel';
+  // ต้องจับคู่ให้ครบทุกชนิดที่ ALLOWED_EXT อนุญาต ไม่งั้นตกเป็น 'other'
+  // ซึ่งไม่มีป้ายกำกับใน FILE_META แล้วป้ายชนิดไฟล์จะหายไปทั้งอัน
+  if (['.ppt', '.pptx', '.ppsx', '.odp'].includes(ext) || m.includes('presentation') || m.includes('powerpoint')) return 'slide';
+  if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tif', '.tiff', '.heic', '.heif'].includes(ext) || m.startsWith('image/')) return 'image';
   return 'other';
 }

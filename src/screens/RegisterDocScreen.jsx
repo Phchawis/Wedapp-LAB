@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Button, Card, Input, Select, Alert, DocTypeTag, StatusBadge, IconButton } from '../components/ds/index.js';
 import { Icon } from '../components/Icon.jsx';
 import { QMS, RETENTION_OPTIONS } from '../data/taxonomy.js';
+import { ACCEPT_ATTR, ALLOWED_EXT_SET, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL, UNSUPPORTED_MSG } from '../data/file-types.js';
 
 // วันที่วันนี้ตามเวลาไทย (YYYY-MM-DD) — เดิม hardcode ไว้ ทำให้เอกสารใหม่ลงวันที่ผิด
 const TODAY = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
@@ -51,8 +52,14 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
 
   const addFiles = (list) => {
     const validFiles = Array.from(list).filter((f) => {
-      if (f.size > 25 * 1024 * 1024) {
-        window.alert(`ไฟล์ "${f.name}" มีขนาดเกิน 25 MB และจะไม่ถูกนำเข้าระบบ`);
+      if (f.size > MAX_UPLOAD_BYTES) {
+        window.alert(`ไฟล์ "${f.name}" มีขนาดเกิน ${MAX_UPLOAD_LABEL} และจะไม่ถูกนำเข้าระบบ`);
+        return false;
+      }
+      // ลากไฟล์มาวางเลี่ยง accept ของช่องเลือกไฟล์ได้ จึงต้องกรองชนิดไฟล์ตรงนี้ด้วย
+      const ext = (f.name.split('.').pop() || '').toLowerCase();
+      if (!ALLOWED_EXT_SET.has(ext)) {
+        window.alert(UNSUPPORTED_MSG(ext));
         return false;
       }
       return true;
@@ -245,9 +252,9 @@ export function RegisterDocScreen({ docs, onSubmit, onCancel }) {
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '20px 16px', cursor: 'pointer', borderRadius: 'var(--radius-md)', border: '1.5px dashed var(--border-default)', background: 'var(--slate-50)', color: 'var(--text-secondary)', font: 'var(--type-ui)' }}
             >
               <Icon name="Download" size={18} color="var(--brand-600)" style={{ transform: 'rotate(180deg)' }} />
-              คลิกหรือลากไฟล์ Word / Excel / PDF มาวางที่นี่ (สูงสุด 25 MB ต่อไฟล์)
+              คลิกหรือลากไฟล์ PDF / Word / Excel / PowerPoint / รูปภาพ มาวางที่นี่ (สูงสุด {MAX_UPLOAD_LABEL} ต่อไฟล์)
             </div>
-            <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            <input ref={fileRef} type="file" multiple accept={ACCEPT_ATTR}
               style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
 
             {files.length > 0 && (

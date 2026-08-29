@@ -222,6 +222,15 @@ export async function createPostgresStore() {
       await removeFiles(atts.map((a) => a.storage));
     },
 
+    // เพิ่มไฟล์แนบใหม่เข้าเอกสารที่ลงทะเบียนไว้แล้ว
+    async addAttachment(docNo, a) {
+      const { rows } = await q(
+        `insert into attachments (doc_no, kind, name, mime, size, url, storage_path)
+         values ($1,$2,$3,$4,$5,$6,$7) returning *`,
+        [docNo, a.kind, a.name, a.mime || null, a.size || null, a.url || null, a.storage || null],
+      );
+      return rows[0] ? attFromRow(rows[0]) : null;
+    },
     async getAttachment(id) {
       // id ต้องเป็น UUID — ถ้าไม่ใช่ให้คืน null (404) แทนที่จะให้ Postgres โยน error เป็น 500
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id))) return null;
