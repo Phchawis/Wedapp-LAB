@@ -260,11 +260,13 @@ export function KpiScreen() {
           </select>
         </span>
       }>
-        {!canEdit && (
-          <p style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
-            ดูได้อย่างเดียว — การกรอกผลเป็นสิทธิ์ของหัวหน้างานและผู้ดูแลระบบ
-          </p>
-        )}
+        <style>{`
+          .kpi-name:hover .kpi-name-text { text-decoration: underline; text-underline-offset: 3px; }
+        `}</style>
+        <p style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
+          กดที่ชื่อตัวชี้วัดเพื่อดูกราฟแนวโน้มทั้งปี · เอาเมาส์ชี้ที่ช่องสีเพื่อดูค่าของเดือนนั้น
+          {!canEdit && ' · ดูได้อย่างเดียว การกรอกผลเป็นสิทธิ์ของหัวหน้างานและผู้ดูแลระบบ'}
+        </p>
 
         {/* จอแคบให้ตารางเลื่อนแนวนอนในกรอบตัวเอง แทนบีบจนอ่านไม่ออก */}
         <div style={{ overflowX: 'auto' }}>
@@ -301,8 +303,11 @@ export function KpiScreen() {
                 return (
                   <div key={ind.id}>
                   <div style={{ ...ROW, padding: '9px 0', borderBottom: isOpen ? 'none' : '1px solid var(--border-subtle)' }}>
+                    {/* ทำให้เห็นชัดว่ากดได้ — ลูกศรหน้าแถวหมุนเมื่อกาง และชื่อขีดเส้นใต้ตอนชี้
+                        เดิมเป็นข้อความเปล่า ๆ ผู้ใช้จึงไม่รู้ว่ากดดูกราฟได้ */}
                     <button
                       type="button"
+                      className="kpi-name"
                       onClick={() => setOpen(isOpen ? null : ind.id)}
                       aria-expanded={isOpen}
                       title="กดเพื่อดูกราฟแนวโน้มทั้งปี"
@@ -311,8 +316,13 @@ export function KpiScreen() {
                         background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
                       }}
                     >
+                      <span aria-hidden style={{
+                        flexShrink: 0, alignSelf: 'center', color: isOpen ? 'var(--brand-700)' : 'var(--text-tertiary)',
+                        transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s ease',
+                        font: 'var(--text-2xs)/1 var(--font-mono)',
+                      }}>▶</span>
                       <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', flexShrink: 0 }}>{ind.code}</span>
-                      <span style={{ font: 'var(--text-sm)/1.5 var(--font-body)', color: isOpen ? 'var(--brand-700)' : 'var(--text-secondary)' }}>{ind.name}</span>
+                      <span className="kpi-name-text" style={{ font: 'var(--text-sm)/1.5 var(--font-body)', color: isOpen ? 'var(--brand-700)' : 'var(--text-secondary)' }}>{ind.name}</span>
                     </button>
 
                     {/* ทั้ง 12 เดือนในแถวเดียว — เดือนที่เลือกอยู่กลายเป็นช่องกรอก

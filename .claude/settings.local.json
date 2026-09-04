@@ -361,7 +361,8 @@
       "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'sleep 8 *)",
       "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ตัวชี้วัดแยกตามความเร่งด่วนจริง ===\" *)",
       "Bash(scp -q -P 8443 -i ~/.ssh/ahs_deploy /tmp/q.sql root@188.166.181.243:/tmp/q.sql)",
-      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'docker exec -i masterlist-db-1 psql -U masterlist -d masterlist -tAF\" | \" < /tmp/q.sql; rm -f /tmp/q.sql')"
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'docker exec -i masterlist-db-1 psql -U masterlist -d masterlist -tAF\" | \" < /tmp/q.sql; rm -f /tmp/q.sql')",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'F=$\\(docker exec labqms-app sh -c \"ls /app/dist/assets | grep KpiScreen\"\\) *)"
     ]
   }
 }
