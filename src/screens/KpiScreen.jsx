@@ -33,6 +33,21 @@ function fmt(v, kind) {
   return Number.isInteger(r) ? String(r) : r.toFixed(2);
 }
 
+/* แถวหนึ่ง = ชื่อตัวชี้วัด | 12 เดือน | เป้าหมาย
+   คอลัมน์เดือนต้องกว้างพอให้ป้ายอ่านออก จอแคบให้เลื่อนแนวนอนในกรอบตัวเอง */
+const ROW = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1.3fr) minmax(360px, 1fr) minmax(72px, auto)',
+  gap: 16,
+  alignItems: 'center',
+};
+const MONTHS_ROW = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(12, 1fr)',
+  gap: 3,
+  alignItems: 'center',
+};
+
 export function KpiScreen() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -207,6 +222,23 @@ export function KpiScreen() {
           </p>
         )}
 
+        {/* จอแคบให้ตารางเลื่อนแนวนอนในกรอบตัวเอง แทนบีบจนอ่านไม่ออก */}
+        <div style={{ overflowX: 'auto' }}>
+        <div style={{ minWidth: 700 }}>
+        <div style={{ ...ROW, paddingBottom: 6, borderBottom: '1px solid var(--border-default)' }}>
+          <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>ตัวชี้วัด</span>
+          <div style={MONTHS_ROW}>
+            {months.map((m, i) => (
+              <span key={m} style={{
+                font: 'var(--text-2xs)/1 var(--font-mono)', textAlign: 'center',
+                color: i + 1 === month ? 'var(--brand-700)' : 'var(--text-tertiary)',
+                fontWeight: i + 1 === month ? 700 : 400,
+              }}>{m}</span>
+            ))}
+          </div>
+          <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', textAlign: 'right' }}>เป้าหมาย</span>
+        </div>
+
         {groups.map(([key, items]) => {
           const [gcode, gname] = key.split('|');
           return (
@@ -221,42 +253,66 @@ export function KpiScreen() {
                 const warn = warnings[ind.id];
                 const v = raw.trim() === '' ? null : Number(raw);
                 const ok = Number.isFinite(v) ? meets(v, ind.targetOp, ind.targetValue) : null;
-                const prev = month > 1 ? ind.values[month - 2] : null;
                 return (
-                  <div key={ind.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(150px,190px) 130px', gap: 14, alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div key={ind.id} style={{ ...ROW, padding: '9px 0', borderBottom: '1px solid var(--border-subtle)' }}>
                     <label htmlFor={ind.id} style={{ display: 'flex', gap: 8, minWidth: 0, alignItems: 'baseline' }}>
                       <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', flexShrink: 0 }}>{ind.code}</span>
                       <span style={{ font: 'var(--text-sm)/1.5 var(--font-body)', color: 'var(--text-secondary)' }}>{ind.name}</span>
                     </label>
 
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <input
-                          id={ind.id}
-                          inputMode="decimal"
-                          disabled={!canEdit}
-                          value={raw}
-                          onChange={(e) => setDraft((d) => ({ ...d, [ind.id]: e.target.value }))}
-                          placeholder="—"
-                          style={{
-                            width: '100%', font: 'var(--text-sm)/1 var(--font-mono)', textAlign: 'right',
-                            padding: '7px 9px', borderRadius: 'var(--radius-sm)',
-                            background: canEdit ? 'var(--surface-card)' : 'var(--slate-50)',
-                            color: 'var(--text-primary)',
-                            border: `1px solid ${warn ? 'var(--amber-600)' : ok === false ? 'var(--red-600)' : 'var(--border-default)'}`,
-                          }}
-                        />
-                        {ind.kind === 'PERCENT' && <span style={{ font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>%</span>}
-                      </div>
-                      {prev !== null && prev !== undefined && (
-                        <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', textAlign: 'right', marginTop: 3 }}>
-                          เดือนก่อน {fmt(prev, ind.kind)}
-                        </div>
-                      )}
+                    {/* ทั้ง 12 เดือนในแถวเดียว — เดือนที่เลือกอยู่กลายเป็นช่องกรอก
+                        เดือนอื่นเป็นบล็อกสีอ่านอย่างเดียว จึงเห็นทั้งปีและแก้เดือนที่ต้องการ
+                        ได้ในหน้าจอเดียว ไม่ต้องสลับโหมด */}
+                    <div style={MONTHS_ROW}>
+                      {months.map((m, i) => {
+                        const isEditing = i + 1 === month;
+                        if (isEditing) {
+                          return (
+                            <input
+                              key={m}
+                              id={ind.id}
+                              inputMode="decimal"
+                              disabled={!canEdit}
+                              value={raw}
+                              onChange={(e) => setDraft((d) => ({ ...d, [ind.id]: e.target.value }))}
+                              title={`${m} · กำลังแก้ไข`}
+                              placeholder="—"
+                              style={{
+                                width: '100%', minWidth: 0, height: 26, font: 'var(--text-2xs)/1 var(--font-mono)',
+                                textAlign: 'center', padding: '2px 3px', borderRadius: 'var(--radius-xs)',
+                                background: canEdit ? 'var(--surface-card)' : 'var(--slate-50)',
+                                color: 'var(--text-primary)',
+                                border: `2px solid ${warn ? 'var(--amber-600)' : ok === false ? 'var(--red-600)' : 'var(--brand-600)'}`,
+                              }}
+                            />
+                          );
+                        }
+                        const mv = ind.values[i];
+                        const mok = meets(mv, ind.targetOp, ind.targetValue);
+                        return (
+                          <span
+                            key={m}
+                            title={`${m} · ${fmt(mv, ind.kind)}${mok === null ? '' : mok ? ' · ผ่าน' : ' · ไม่ผ่าน'}`}
+                            style={{
+                              height: 26, borderRadius: 'var(--radius-xs)', display: 'grid', placeItems: 'center',
+                              font: 'var(--text-2xs)/1 var(--font-mono)',
+                              color: mok === null ? 'var(--text-tertiary)' : '#fff',
+                              background: mok === null ? 'var(--slate-100)' : mok ? PASS : FAIL,
+                              // ช่องไม่ผ่านมีลายทแยงด้วย ไม่พึ่งสีอย่างเดียว (คนตาบอดสีแดง-เขียว)
+                              backgroundImage: mok === false
+                                ? 'repeating-linear-gradient(45deg, rgba(0,0,0,.42) 0 2px, transparent 2px 4px)'
+                                : undefined,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {mv === null || mv === undefined ? '' : Math.round(mv)}
+                          </span>
+                        );
+                      })}
                     </div>
 
                     <div style={{ font: 'var(--text-2xs)/1.4 var(--font-mono)', color: 'var(--text-tertiary)', textAlign: 'right' }}>
-                      เป้า {ind.targetRaw || '—'}
+                      {ind.targetRaw || '—'}
                       {ok !== null && (
                         <div style={{ color: ok ? PASS : FAIL, marginTop: 3 }}>{ok ? 'ผ่าน' : 'ไม่ผ่าน'}</div>
                       )}
@@ -271,6 +327,9 @@ export function KpiScreen() {
             </div>
           );
         })}
+
+        </div>
+        </div>
 
         {canEdit && (
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', paddingTop: 6 }}>

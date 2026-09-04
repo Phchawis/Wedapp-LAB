@@ -357,7 +357,11 @@
       "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'ML=$\\(grep \"^DATABASE_URL=\" /opt/masterlist/.env | cut -d= -f2- | tr -d \"\\\\\"\"\\) *)",
       "Bash(rm -f \"/private/tmp/claude-501/-Users-gpharkchawisp-Documents-Wedapp------------------LAB/f4902210-6712-4c3d-98b5-7cc94bcdfb52/scratchpad/add-admin.mjs\")",
       "Bash(ssh -o ConnectTimeout=20 ahs-droplet-8443 'rm -f /tmp/add-admin.mjs')",
-      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== labqms คุยกับ masterlist ผ่าน docker network ได้ไหม ===\" *)"
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== labqms คุยกับ masterlist ผ่าน docker network ได้ไหม ===\" *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'sleep 8 *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ตัวชี้วัดแยกตามความเร่งด่วนจริง ===\" *)",
+      "Bash(scp -q -P 8443 -i ~/.ssh/ahs_deploy /tmp/q.sql root@188.166.181.243:/tmp/q.sql)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'docker exec -i masterlist-db-1 psql -U masterlist -d masterlist -tAF\" | \" < /tmp/q.sql; rm -f /tmp/q.sql')"
     ]
   }
 }
