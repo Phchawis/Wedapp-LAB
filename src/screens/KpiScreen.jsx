@@ -33,6 +33,49 @@ function fmt(v, kind) {
   return Number.isInteger(r) ? String(r) : r.toFixed(2);
 }
 
+/* กราฟแนวโน้มทั้งปี พร้อมเส้นเป้าหมายและแรเงาฝั่งที่ผ่านเกณฑ์
+   วาดด้วย SVG เอง — ข้อมูลแค่ 12 จุดต่อเส้น ไม่คุ้มที่จะลงไลบรารีกราฟทั้งก้อน
+   (ให้ตรงกับที่ระบบทะเบียนเอกสารกลางใช้ จะได้อ่านเหมือนกันทั้งสองระบบ) */
+function Sparkline({ ind, months }) {
+  const w = 620, h = 96, pad = 8;
+  const pts = ind.values.map((v, i) => ({ v, i })).filter((p) => p.v !== null && p.v !== undefined);
+  if (!pts.length) return null;
+
+  const all = pts.map((p) => p.v);
+  if (ind.targetValue !== null && ind.targetValue !== undefined) all.push(ind.targetValue);
+  let lo = Math.min(...all), hi = Math.max(...all);
+  if (hi === lo) { hi = lo + 1; lo -= 1; }
+  const span = hi - lo;
+  lo -= span * 0.12; hi += span * 0.12;
+
+  const x = (i) => pad + (i / (months.length - 1)) * (w - pad * 2);
+  const y = (v) => h - pad - ((v - lo) / (hi - lo)) * (h - pad * 2);
+  const d = pts.map((p, k) => `${k === 0 ? 'M' : 'L'}${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
+  const ty = (ind.targetValue !== null && ind.targetValue !== undefined) ? y(ind.targetValue) : null;
+  // ตัวชี้วัดที่ "ยิ่งมากยิ่งดี" ให้แรเงาด้านบนเส้นเป้า ที่เหลือแรเงาด้านล่าง
+  const good = ind.targetOp === '>=' || ind.targetOp === '>' || ind.targetOp === '=' || !ind.targetOp;
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} role="img"
+      aria-label={`แนวโน้ม ${ind.name} ตลอดปีงบประมาณ`} style={{ display: 'block', overflow: 'visible' }}>
+      {ty !== null && (
+        <>
+          <rect x={pad} y={good ? pad : ty} width={w - pad * 2}
+            height={Math.max(0, good ? ty - pad : h - pad - ty)} fill={PASS} opacity="0.07" />
+          <line x1={pad} y1={ty} x2={w - pad} y2={ty} stroke={PASS} strokeWidth="1" strokeDasharray="4 4" opacity="0.8" />
+        </>
+      )}
+      <path d={d} fill="none" stroke="var(--text-primary)" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((p) => {
+        const ok = meets(p.v, ind.targetOp, ind.targetValue);
+        return <circle key={p.i} cx={x(p.i)} cy={y(p.v)} r="3.2"
+          fill={ok === null ? 'var(--slate-500)' : ok ? PASS : FAIL}
+          stroke="var(--surface-card)" strokeWidth="1.5" />;
+      })}
+    </svg>
+  );
+}
+
 /* แถวหนึ่ง = ชื่อตัวชี้วัด | 12 เดือน | เป้าหมาย
    คอลัมน์เดือนต้องกว้างพอให้ป้ายอ่านออก จอแคบให้เลื่อนแนวนอนในกรอบตัวเอง */
 const ROW = {
@@ -56,6 +99,7 @@ export function KpiScreen() {
   const [draft, setDraft] = useState({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState('');
+  const [open, setOpen] = useState(null); // แถวที่กางกราฟอยู่
 
   const load = async (year) => {
     setLoading(true);
@@ -253,12 +297,23 @@ export function KpiScreen() {
                 const warn = warnings[ind.id];
                 const v = raw.trim() === '' ? null : Number(raw);
                 const ok = Number.isFinite(v) ? meets(v, ind.targetOp, ind.targetValue) : null;
+                const isOpen = open === ind.id;
                 return (
-                  <div key={ind.id} style={{ ...ROW, padding: '9px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <label htmlFor={ind.id} style={{ display: 'flex', gap: 8, minWidth: 0, alignItems: 'baseline' }}>
+                  <div key={ind.id}>
+                  <div style={{ ...ROW, padding: '9px 0', borderBottom: isOpen ? 'none' : '1px solid var(--border-subtle)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(isOpen ? null : ind.id)}
+                      aria-expanded={isOpen}
+                      title="กดเพื่อดูกราฟแนวโน้มทั้งปี"
+                      style={{
+                        display: 'flex', gap: 8, minWidth: 0, alignItems: 'baseline', textAlign: 'left',
+                        background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+                      }}
+                    >
                       <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)', flexShrink: 0 }}>{ind.code}</span>
-                      <span style={{ font: 'var(--text-sm)/1.5 var(--font-body)', color: 'var(--text-secondary)' }}>{ind.name}</span>
-                    </label>
+                      <span style={{ font: 'var(--text-sm)/1.5 var(--font-body)', color: isOpen ? 'var(--brand-700)' : 'var(--text-secondary)' }}>{ind.name}</span>
+                    </button>
 
                     {/* ทั้ง 12 เดือนในแถวเดียว — เดือนที่เลือกอยู่กลายเป็นช่องกรอก
                         เดือนอื่นเป็นบล็อกสีอ่านอย่างเดียว จึงเห็นทั้งปีและแก้เดือนที่ต้องการ
@@ -278,7 +333,7 @@ export function KpiScreen() {
                               title={`${m} · กำลังแก้ไข`}
                               placeholder="—"
                               style={{
-                                width: '100%', minWidth: 0, height: 26, font: 'var(--text-2xs)/1 var(--font-mono)',
+                                width: '100%', minWidth: 0, height: 24, font: 'var(--text-2xs)/1 var(--font-mono)',
                                 textAlign: 'center', padding: '2px 3px', borderRadius: 'var(--radius-xs)',
                                 background: canEdit ? 'var(--surface-card)' : 'var(--slate-50)',
                                 color: 'var(--text-primary)',
@@ -290,23 +345,21 @@ export function KpiScreen() {
                         const mv = ind.values[i];
                         const mok = meets(mv, ind.targetOp, ind.targetValue);
                         return (
+                          /* ไม่ใส่ตัวเลขในช่อง — 12 คอลัมน์ทำให้ตัวเล็กจนอ่านยาก และการปัดเศษ
+                             ทำให้ 99.03 กลายเป็น 99 ซึ่งคลาดเคลื่อน · ค่าจริงดูได้จากการชี้
+                             และจากแผงกราฟที่กางออกมา */
                           <span
                             key={m}
                             title={`${m} · ${fmt(mv, ind.kind)}${mok === null ? '' : mok ? ' · ผ่าน' : ' · ไม่ผ่าน'}`}
                             style={{
-                              height: 26, borderRadius: 'var(--radius-xs)', display: 'grid', placeItems: 'center',
-                              font: 'var(--text-2xs)/1 var(--font-mono)',
-                              color: mok === null ? 'var(--text-tertiary)' : '#fff',
+                              height: 22, borderRadius: 'var(--radius-xs)',
                               background: mok === null ? 'var(--slate-100)' : mok ? PASS : FAIL,
                               // ช่องไม่ผ่านมีลายทแยงด้วย ไม่พึ่งสีอย่างเดียว (คนตาบอดสีแดง-เขียว)
                               backgroundImage: mok === false
                                 ? 'repeating-linear-gradient(45deg, rgba(0,0,0,.42) 0 2px, transparent 2px 4px)'
                                 : undefined,
-                              overflow: 'hidden',
                             }}
-                          >
-                            {mv === null || mv === undefined ? '' : Math.round(mv)}
-                          </span>
+                          />
                         );
                       })}
                     </div>
@@ -320,6 +373,36 @@ export function KpiScreen() {
 
                     {warn && (
                       <p role="alert" style={{ gridColumn: '1 / -1', margin: 0, font: 'var(--text-xs)/1.5 var(--font-body)', color: 'var(--amber-700)' }}>{warn}</p>
+                    )}
+                    </div>
+
+                    {isOpen && (
+                      <div style={{ padding: '14px 0 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '12px 24px', marginBottom: 14 }}>
+                          {(() => {
+                            const filled = ind.values.map((x, k) => ({ x, k })).filter((o) => o.x !== null && o.x !== undefined);
+                            const last = filled.length ? filled[filled.length - 1] : null;
+                            let pass = 0, failN = 0;
+                            for (const o of filled) {
+                              const r = meets(o.x, ind.targetOp, ind.targetValue);
+                              if (r === true) pass += 1; else if (r === false) failN += 1;
+                            }
+                            const nums = filled.map((o) => o.x);
+                            return [
+                              ['ค่าล่าสุด', last ? `${fmt(last.x, ind.kind)} (${months[last.k]})` : '—'],
+                              ['ผ่านเป้า', pass + failN ? `${pass}/${pass + failN} เดือน` : '—'],
+                              ['ต่ำสุด – สูงสุด', nums.length ? `${fmt(Math.min(...nums), ind.kind)} – ${fmt(Math.max(...nums), ind.kind)}` : '—'],
+                              ['ผู้จัดทำข้อมูล', ind.owner || '—'],
+                            ].map(([label, value]) => (
+                              <div key={label}>
+                                <div style={{ font: 'var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 4 }}>{label}</div>
+                                <div style={{ font: 'var(--text-sm)/1.5 var(--font-body)', color: 'var(--text-primary)' }}>{value}</div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                        <Sparkline ind={ind} months={months} />
+                      </div>
                     )}
                   </div>
                 );
