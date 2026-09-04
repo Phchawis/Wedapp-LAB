@@ -25,6 +25,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:?ตั้ง JWT_SECRET ใน .env (openssl rand -base64 32)}
       # ต้องตรงกับ SSO_SHARED_SECRET ฝั่ง Masterlist เป๊ะ ๆ
       SSO_SHARED_SECRET: ${SSO_SHARED_SECRET:?ตั้ง SSO_SHARED_SECRET ใน .env}
+      # ตัวชี้วัดคุณภาพเก็บอยู่ที่ Masterlist ที่เดียว ระบบนี้เรียกผ่านเครือข่าย docker
+      # ไม่ผ่านอินเทอร์เน็ต — ชื่อ host คือชื่อคอนเทนเนอร์ของ Masterlist
+      MASTERLIST_INTERNAL_URL: ${MASTERLIST_INTERNAL_URL:-http://masterlist-app-1:3000}
       UPLOAD_DIR: /app/uploads
       PORT: 3001
     volumes:

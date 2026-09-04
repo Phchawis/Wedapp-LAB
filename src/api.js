@@ -101,6 +101,11 @@ export const api = {
     return req('/documents/' + encodeURIComponent(no) + '/attachments/' + encodeURIComponent(id) + '/version', { method: 'POST', body: fd, isForm: true });
   },
 
+  // ตัวชี้วัดคุณภาพ — ข้อมูลอยู่ที่ระบบ Masterlist เซิร์ฟเวอร์ของเราเรียกต่อให้
+  getKpi: (year) => req('/kpi' + (year ? '?year=' + encodeURIComponent(year) : '')),
+  saveKpiValues: (fiscalYear, month, entries) =>
+    req('/kpi/values', { method: 'POST', body: { fiscalYear, month, entries } }),
+
   listUsers: () => req('/users'),
   createUser: (u) => req('/users', { method: 'POST', body: u }),
   updateUser: (username, patch) => req('/users/' + encodeURIComponent(username), { method: 'PATCH', body: patch }),

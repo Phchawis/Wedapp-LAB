@@ -429,6 +429,71 @@ app.get('/api/logs', authMw, requirePerm('audit'), wrap(async (req, res) => {
   res.json(await store.listLogs());
 }));
 
+/* ── ตัวชี้วัดคุณภาพ (KPI) ────────────────────────────────────
+   ตัวชี้วัดเก็บอยู่ที่ระบบ Masterlist ที่เดียว ระบบนี้เรียกผ่าน API ภายใน
+   ไม่คัดลอกมาเก็บเอง — แก้ที่ระบบไหนก็เห็นตรงกันทั้งสองฝั่งทันที และกติกา
+   ตรวจค่า (สเกลร้อยละ สิทธิ์แก้ไข) อยู่ที่เดียวไม่ต้องเขียนซ้ำสองที่
+
+   MASTERLIST_INTERNAL_URL ชี้ไปที่คอนเทนเนอร์ Masterlist ในเครือข่าย docker
+   ไม่ได้ออกอินเทอร์เน็ต และใช้กุญแจ SSO_SHARED_SECRET ที่สองระบบมีตรงกันอยู่แล้ว */
+const MASTERLIST_URL = process.env.MASTERLIST_INTERNAL_URL || '';
+const KPI_WORK = 'MEDTECH'; // ระบบนี้ดูแลเฉพาะงานเทคนิคการแพทย์
+
+async function callMasterlist(path, init = {}) {
+  if (!MASTERLIST_URL || !process.env.SSO_SHARED_SECRET) {
+    const e = new Error('ยังไม่ได้เชื่อมต่อกับระบบทะเบียนเอกสารกลาง');
+    e.status = 503;
+    throw e;
+  }
+  const res = await fetch(`${MASTERLIST_URL}${path}`, {
+    ...init,
+    headers: {
+      'x-internal-key': process.env.SSO_SHARED_SECRET,
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.headers || {}),
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const e = new Error(data.error || 'เรียกระบบทะเบียนเอกสารกลางไม่สำเร็จ');
+    e.status = res.status;
+    throw e;
+  }
+  return data;
+}
+
+app.get('/api/kpi', authMw, wrap(async (req, res) => {
+  const year = req.query.year ? `&year=${encodeURIComponent(req.query.year)}` : '';
+  const data = await callMasterlist(`/api/kpi?work=${KPI_WORK}${year}`);
+  // บอกหน้าจอไปด้วยว่าผู้ใช้คนนี้แก้ได้ไหม จะได้ไม่ต้องคำนวณสิทธิ์ซ้ำ
+  res.json({ ...data, canEdit: can(req.user.role, 'publish') || req.user.role === 'sysadmin' });
+}));
+
+app.post('/api/kpi/values', authMw, wrap(async (req, res) => {
+  if (!(can(req.user.role, 'publish') || req.user.role === 'sysadmin')) {
+    return res.status(403).json({ error: 'ไม่มีสิทธิ์แก้ไขตัวชี้วัด' });
+  }
+  const { fiscalYear, month, entries } = req.body || {};
+  const data = await callMasterlist('/api/kpi', {
+    method: 'POST',
+    body: JSON.stringify({
+      workId: KPI_WORK,
+      fiscalYear,
+      month,
+      entries,
+      // ส่งบทบาทไปให้ Masterlist ตรวจซ้ำ — หัวหน้างานของระบบนี้เทียบเท่า HEAD_WORK
+      actor: {
+        name: req.user.name,
+        role: req.user.role === 'sysadmin' ? 'SYSADMIN' : 'HEAD_WORK',
+        workId: KPI_WORK,
+      },
+    }),
+  });
+  await logAction(req.user, 'kpi:save', `เดือนที่ ${month} ปีงบ ${fiscalYear}`);
+  res.json(data);
+}));
+
 // ── Emergency Kit Export (ZIP) ───────────────────────────────
 // ไม่มีสิทธิ์ใดโดยเฉพาะครอบคลุมฟีเจอร์นี้ใน Masterlist — เปิดให้ผู้ใช้งานที่ล็อกอินทุกคนใช้ได้ (เหมือนพฤติกรรมเดิม)
 // escape ข้อความก่อนยัดลง HTML — กัน HTML/script injection ในไฟล์ที่ export ออกไป

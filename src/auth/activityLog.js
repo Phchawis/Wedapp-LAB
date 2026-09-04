@@ -11,6 +11,7 @@ export const LOG_ACTIONS = {
   'doc:create': { th: 'ลงทะเบียนเอกสาร', icon: 'Plus', c: 'var(--green-700)' },
   'doc:publish': { th: 'ประกาศใช้เอกสาร', icon: 'Megaphone', c: 'var(--green-700)' },
   'doc:edit': { th: 'บันทึกแก้ไขเอกสาร', icon: 'PencilLine', c: 'var(--amber-700)' },
+  'kpi:save': { th: 'บันทึกผลตัวชี้วัด', icon: 'TrendingUp', c: 'var(--blue-700)' },
   'doc:file-add': { th: 'แนบไฟล์เข้าเอกสาร', icon: 'Paperclip', c: 'var(--green-700)' },
   'doc:file-update': { th: 'อัปเดตไฟล์เอกสาร (เวอร์ชันใหม่)', icon: 'Upload', c: 'var(--amber-700)' },
   'doc:obsolete': { th: 'ยกเลิกใช้งานเอกสาร', icon: 'Ban', c: 'var(--red-700)' },

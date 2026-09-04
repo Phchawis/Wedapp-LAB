@@ -13,6 +13,7 @@ const RegisterDocScreen = lazy(() => import('./screens/RegisterDocScreen.jsx'));
 const UsersScreen = lazy(() => import('./screens/UsersScreen.jsx'));
 const LogScreen = lazy(() => import('./screens/LogScreen.jsx'));
 const HelpScreen = lazy(() => import('./screens/HelpScreen.jsx'));
+const KpiScreen = lazy(() => import('./screens/KpiScreen.jsx'));
 const ChangePasswordScreen = lazy(() => import('./screens/ChangePasswordScreen.jsx'));
 
 function Loader({ text = 'กำลังโหลดข้อมูล...' }) {
@@ -239,6 +240,7 @@ export default function App() {
     users: { e: 'ACCESS CONTROL', t: 'จัดการผู้ใช้งาน', s: 'เพิ่ม ลบ และกำหนดสิทธิ์ผู้ใช้งานระบบ' },
     log: { e: 'AUDIT LOG', t: 'บันทึกกิจกรรม', s: 'ประวัติการทำงานของผู้ใช้งานในระบบ' },
     detail: { e: 'DOCUMENT', t: 'รายละเอียดเอกสาร', s: doc ? doc.no : '' },
+    kpi: { e: 'QUALITY INDICATORS', t: 'ตัวชี้วัดคุณภาพ', s: 'ผลการเก็บตัวชี้วัดของงานเทคนิคการแพทย์ — ข้อมูลชุดเดียวกับระบบทะเบียนเอกสารกลาง' },
     help: { e: 'USER GUIDE', t: 'คู่มือการใช้งาน', s: 'คู่มือการควบคุมเอกสารตามมาตรฐาน ISO 15189' },
   };
   const head = titles[view] || titles.dashboard;
@@ -261,6 +263,7 @@ export default function App() {
   else if (view === 'register') body = <RegisterScreen docs={docs} cat={cat} onOpen={openDoc} />;
   else if (view === 'users' && canViewUsers) body = <UsersScreen users={users} currentUser={currentUser} onAdd={addUser} onEdit={editUser} onResetPassword={resetUserPassword} onDelete={deleteUser} />;
   else if (view === 'log' && canAudit) body = <LogScreen logs={logs} />;
+  else if (view === 'kpi') body = <KpiScreen />;
   else if (view === 'help') body = <HelpScreen />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onAddFile={addDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
   else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
