@@ -256,7 +256,7 @@ function DowntimeSection() {
       </div>
 
       {/* ระดับความรุนแรง */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>6.1 · ระดับความรุนแรงและการปฏิบัติ</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>7.1 · ระดับความรุนแรงและการปฏิบัติ</div>
       <Card padding="none" style={{ marginBottom: 26 }}>
         {DOWNTIME_LEVELS.map((l, i) => (
           <div key={l.title} style={{ padding: '14px 16px', borderBottom: i === DOWNTIME_LEVELS.length - 1 ? 'none' : '1px solid var(--border-subtle)' }}>
@@ -271,7 +271,7 @@ function DowntimeSection() {
       </Card>
 
       {/* แยกตามบทบาท */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>6.2 · ขั้นตอนปฏิบัติแยกตามบทบาท</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 12px' }}>7.2 · ขั้นตอนปฏิบัติแยกตามบทบาท</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 26 }}>
         {DOWNTIME_ROLES.map((r, i) => (
           <div key={r.who} className="qms-rise-stagger" style={{
@@ -295,7 +295,7 @@ function DowntimeSection() {
       </div>
 
       {/* การ์ดฉุกเฉิน */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 8px' }}>6.3 · การ์ดฉุกเฉินสำหรับติดหน้างาน</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '0 0 8px' }}>7.3 · การ์ดฉุกเฉินสำหรับติดหน้างาน</div>
       <p style={{ font: 'var(--type-caption)', color: 'var(--text-tertiary)', marginBottom: 14, maxWidth: '70ch' }}>
         พิมพ์ติดไว้ที่จุดปฏิบัติงาน ห้องเวร และข้างเครื่องตรวจวิเคราะห์ — อ่านได้ทันทีโดยไม่ต้องเปิดคอมพิวเตอร์
       </p>
@@ -349,13 +349,13 @@ function ArchitectureSection() {
       </p>
 
       {/* 5.1 Tech stack */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>7.1 · ชุดเทคโนโลยี (Technology Stack)</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>8.1 · ชุดเทคโนโลยี (Technology Stack)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: 28 }}>
         {STACK.map((s, i) => <StackChip key={s.layer} {...s} i={i} />)}
       </div>
 
       {/* 5.2 Architecture diagram (animated) */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>7.2 · แผนผังสถาปัตยกรรม (Architecture Overview)</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '4px 0 12px' }}>8.2 · แผนผังสถาปัตยกรรม (Architecture Overview)</div>
       <Card>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 4, flexWrap: 'wrap' }}>
           <ArchNode icon="Monitor" title="เบราว์เซอร์ผู้ใช้" sub="React SPA" tone="slate" />
@@ -375,7 +375,7 @@ function ArchitectureSection() {
       </Card>
 
       {/* 5.3 Request lifecycle (animated pipeline) */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>7.3 · เส้นทางการทำงานของหนึ่งคำขอ — ตัวอย่าง “ลงทะเบียนเอกสาร”</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>8.3 · เส้นทางการทำงานของหนึ่งคำขอ — ตัวอย่าง “ลงทะเบียนเอกสาร”</div>
       <div className="qms-no-print" style={{ position: 'relative', height: 3, borderRadius: 2, background: 'var(--slate-100)', margin: '0 0 18px', overflow: 'hidden' }}>
         <span className="qms-travel" style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: 46, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, transparent, var(--brand-500))' }} />
       </div>
@@ -393,7 +393,7 @@ function ArchitectureSection() {
       </div>
 
       {/* 5.4 Security + SSO */}
-      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>7.4 · ความปลอดภัยและการเชื่อมต่อระบบ Masterlist (SSO)</div>
+      <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)', margin: '28px 0 12px' }}>8.4 · ความปลอดภัยและการเชื่อมต่อระบบ Masterlist (SSO)</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
         {[
           { icon: 'ShieldCheck', t: 'RBAC ตามบทบาท', d: 'ทุก endpoint ตรวจสิทธิ์ด้วย can(role, action) — สิทธิ์ผู้ควบคุมเอกสารกับผู้ใช้ทั่วไปแยกกันชัดเจน' },
