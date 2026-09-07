@@ -26,10 +26,10 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
 
   const navItems = [
     { id: 'dashboard', icon: 'LayoutDashboard', label: 'Dashboard' },
+    { id: 'kpi', icon: 'TrendingUp', label: 'ตัวชี้วัด' },
     { id: 'register', icon: 'FolderClosed', label: 'ทะเบียนเอกสาร', count: registerCount },
     can(user.role, 'viewUsers') && { id: 'users', icon: 'UserCog', label: 'จัดการผู้ใช้งาน' },
     can(user.role, 'audit') && { id: 'log', icon: 'History', label: 'บันทึกกิจกรรม' },
-    { id: 'kpi', icon: 'TrendingUp', label: 'ตัวชี้วัด' },
     { id: 'help', icon: 'HelpCircle', label: 'คู่มือการใช้งาน' },
   ].filter(Boolean);
 
