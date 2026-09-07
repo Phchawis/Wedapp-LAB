@@ -67,15 +67,6 @@ function ControlCard({ doc, typeObj, catObj, reviewDue }) {
   );
 }
 
-function Field({ k, v }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <span style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{k}</span>
-      <span style={{ font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{v}</span>
-    </div>
-  );
-}
-
 /* DocDetailScreen — controlled-document view: header band, attachments,
    revision history, and permission-gated workflow / export actions. */
 export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onAddFile, onDelete }) {
@@ -457,22 +448,19 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
                 <img src={seal} alt="ตราโรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ" style={{ width: 46, height: 46, objectFit: 'contain' }} />
               </div>
               <div style={{ padding: '14px 18px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                   <DocTypeTag type={doc.type} />
                   <StatusBadge status={doc.status} size="sm" />
+                  {/* เลขที่เอกสารและเวอร์ชันต้องเห็นทุกแท็บ จึงอยู่ตรงหัวเรื่อง
+                      ไม่ใช่ในการ์ดข้อมูลควบคุมซึ่งเห็นเฉพาะแท็บข้อมูล */}
+                  <span style={{ font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-secondary)' }}>
+                    {doc.no} · v.{String(doc.rev).padStart(2, '0')}
+                  </span>
                 </div>
                 {/* จำกัดความยาวบรรทัดของชื่อเอกสาร — บนจอกว้างบรรทัดยาวเกินไปจะอ่านยาก */}
                 <h1 style={{ font: 'var(--fw-bold) var(--text-2xl)/1.2 var(--font-display)', color: 'var(--text-primary)', marginBottom: 4, maxWidth: '38ch' }}>{doc.th}</h1>
                 <div style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)' }}>{typeObj?.th || doc.type} · หมวดงาน{catObj?.th || doc.cat}</div>
               </div>
-            </div>
-            {/* จำกัดความกว้างของแต่ละช่อง (ไม่ใช้ 1fr) — บนจอกว้างข้อมูลจะได้ไม่ถูกยืดกระจายจนอ่านยาก */}
-            <div style={{ display: 'grid', gridTemplateColumns: narrow ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(130px, 210px))', gap: '16px 28px', justifyContent: 'start', padding: '16px 18px', background: 'var(--slate-50)' }}>
-              <Field k="เลขที่เอกสาร" v={doc.no} />
-              <Field k="แก้ไขครั้งที่" v={String(doc.rev).padStart(2, '0')} />
-              <Field k="ประกาศใช้" v={doc.updated} />
-              <Field k="ผู้รับผิดชอบ" v={doc.owner} />
-              <Field k="ระยะเวลาจัดเก็บ" v={doc.retention ? doc.retention + ' ปี' : '—'} />
             </div>
           </div>
 

@@ -377,7 +377,9 @@
       "Bash(rsync -az -e 'ssh -p 8443 -i ~/.ssh/ahs_deploy' src/screens/HelpScreen.jsx root@188.166.181.243:/opt/labqms/src/screens/HelpScreen.jsx)",
       "Bash(grep -oE \"\\\\['[ก-๙A-Za-z ·/]+',|label: *'[^']+'|>[ก-๙]{3,20}<\" src/screens/DocDetailScreen.jsx)",
       "Bash(grep -oE \"'[ก-๙A-Za-z ·/]{3,}'\")",
-      "Bash(grep -nE \"const \\\\{|no,|th,|owner|retention|body\")"
+      "Bash(grep -nE \"const \\\\{|no,|th,|owner|retention|body\")",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q prisma/migrations/20260907000000_reviewer_and_retention/migration.sql root@188.166.181.243:/tmp/mig.sql)",
+      "Bash(rsync -az -e 'ssh -p 8443 -i ~/.ssh/ahs_deploy' src/screens/DocDetailScreen.jsx root@188.166.181.243:/opt/labqms/src/screens/DocDetailScreen.jsx)"
     ]
   }
 }
