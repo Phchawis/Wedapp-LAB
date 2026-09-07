@@ -40,6 +40,13 @@ create table if not exists documents (
 );
 
 -- ไฟล์แนบ / ลิงก์ (ไฟล์จริงอยู่บนดิสก์: storage_path = ชื่อไฟล์ใน UPLOAD_DIR)
+-- ข้อมูลควบคุมเอกสารตาม ISO 15189:2022 ข้อ 8.3 — ต้องระบุได้ว่าใครทบทวน ใครอนุมัติ
+-- และเมื่อไรต้องทบทวนรอบถัดไป (เพิ่มทีหลัง จึงใช้ add column แทนการแก้ create table)
+alter table documents add column if not exists reviewer    text;
+alter table documents add column if not exists approver    text;
+alter table documents add column if not exists next_review date;
+alter table documents add column if not exists controlled  boolean not null default true;
+
 create table if not exists attachments (
   id           uuid primary key default gen_random_uuid(),
   doc_no       text not null references documents(no) on delete cascade,

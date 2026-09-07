@@ -29,6 +29,44 @@ function fmtTs(iso) {
 }
 
 // ป้าย/ค่าในแถบหัวเอกสารควบคุม — label ใช้ secondary ให้คอนทราสต์ผ่าน AA บนพื้น slate-50
+/* ข้อมูลควบคุมเอกสารตาม ISO 15189:2022 ข้อ 8.3
+   รายการและลำดับให้ตรงกับระบบทะเบียนเอกสารกลาง (Masterlist) เจ้าหน้าที่จะได้อ่านแบบเดียวกัน
+   ช่องที่ยังไม่มีข้อมูลแสดง "ยังไม่ระบุ" แทนการซ่อน — เพราะช่องว่างคือสิ่งที่ต้องตามเก็บ
+   ถ้าซ่อนไปจะไม่มีใครรู้ว่าขาด */
+function ControlCard({ doc, typeObj, catObj, reviewDue }) {
+  const dash = (v) => (v && String(v).trim() ? v : null);
+  const rows = [
+    ['รหัสเอกสาร', dash(doc.no), true],
+    ['ประเภทเอกสาร', `${doc.type} · ${typeObj?.th || ''}`.trim()],
+    ['หมวดงาน', catObj?.th || doc.cat],
+    ['เวอร์ชันปัจจุบัน', `v.${String(doc.rev).padStart(2, '0')}`, true],
+    ['วันที่ประกาศใช้', dash(doc.updated), true],
+    ['กำหนดทบทวนถัดไป', dash(doc.nextReview) || reviewDue, true],
+    ['ผู้จัดทำ / เจ้าของ', dash(doc.owner)],
+    ['ผู้ทบทวน', dash(doc.reviewer)],
+    ['ผู้อนุมัติ', dash(doc.approver)],
+    ['ระยะเวลาจัดเก็บ', doc.retention ? `${doc.retention} ปี` : null],
+    ['สถานะการควบคุม', doc.controlled === false ? 'ไม่ควบคุม' : 'เอกสารควบคุม'],
+    ['ข้อกำหนดอ้างอิง', 'ISO 15189:2022', true],
+  ];
+  return (
+    <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="ShieldCheck" size={16} color="var(--text-secondary)" /> ข้อมูลควบคุมเอกสาร</span>}>
+      <dl style={{ margin: 0, padding: '4px 18px 12px' }}>
+        {rows.map(([k, v, mono]) => (
+          <div key={k} style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'baseline', padding: '9px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+            <dt style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)', flex: '0 0 auto' }}>{k}</dt>
+            <dd style={{
+              margin: 0, textAlign: 'right',
+              font: `var(--text-sm)/1.4 var(--font-${mono ? 'mono' : 'body'})`,
+              color: v ? 'var(--text-primary)' : 'var(--text-tertiary)',
+            }}>{v || 'ยังไม่ระบุ'}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  );
+}
+
 function Field({ k, v }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -42,6 +80,15 @@ function Field({ k, v }) {
    revision history, and permission-gated workflow / export actions. */
 export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onAddFile, onDelete }) {
   const Q = QMS;
+  // ยังไม่ได้ระบุวันทบทวน ให้ประมาณจากวันประกาศใช้ + 1 ปี ซึ่งเป็นเกณฑ์ที่ระบบใช้เตือนอยู่แล้ว
+  // แสดงพร้อมวงเล็บบอกว่าเป็นค่าประมาณ จะได้ไม่เข้าใจผิดว่ามีคนกำหนดไว้จริง
+  const reviewDueDate = (() => {
+    if (!doc.updated) return null;
+    const d = new Date(doc.updated);
+    if (Number.isNaN(d.getTime())) return null;
+    d.setFullYear(d.getFullYear() + 1);
+    return `${d.toISOString().slice(0, 10)} (ประมาณ)`;
+  })();
   const catObj = Q.WORK_CATEGORIES.find((c) => c.code === doc.cat);
   const typeObj = Q.DOC_TYPES.find((t) => t.code === doc.type);
   const narrow = useNarrow(900);
@@ -444,6 +491,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
           {activeTab === 'detail' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {/* ตัวแสดงเอกสารย้ายไปอยู่เต็มความกว้างเหนือคอลัมน์ (ดูด้านบน) */}
+
+              <ControlCard doc={doc} typeObj={typeObj} catObj={catObj} reviewDue={reviewDueDate} />
 
               {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
               <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>

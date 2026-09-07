@@ -31,6 +31,9 @@ const docFromRow = (r) => ({
   no: r.no, th: r.th, type: r.type, cat: r.cat, rev: r.rev, status: r.status,
   updated: dateOnly(r.updated),
   owner: r.owner, retention: r.retention, files: r.files || [], createdAt: r.created_at,
+  reviewer: r.reviewer || '', approver: r.approver || '',
+  nextReview: dateOnly(r.next_review),
+  controlled: r.controlled !== false,
 });
 const attFromRow = (r) => ({
   id: r.id, docNo: r.doc_no, kind: r.kind, name: r.name, mime: r.mime,
@@ -181,9 +184,10 @@ export async function createPostgresStore() {
       try {
         await client.query('begin');
         await client.query(
-          `insert into documents (no, th, type, cat, rev, status, updated, owner, retention, files)
-           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-          [doc.no, doc.th, doc.type, doc.cat, doc.rev, doc.status, doc.updated || null, doc.owner, doc.retention, JSON.stringify(doc.files || [])],
+          `insert into documents (no, th, type, cat, rev, status, updated, owner, retention, files, reviewer, approver, next_review, controlled)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+          [doc.no, doc.th, doc.type, doc.cat, doc.rev, doc.status, doc.updated || null, doc.owner, doc.retention, JSON.stringify(doc.files || []),
+           doc.reviewer || null, doc.approver || null, doc.nextReview || null, doc.controlled !== false],
         );
         for (const a of attachments) {
           await client.query(
@@ -209,6 +213,10 @@ export async function createPostgresStore() {
       if (patch.rev != null) put('rev', patch.rev);
       if (patch.updated != null) put('updated', patch.updated);
       if (patch.files != null) put('files', JSON.stringify(patch.files));
+        if (patch.reviewer != null) put('reviewer', patch.reviewer);
+        if (patch.approver != null) put('approver', patch.approver);
+        if (patch.nextReview !== undefined) put('next_review', patch.nextReview || null);
+        if (patch.controlled != null) put('controlled', patch.controlled);
       if (!sets.length) return this.getDocument(no);
       vals.push(no);
       const { rows } = await q(`update documents set ${sets.join(', ')} where no = $${vals.length} returning *`, vals);

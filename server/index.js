@@ -218,6 +218,9 @@ app.post('/api/documents', authMw, requirePerm('register'), upload.array('files'
     no, th: (b.th || '').trim(), type: b.type, cat: b.cat,
     rev: Math.max(1, parseInt(b.rev, 10) || 1), status: b.status || 'draft',
     updated: b.updated, owner: (b.owner || '').trim(), retention: parseInt(b.retention, 10) || 5,
+    reviewer: (b.reviewer || '').trim(), approver: (b.approver || '').trim(),
+    nextReview: /^\d{4}-\d{2}-\d{2}$/.test(b.nextReview || '') ? b.nextReview : null,
+    controlled: b.controlled === undefined ? true : b.controlled !== 'false' && b.controlled !== false,
     files: [...new Set(attachments.map((a) => a.kind))], createdAt: new Date().toISOString(),
   };
   await store.createDocument(doc, attachments);
@@ -237,7 +240,7 @@ const STATUS_TRANSITIONS = {
   obsolete:   { review: 'revise' },
 };
 app.patch('/api/documents/:no', authMw, wrap(async (req, res) => {
-  const { status, rev, updated, action } = req.body;
+  const { status, rev, updated, action, reviewer, approver, nextReview, controlled } = req.body;
   const doc = await store.getDocument(req.params.no);
   if (!doc) return res.status(404).json({ error: 'ไม่พบเอกสาร' });
 
@@ -256,8 +259,30 @@ app.patch('/api/documents/:no', authMw, wrap(async (req, res) => {
     return res.status(403).json({ error: 'ไม่มีสิทธิ์แก้ไขข้อมูลเอกสารนี้' });
   }
 
+  // ข้อมูลควบคุมเอกสาร (ผู้ทบทวน ผู้อนุมัติ กำหนดทบทวน) เป็นหลักฐานที่ผู้ตรวจประเมินดู
+  // จึงให้แก้ได้เฉพาะผู้มีสิทธิ์ประกาศใช้ ไม่ใช่ทุกคนที่แก้เอกสารได้
+  const touchingCtrl = [reviewer, approver, nextReview, controlled].some((v) => v !== undefined);
+  if (touchingCtrl && !can(req.user.role, 'publish')) {
+    return res.status(403).json({ error: 'ไม่มีสิทธิ์แก้ข้อมูลควบคุมเอกสาร' });
+  }
+
   // ตรวจชนิดข้อมูลก่อนเขียน (กัน 500 จาก Postgres และค่าขยะ)
   const patch = {};
+
+  // บันทึกผู้ทบทวน/ผู้อนุมัติจากคนที่กดจริง ไม่ให้ฝั่งหน้าเว็บส่งชื่อมาเอง
+  // (ถ้าให้ส่งมาได้ ใครก็อ้างชื่อคนอื่นเป็นผู้อนุมัติได้ ซึ่งทำลายคุณค่าของหลักฐานทั้งชุด)
+  // ทำแบบเดียวกับระบบทะเบียนเอกสารกลาง: เข้าสู่ทบทวน = ผู้ทบทวน · ประกาศใช้ = ผู้อนุมัติ
+  if (statusChanging && status === 'review' && !doc.reviewer) patch.reviewer = req.user.name;
+  if (statusChanging && status === 'effective') patch.approver = req.user.name;
+  if (reviewer !== undefined) patch.reviewer = String(reviewer).trim();
+  if (approver !== undefined) patch.approver = String(approver).trim();
+  if (controlled !== undefined) patch.controlled = controlled !== false && controlled !== 'false';
+  if (nextReview !== undefined) {
+    if (nextReview && !/^\d{4}-\d{2}-\d{2}$/.test(nextReview)) {
+      return res.status(400).json({ error: 'รูปแบบวันที่ทบทวนไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)' });
+    }
+    patch.nextReview = nextReview || null;
+  }
   if (status != null) patch.status = status;
   if (rev != null) {
     const n = Number(rev);

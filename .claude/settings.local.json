@@ -374,7 +374,10 @@
       "Bash(grep -n \"Section n=\\\\\"0[4-7]\\\\\"\\\\|<DowntimeSection\\\\|<ArchitectureSection\\\\|</div>$\" src/screens/HelpScreen.jsx)",
       "Bash(grep -noE \"[0-9]\\\\.[0-9] · [^<']{0,40}\" src/screens/HelpScreen.jsx)",
       "Bash(grep -noE \"[0-9]\\\\.[0-9] · [^<']{0,30}\" src/screens/HelpScreen.jsx)",
-      "Bash(rsync -az -e 'ssh -p 8443 -i ~/.ssh/ahs_deploy' src/screens/HelpScreen.jsx root@188.166.181.243:/opt/labqms/src/screens/HelpScreen.jsx)"
+      "Bash(rsync -az -e 'ssh -p 8443 -i ~/.ssh/ahs_deploy' src/screens/HelpScreen.jsx root@188.166.181.243:/opt/labqms/src/screens/HelpScreen.jsx)",
+      "Bash(grep -oE \"\\\\['[ก-๙A-Za-z ·/]+',|label: *'[^']+'|>[ก-๙]{3,20}<\" src/screens/DocDetailScreen.jsx)",
+      "Bash(grep -oE \"'[ก-๙A-Za-z ·/]{3,}'\")",
+      "Bash(grep -nE \"const \\\\{|no,|th,|owner|retention|body\")"
     ]
   }
 }
