@@ -214,6 +214,13 @@ const DOWNTIME_ROLES = [
   ] },
 ];
 
+const KPI_HELP = [
+  { icon: 'List', t: 'อ่านตารางสี', d: 'หนึ่งแถวคือหนึ่งตัวชี้วัด หนึ่งช่องคือหนึ่งเดือน — เขียวคือผ่านเป้า แดงลายทแยงคือไม่ผ่าน เทาคือยังไม่มีข้อมูล' },
+  { icon: 'TrendingUp', t: 'ดูกราฟแนวโน้ม', d: 'กดที่ชื่อตัวชี้วัดเพื่อกางกราฟทั้งปี มีเส้นประบอกเป้าหมายและแรเงาฝั่งที่ผ่านเกณฑ์ กดซ้ำเพื่อปิด' },
+  { icon: 'PencilLine', t: 'กรอกผลรายเดือน', d: 'หัวหน้างานและผู้ดูแลระบบกรอกได้ ระบบเตือนทันทีหากกรอกร้อยละเป็นเศษส่วน เช่น 0.99 แทน 99' },
+  { icon: 'Clock', t: 'ปีงบประมาณ', d: 'เดือนแรกของตารางคือ ต.ค. ตามปีงบประมาณไทย ไม่ใช่ ม.ค. — ปีเก่าเปิดดูย้อนหลังได้ตลอด' },
+];
+
 function DowntimeSection() {
   const printCard = () => {
     document.body.classList.add('qms-printing-card');
@@ -226,7 +233,7 @@ function DowntimeSection() {
   };
 
   return (
-    <Section n="06" title="แผนรับมือเมื่อระบบใช้งานไม่ได้ (Downtime Plan)">
+    <Section n="07" title="แผนรับมือเมื่อระบบใช้งานไม่ได้ (Downtime Plan)">
       <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', marginBottom: 18, maxWidth: '72ch' }}>
         งานห้องปฏิบัติการต้องดำเนินต่อได้เสมอแม้ระบบสารสนเทศขัดข้อง หัวข้อนี้กำหนดว่าแต่ละบทบาททำอะไร
         เพื่อให้บริการไม่หยุดชะงักและเอกสารที่ใช้อ้างอิงยังคงถูกต้อง
@@ -335,7 +342,7 @@ function DowntimeSection() {
 
 function ArchitectureSection() {
   return (
-    <Section n="07" title="สถาปัตยกรรมระบบและการทำงานเบื้องหลัง (สำหรับ Programmer / เจ้าหน้าที่ IT)">
+    <Section n="08" title="สถาปัตยกรรมระบบและการทำงานเบื้องหลัง (สำหรับ Programmer / เจ้าหน้าที่ IT)">
       <p style={{ font: 'var(--type-body)', color: 'var(--text-secondary)', marginBottom: 20, maxWidth: '72ch' }}>
         ส่วนนี้อธิบายภาพรวมทางเทคนิคของระบบสำหรับผู้พัฒนาและเจ้าหน้าที่ไอที ตั้งแต่ชุดเทคโนโลยีที่ใช้
         เส้นทางการไหลของข้อมูล ไปจนถึงการเชื่อมต่อกับระบบ Masterlist ฝ่ายสหเวชศาสตร์
@@ -545,7 +552,34 @@ export function HelpScreen() {
         </div>
       </Section>
 
-      {/* 06 — แผนรับมือเมื่อระบบใช้งานไม่ได้ (ทุกบทบาทต้องอ่าน) */}
+      {/* 06 — ตัวชี้วัดคุณภาพ: ข้อมูลอยู่ที่ระบบทะเบียนกลาง ระบบนี้ดึงมาแสดง */}
+      <Section n="06" title="ตัวชี้วัดคุณภาพ (KPI)">
+        <div style={{ font: 'var(--type-ui)', color: 'var(--text-secondary)', marginBottom: 16, maxWidth: '70ch' }}>
+          เมนู <strong style={{ color: 'var(--text-primary)' }}>ตัวชี้วัด</strong> แสดงผลรายเดือนตลอดปีงบประมาณของงานเทคนิคการแพทย์
+          เรียงตามรหัสตัวชี้วัดในแบบฟอร์มฉบับจริง เพื่อให้เทียบกับเอกสารที่ใช้ตอนตรวจประเมินได้ทีละบรรทัด
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px 24px' }}>
+          {KPI_HELP.map((k) => (
+            <div key={k.t} style={{ padding: '14px 16px', background: 'var(--surface-card)', border: '1px solid var(--slate-200)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                <Icon name={k.icon} size={15} color="var(--brand-600)" />
+                <span style={{ font: 'var(--fw-semibold) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-primary)' }}>{k.t}</span>
+              </div>
+              <div style={{ font: 'var(--text-xs)/1.55 var(--font-body)', color: 'var(--text-secondary)' }}>{k.d}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', background: 'var(--brand-50)', border: '1px solid var(--brand-600)', borderRadius: 'var(--radius-sm)' }}>
+          <Icon name="Link" size={16} color="var(--brand-700)" />
+          <div style={{ font: 'var(--text-xs)/1.6 var(--font-body)', color: 'var(--text-secondary)' }}>
+            ตัวเลขชุดนี้เก็บไว้ที่ <strong style={{ color: 'var(--text-primary)' }}>ระบบทะเบียนเอกสารกลาง (Masterlist)</strong> ที่เดียว
+            ระบบนี้ดึงมาแสดงผ่านเครือข่ายภายในของเซิร์ฟเวอร์ — แก้ที่ระบบไหนก็เห็นตรงกันทั้งสองฝั่งทันที
+            จึงไม่มีปัญหาตัวเลขสองชุดไม่ตรงกัน และตอบผู้ตรวจได้ว่าข้อมูลจริงอยู่ที่ใด
+          </div>
+        </div>
+      </Section>
+
+      {/* 07 — แผนรับมือเมื่อระบบใช้งานไม่ได้ (ทุกบทบาทต้องอ่าน) */}
       <DowntimeSection />
 
       <ArchitectureSection />

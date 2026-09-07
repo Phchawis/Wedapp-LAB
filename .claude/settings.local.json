@@ -369,7 +369,9 @@
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q.sql root@188.166.181.243:/tmp/q.sql)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q2.sql root@188.166.181.243:/tmp/q2.sql)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q3.sql root@188.166.181.243:/tmp/q3.sql)",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q4.sql root@188.166.181.243:/tmp/q4.sql)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q4.sql root@188.166.181.243:/tmp/q4.sql)",
+      "Bash(rsync -az -e 'ssh -p 8443 -i ~/.ssh/ahs_deploy' src/screens/AppShell.jsx root@188.166.181.243:/opt/labqms/src/screens/AppShell.jsx)",
+      "Bash(grep -n \"Section n=\\\\\"0[4-7]\\\\\"\\\\|<DowntimeSection\\\\|<ArchitectureSection\\\\|</div>$\" src/screens/HelpScreen.jsx)"
     ]
   }
 }
