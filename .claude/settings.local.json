@@ -362,7 +362,14 @@
       "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ตัวชี้วัดแยกตามความเร่งด่วนจริง ===\" *)",
       "Bash(scp -q -P 8443 -i ~/.ssh/ahs_deploy /tmp/q.sql root@188.166.181.243:/tmp/q.sql)",
       "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'docker exec -i masterlist-db-1 psql -U masterlist -d masterlist -tAF\" | \" < /tmp/q.sql; rm -f /tmp/q.sql')",
-      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'F=$\\(docker exec labqms-app sh -c \"ls /app/dist/assets | grep KpiScreen\"\\) *)"
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'F=$\\(docker exec labqms-app sh -c \"ls /app/dist/assets | grep KpiScreen\"\\) *)",
+      "Bash(rsync -az -e 'ssh -p 8443' src/screens/KpiScreen.jsx root@188.166.181.243:/opt/labqms/src/screens/KpiScreen.jsx)",
+      "Bash(rsync -az -e 'ssh -p 8443 -i ~/.ssh/ahs_deploy' src/screens/KpiScreen.jsx root@188.166.181.243:/opt/labqms/src/screens/KpiScreen.jsx)",
+      "Bash(cd ~ && find . -maxdepth 6 \\\\\\( -name \"*รายงานผล*.xls*\" -o -name \"1.BB*\" -o -name \"2.Bac*\" -o -name \"3.LAB*\" \\\\\\) 2>/dev/null | head -10)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q.sql root@188.166.181.243:/tmp/q.sql)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q2.sql root@188.166.181.243:/tmp/q2.sql)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q3.sql root@188.166.181.243:/tmp/q3.sql)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/q4.sql root@188.166.181.243:/tmp/q4.sql)"
     ]
   }
 }
