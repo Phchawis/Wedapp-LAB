@@ -112,8 +112,8 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
             <span className="masthead-badge"><img src={seal} alt="ตรา รพธ." /></span>
             {!narrow && (
               <div style={{ lineHeight: 1.2 }}>
-                <div style={{ font: 'var(--fw-bold) var(--text-sm)/1.25 var(--font-display)', color: 'var(--brand-900)' }}>ห้องปฏิบัติการเทคนิคการแพทย์</div>
-                <div style={{ font: 'var(--text-xs)/1.25 var(--font-body)', color: 'var(--text-tertiary)' }}>รพ.ธรรมศาสตร์เฉลิมพระเกียรติ</div>
+                <div style={{ font: 'var(--fw-bold) var(--text-md)/1.3 var(--font-display)', color: 'var(--brand-900)' }}>ห้องปฏิบัติการเทคนิคการแพทย์</div>
+                <div style={{ font: 'var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-tertiary)' }}>รพ.ธรรมศาสตร์เฉลิมพระเกียรติ</div>
               </div>
             )}
           </div>

@@ -72,8 +72,9 @@ code, kbd, samp { font-family: var(--font-mono); }
 
 /* ── Masthead Logo Badge (top nav) — bordered badge that lifts + glows on hover ── */
 .masthead-badge {
-  width: 44px;
-  height: 44px;
+  position: relative;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: var(--white);
   display: grid;
@@ -86,8 +87,8 @@ code, kbd, samp { font-family: var(--font-mono); }
               border-color var(--dur-base) var(--ease-standard);
 }
 .masthead-badge img {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   transition: transform var(--dur-base) var(--ease-standard);
 }
@@ -97,10 +98,12 @@ code, kbd, samp { font-family: var(--font-mono); }
   border-color: var(--brand-400);
 }
 .masthead-link:hover .masthead-badge img {
-  transform: scale(1.08) rotate(5deg);
+  transform: scale(1.06) rotate(360deg);
+  transition: transform .75s cubic-bezier(.34,1.28,.5,1);
 }
 @media (prefers-reduced-motion: reduce) {
   .masthead-badge, .masthead-badge img { transition: none !important; }
+  .masthead-badge::before { animation: none !important; }
 }
 
 /* ── Document List & Table Hover States ──────────────────────────────────── */
@@ -381,6 +384,25 @@ code, kbd, samp { font-family: var(--font-mono); }
   .qms-help-section { break-inside: avoid; page-break-inside: avoid; }
 }
 
+/* วงแหวนหายใจรอบตรา — ให้แถบหัวเว็บมีชีวิตนิดหนึ่ง และเข้าชุดกับระบบทะเบียนกลาง
+   ใช้ ::before เพราะถ้าไปขยับตัวตราเองจะดันชื่อหน่วยงานข้าง ๆ ขยับตาม */
+.masthead-badge::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--brand-600);
+  opacity: .26;
+  pointer-events: none;
+  animation: sealBreathe 3.6s ease-in-out infinite;
+}
+.masthead-link:hover .masthead-badge::before { animation: sealRipple 1.1s ease-out infinite; }
 
-
-
+@keyframes sealBreathe {
+  0%, 100% { transform: scale(1);    opacity: .26; }
+  50%      { transform: scale(1.09); opacity: .06; }
+}
+@keyframes sealRipple {
+  from { transform: scale(1);   opacity: .5; }
+  to   { transform: scale(1.5); opacity: 0; }
+}
