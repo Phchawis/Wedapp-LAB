@@ -424,7 +424,11 @@
       "Bash(cp ~/Downloads/MT_Satisfaction_Dashboard_online.html \"/Users/gpharkchawisp/Documents/Wedapp ระบบจัดการเอกสาร LAB/server/kpi-reports/satisfaction-2569.html\")",
       "Bash(awk '{printf \"  ML  %-26s %s\\\\n\", $9, $5}')",
       "Bash(awk '{printf \"  QMS %-26s %s\\\\n\", $9, $5}')",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_sat.tgz root@188.166.181.243:/tmp/)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_sat.tgz root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/mime.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/stor.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/paths.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/sz.sql root@188.166.181.243:/tmp/)"
     ]
   }
 }

@@ -237,6 +237,18 @@ code, kbd, samp { font-family: var(--font-mono); }
 /* ── ตัวแสดงเอกสาร PDF ──────────────────────────────────────────────────────
    ให้พื้นที่อ่านมากที่สุด: กว้างเต็มหน้า สูงตามจอ และกดขยายเต็มจอได้
    (เดิมถูกบีบอยู่ในคอลัมน์แคบ สูงตายตัว 600px อ่านรายละเอียดไม่ออก) */
+/* กะพริบขอบเขียวสั้น ๆ ตอนตัวแสดงเอกสารโผล่ขึ้นมา
+   ใช้คู่กับการเลื่อนหน้าจอไปหา — ผู้ใช้กดจากรายการไฟล์แนบด้านล่าง
+   ถ้าไม่มีสัญญาณอะไรจะไม่รู้ว่าเอกสารเปิดแล้ว */
+.qms-preview-enter { animation: qmsPreviewIn .9s var(--ease-standard) both; }
+@keyframes qmsPreviewIn {
+  0%   { box-shadow: 0 0 0 3px var(--brand-600); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qms-preview-enter { animation: none; }
+}
+
 .qms-preview-body {
   background: var(--slate-100);
   height: clamp(520px, 78vh, 1200px);

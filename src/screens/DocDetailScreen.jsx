@@ -188,6 +188,12 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
         setPreviewName(att.name);
+        // ตัวแสดงเอกสารอยู่บนสุดของหน้า แต่ปุ่ม "เปิดดู" อยู่ล่างในรายการไฟล์แนบ
+        // ถ้าไม่เลื่อนไปหา ผู้ใช้จะไม่เห็นอะไรขยับเลยและนึกว่าเปิดไม่ขึ้น
+        // รอเฟรมถัดไปก่อน เพราะตอนนี้ตัวแสดงยังไม่ถูกวาดลงหน้า
+        requestAnimationFrame(() => {
+          previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
       } catch (e) {
         window.alert(e.message || 'โหลดตัวอย่างไฟล์ไม่สำเร็จ');
       } finally {
@@ -387,7 +393,7 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
 
       {/* ตัวแสดงเอกสาร — กว้างเต็มหน้าเพื่อให้อ่านรายละเอียดได้ชัด (กดขยายเต็มจอได้) */}
       {previewUrl && (
-        <div ref={previewRef} className="qms-preview" style={{ marginBottom: 20 }}>
+        <div ref={previewRef} className="qms-preview qms-preview-enter" style={{ marginBottom: 20 }}>
           <Card
             padding="none"
             header={
