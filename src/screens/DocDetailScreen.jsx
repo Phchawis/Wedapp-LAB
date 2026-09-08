@@ -51,14 +51,22 @@ function ControlCard({ doc, typeObj, catObj, reviewDue }) {
   ];
   return (
     <Card padding="none" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="ShieldCheck" size={16} color="var(--text-secondary)" /> ข้อมูลควบคุมเอกสาร</span>}>
-      <dl style={{ margin: 0, padding: '4px 18px 12px' }}>
+      {/* วางเป็นหลายคอลัมน์แทนการเรียงลงมา 12 บรรทัด — เดิมกินความสูงทั้งหน้าจอ
+          จนต้องเลื่อนผ่านทุกครั้งกว่าจะถึงไฟล์แนบ จอกว้างจะได้ 3–4 คอลัมน์
+          ป้ายอยู่บนค่าอยู่ล่าง อ่านเป็นคู่ได้โดยไม่ต้องมีเส้นคั่นให้รก */}
+      <dl style={{
+        margin: 0, padding: '10px 18px 16px',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+        gap: '14px 26px',
+      }}>
         {rows.map(([k, v, mono]) => (
-          <div key={k} style={{ display: 'flex', gap: 14, justifyContent: 'space-between', alignItems: 'baseline', padding: '9px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-            <dt style={{ font: 'var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-secondary)', flex: '0 0 auto' }}>{k}</dt>
+          <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+            <dt style={{ font: 'var(--text-2xs)/1 var(--font-body)', color: 'var(--text-tertiary)', letterSpacing: '.03em' }}>{k}</dt>
             <dd style={{
-              margin: 0, textAlign: 'right',
-              font: `var(--text-sm)/1.4 var(--font-${mono ? 'mono' : 'body'})`,
+              margin: 0,
+              font: `var(--fw-medium) var(--text-sm)/1.45 var(--font-${mono ? 'mono' : 'body'})`,
               color: v ? 'var(--text-primary)' : 'var(--text-tertiary)',
+              overflowWrap: 'anywhere',
             }}>{v || 'ยังไม่ระบุ'}</dd>
           </div>
         ))}
@@ -486,7 +494,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {/* ตัวแสดงเอกสารย้ายไปอยู่เต็มความกว้างเหนือคอลัมน์ (ดูด้านบน) */}
 
-              <ControlCard doc={doc} typeObj={typeObj} catObj={catObj} reviewDue={reviewDueDate} />
+              {/* ไฟล์แนบอยู่บนสุด — เป็นสิ่งที่คนเข้ามาหน้านี้ต้องการเกือบทุกครั้ง
+                  ส่วนข้อมูลควบคุมเป็นข้อมูลอ้างอิงที่ดูเป็นครั้งคราว จึงย้ายลงไปท้ายสุด */}
 
               {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
               <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>
@@ -591,6 +600,8 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
                   </div>
                 )}
               </Card>
+
+              <ControlCard doc={doc} typeObj={typeObj} catObj={catObj} reviewDue={reviewDueDate} />
             </div>
           )}
 
