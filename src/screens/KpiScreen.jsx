@@ -114,7 +114,7 @@ function ReportCards() {
   return (
     <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FileText" size={16} color="var(--text-secondary)" /> รายงานฉบับเต็ม ปีงบประมาณ 2569</span>}>
       <p style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>
-        เปิดในแท็บใหม่ — รายงานเหล่านี้เป็นไฟล์ที่จัดทำไว้ ไม่ได้ดึงตัวเลขสดจากตารางด้านบน
+        เปิดในแท็บใหม่ — รายงานเหล่านี้เป็นไฟล์ที่จัดทำไว้ ไม่ได้ดึงตัวเลขสดจากตารางด้านล่าง
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
         {REPORTS.map((r) => (
@@ -288,6 +288,8 @@ export function KpiScreen() {
           ข้อมูลชุดเดียวกับระบบทะเบียนเอกสารฝ่ายสหเวชศาสตร์ — แก้ที่ระบบไหนก็เห็นตรงกันทั้งสองฝั่ง
         </p>
       </div>
+
+      <ReportCards />
 
       <div style={{ display: 'flex', gap: '10px 24px', flexWrap: 'wrap', alignItems: 'center' }}>
         {[
@@ -492,8 +494,6 @@ export function KpiScreen() {
           </div>
         )}
       </Card>
-
-      <ReportCards />
     </div>
   );
 }
