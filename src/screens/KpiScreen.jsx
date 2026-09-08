@@ -95,9 +95,14 @@ const MONTHS_ROW = {
 
    ระบบนี้แนบเฉพาะของงานตัวเองกับสรุปรวมของฝ่าย ส่วนของงานอื่นอยู่ที่ระบบทะเบียนกลาง
    เปิดเป็นแท็บใหม่เพราะเป็นหน้าเต็มที่มีกราฟและตารางของตัวเอง ยัดใส่กรอบแล้วอ่านไม่ออก */
+/* ปีระบุที่การ์ดแต่ละใบ ไม่ใช่ที่หัวข้อ — แต่ละไฟล์ครอบคลุมช่วงปีไม่เท่ากัน
+   (แดชบอร์ดความพึงพอใจมีทั้ง 2568 และ 2569) ถ้าเขียนปีไว้ที่หัวข้อเดียวจะผิดกับบางใบ */
 const REPORTS = [
-  { name: 'summary-2569', code: 'สรุป', title: 'สรุปแผนการเก็บตัวชี้วัด', note: 'ภาพรวมทั้งฝ่ายสหเวชศาสตร์ — แผนการเก็บและผลรวมทุกงาน' },
-  { name: 'medtech-2569', code: 'LAB', title: 'งานห้องปฏิบัติการเทคนิคการแพทย์', note: 'แดชบอร์ดตัวชี้วัดคุณภาพรายเดือนของงานเรา' },
+  { name: 'summary-2569', code: 'สรุป', title: 'สรุปแผนการเก็บตัวชี้วัด', note: 'ภาพรวมทั้งฝ่ายสหเวชศาสตร์ — แผนการเก็บและผลรวมทุกงาน', year: 'ปีงบ 2569' },
+  { name: 'medtech-2569', code: 'LAB', title: 'งานห้องปฏิบัติการเทคนิคการแพทย์', note: 'แดชบอร์ดตัวชี้วัดคุณภาพรายเดือนของงานเรา', year: 'ปีงบ 2569' },
+  // ความพึงพอใจไม่ใช่ตัวชี้วัด แต่เป็นข้อมูลป้อนกลับจากผู้ใช้บริการ (ISO 15189 ข้อ 8.6)
+  // อยู่กลุ่มเดียวกันได้แต่ใช้ป้ายคนละสี ไม่ให้เข้าใจว่าเป็นตัวชี้วัดอีกตัว
+  { name: 'satisfaction-2569', code: 'พึงพอใจ', title: 'ความพึงพอใจผู้ใช้บริการ', note: 'แดชบอร์ดความพึงพอใจต่อห้องปฏิบัติการ', year: 'ปีงบ 2568–2569' },
 ];
 
 function ReportCards() {
@@ -112,7 +117,7 @@ function ReportCards() {
   };
 
   return (
-    <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FileText" size={16} color="var(--text-secondary)" /> รายงานฉบับเต็ม ปีงบประมาณ 2569</span>}>
+    <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FileText" size={16} color="var(--text-secondary)" /> รายงานและแดชบอร์ดฉบับเต็ม</span>}>
       <p style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>
         เปิดในแท็บใหม่ — รายงานเหล่านี้เป็นไฟล์ที่จัดทำไว้ ไม่ได้ดึงตัวเลขสดจากตารางด้านล่าง
       </p>
@@ -133,7 +138,13 @@ function ReportCards() {
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.boxShadow = 'none'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
-              <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--brand-700)', padding: '4px 8px', border: '1px solid var(--brand-200, var(--border-subtle))', borderRadius: 'var(--radius-xs)' }}>{r.code}</span>
+              <span style={{
+                font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)',
+                color: r.code === 'พึงพอใจ' ? 'var(--amber-700)' : 'var(--brand-700)',
+                padding: '4px 8px', borderRadius: 'var(--radius-xs)',
+                border: '1px solid ' + (r.code === 'พึงพอใจ' ? 'var(--amber-600)' : 'var(--border-subtle)'),
+              }}>{r.code}</span>
+              <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{r.year}</span>
               <span style={{ marginLeft: 'auto', font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>
                 {busy === r.name ? 'กำลังเปิด…' : '↗'}
               </span>

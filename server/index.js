@@ -580,6 +580,7 @@ async function callMasterlist(path, init = {}) {
 const KPI_REPORTS = {
   'medtech-2569': 'medtech-2569.html',
   'summary-2569': 'summary-2569.html',
+  'satisfaction-2569': 'satisfaction-2569.html',
 };
 app.get('/api/kpi/report/:name', authMw, wrap(async (req, res) => {
   const file = KPI_REPORTS[req.params.name];
