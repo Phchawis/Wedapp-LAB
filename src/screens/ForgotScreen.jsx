@@ -102,14 +102,14 @@ export function ForgotScreen({ resetToken, onBack, onDone }) {
     if (tokenState === 'invalid') {
       return (
         <Shell title="ลิงก์ใช้ไม่ได้แล้ว" onBack={onBack}>
-          <Alert variant="warning">ลิงก์นี้หมดอายุ ถูกใช้ไปแล้ว หรือไม่ถูกต้อง — กรุณาขอลิงก์ใหม่อีกครั้ง</Alert>
+          <Alert tone="warning">ลิงก์นี้หมดอายุ ถูกใช้ไปแล้ว หรือไม่ถูกต้อง — กรุณาขอลิงก์ใหม่อีกครั้ง</Alert>
         </Shell>
       );
     }
     if (done) {
       return (
         <Shell title="ตั้งรหัสผ่านใหม่เรียบร้อย" onBack={onBack}>
-          <Alert variant="success">เข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที</Alert>
+          <Alert tone="success">เข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที</Alert>
           <div style={{ marginTop: 18 }}>
             <Button onClick={onDone} iconLeft={<Icon name="ArrowRight" size={16} color="var(--white)" />}>ไปหน้าเข้าสู่ระบบ</Button>
           </div>
@@ -121,7 +121,7 @@ export function ForgotScreen({ resetToken, onBack, onDone }) {
         <form onSubmit={setNewPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <label style={LABEL}>รหัสผ่านใหม่<input name="password" type="password" autoComplete="new-password" autoFocus style={INPUT} /></label>
           <label style={LABEL}>ยืนยันรหัสผ่านใหม่<input name="confirm" type="password" autoComplete="new-password" style={INPUT} /></label>
-          {err && <Alert variant="danger">{err}</Alert>}
+          {err && <Alert tone="danger">{err}</Alert>}
           <Button type="submit" disabled={busy}>{busy ? 'กำลังบันทึก…' : 'ตั้งรหัสผ่านใหม่'}</Button>
         </form>
       </Shell>
@@ -133,7 +133,7 @@ export function ForgotScreen({ resetToken, onBack, onDone }) {
   if (sent) {
     return (
       <Shell title="ส่งลิงก์แล้ว" onBack={onBack}>
-        <Alert variant="success">
+        <Alert tone="success">
           หากอีเมลนี้ผูกอยู่กับบัญชีในระบบ เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปแล้ว — ลิงก์ใช้ได้ภายใน 30 นาที และใช้ได้ครั้งเดียว
         </Alert>
         <p style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-tertiary)', marginTop: 14 }}>
@@ -148,7 +148,7 @@ export function ForgotScreen({ resetToken, onBack, onDone }) {
     <Shell title="ลืมรหัสผ่าน" lead="กรอกอีเมลที่ผูกไว้กับบัญชีของท่าน ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้" onBack={onBack}>
       <form onSubmit={askLink} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <label style={LABEL}>อีเมลที่ผูกกับบัญชี<input name="email" type="email" required autoFocus autoComplete="email" placeholder="name@example.com" style={INPUT} /></label>
-        {err && <Alert variant="danger">{err}</Alert>}
+        {err && <Alert tone="danger">{err}</Alert>}
         <Button type="submit" disabled={busy}>{busy ? 'กำลังส่ง…' : 'ส่งลิงก์ตั้งรหัสผ่านใหม่'}</Button>
       </form>
     </Shell>

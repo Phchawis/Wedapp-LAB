@@ -405,7 +405,10 @@
       "Bash(tar czf *)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/ml_reset.tgz root@188.166.181.243:/tmp/)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q prisma/migrations/20260908000000_email_and_password_reset/migration.sql root@188.166.181.243:/tmp/mig2.sql)",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_reset.tgz root@188.166.181.243:/tmp/)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_reset.tgz root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_mig.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/verify.mjs root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_acct.tgz root@188.166.181.243:/tmp/)"
     ]
   }
 }

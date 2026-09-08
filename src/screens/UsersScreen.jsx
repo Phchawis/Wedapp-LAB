@@ -36,6 +36,7 @@ function EditRow({ user, assignableRoles, isSelf, onCancel, onSave }) {
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState(user.role);
   const [cat, setCat] = useState(user.cat || '');
+  const [email, setEmail] = useState(user.email || '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,7 +46,7 @@ function EditRow({ user, assignableRoles, isSelf, onCancel, onSave }) {
     setBusy(true);
     setError('');
     try {
-      const patch = { name: name.trim(), role, cat: cat || null };
+      const patch = { name: name.trim(), role, cat: cat || null, email: email.trim() };
       if (!isSelf) patch.username = username.trim();
       await onSave(patch);
     } catch (e) {
@@ -75,6 +76,14 @@ function EditRow({ user, assignableRoles, isSelf, onCancel, onSave }) {
           <div style={{ flex: '1 1 220px' }}>
             <Select label="หมวดงานสังกัด" placeholder="— ไม่ระบุ —" value={cat} onChange={(e) => setCat(e.target.value)}
               options={QMS.WORK_CATEGORIES.map((c) => ({ value: c.code, label: `${c.code} · ${c.th}` }))} />
+          </div>
+          {/* อีเมลใช้ส่งลิงก์ตั้งรหัสผ่านใหม่ — เว้นว่างได้ แต่คนนั้นจะรีเซ็ตเองไม่ได้
+              ต้องมาให้ผู้ดูแลตั้งรหัสให้แทน จึงบอกไว้ใต้ช่องเลย */}
+          <div style={{ flex: '1 1 240px' }}>
+            <Input label="อีเมล (กู้คืนรหัสผ่าน)" type="email" value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="เว้นว่างได้"
+              hint={email.trim() ? undefined : 'ไม่มีอีเมล = รีเซ็ตรหัสเองไม่ได้'} />
           </div>
           <Button size="sm" disabled={busy} onClick={save} iconLeft={<Icon name="Check" size={15} color="#fff" />}>{busy ? 'กำลังบันทึก…' : 'บันทึก'}</Button>
           <Button size="sm" variant="secondary" onClick={onCancel}>ยกเลิก</Button>

@@ -123,11 +123,20 @@ export function AppShell({ view, onNav, cat, onCat, onLogout, user, eyebrow, tit
 
           {!narrow && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-              <Avatar name={user.name} size="md" />
-              <div style={{ lineHeight: 1.3, maxWidth: 160 }}>
-                <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.25 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
-                <div style={{ font: 'var(--text-xs)/1.25 var(--font-body)', color: 'var(--text-tertiary)' }}>{ROLES[user.role]?.short || user.role}</div>
-              </div>
+              {/* กดที่ชื่อตัวเองเพื่อเข้าหน้าบัญชีของฉัน — ที่เดียวที่เจ้าหน้าที่ทั่วไป
+                  ตั้งอีเมลสำหรับกู้คืนรหัสผ่านของตัวเองได้ */}
+              <button
+                type="button"
+                onClick={() => onNav('account')}
+                title="บัญชีของฉัน"
+                style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+              >
+                <Avatar name={user.name} size="md" />
+                <div style={{ lineHeight: 1.3, maxWidth: 160 }}>
+                  <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.25 var(--font-body)', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                  <div style={{ font: 'var(--text-xs)/1.25 var(--font-body)', color: 'var(--text-tertiary)' }}>{ROLES[user.role]?.short || user.role}</div>
+                </div>
+              </button>
               <IconButton label="ออกจากระบบ" variant="ghost" onClick={onLogout}>
                 <Icon name="LogOut" size={18} color="var(--text-tertiary)" />
               </IconButton>

@@ -6,6 +6,7 @@ import { api, decodeToken, setToken } from './api.js';
 
 const LoginScreen = lazy(() => import('./screens/LoginScreen.jsx'));
 const ForgotScreen = lazy(() => import('./screens/ForgotScreen.jsx'));
+const AccountScreen = lazy(() => import('./screens/AccountScreen.jsx'));
 const AppShell = lazy(() => import('./screens/AppShell.jsx'));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen.jsx'));
 const RegisterScreen = lazy(() => import('./screens/RegisterScreen.jsx'));
@@ -260,6 +261,7 @@ export default function App() {
     detail: { e: 'DOCUMENT', t: 'รายละเอียดเอกสาร', s: doc ? doc.no : '' },
     kpi: { e: 'QUALITY INDICATORS', t: 'ตัวชี้วัดคุณภาพ', s: 'ผลการเก็บตัวชี้วัดของงานเทคนิคการแพทย์ — ข้อมูลชุดเดียวกับระบบทะเบียนเอกสารกลาง' },
     help: { e: 'USER GUIDE', t: 'คู่มือการใช้งาน', s: 'คู่มือการควบคุมเอกสารตามมาตรฐาน ISO 15189' },
+    account: { e: 'MY ACCOUNT', t: 'บัญชีของฉัน', s: 'ข้อมูลบัญชีและอีเมลสำหรับกู้คืนรหัสผ่าน' },
   };
   const head = titles[view] || titles.dashboard;
 
@@ -283,6 +285,7 @@ export default function App() {
   else if (view === 'log' && canAudit) body = <LogScreen logs={logs} />;
   else if (view === 'kpi') body = <KpiScreen />;
   else if (view === 'help') body = <HelpScreen />;
+  else if (view === 'account') body = <AccountScreen user={currentUser} />;
   else if (view === 'detail' && doc) body = <DocDetailScreen doc={doc} role={role} onUpdate={updateDoc} onUpdateFile={updateDocFile} onAddFile={addDocFile} onDelete={deleteDoc} onBack={() => setView(cat ? 'register' : 'dashboard')} />;
   else body = <DashboardScreen docs={docs} onOpen={openDoc} onGoRegister={() => nav('register')} onCreate={can(role, 'register') ? openCreate : undefined} />;
 
