@@ -88,6 +88,21 @@ export const api = {
   resetPassword: (token, password) => req('/auth/reset', { method: 'POST', body: { token, password } }),
   updateMyEmail: (email) => req('/me/email', { method: 'PATCH', body: { email } }),
 
+  /* ดึงรายงานตัวชี้วัดฉบับเต็มมาเปิดในแท็บใหม่
+     ต้องดึงผ่าน fetch เพราะ token อยู่ในหัว Authorization ไม่ใช่คุกกี้ —
+     ลิงก์ <a href> ธรรมดาจะไม่ติด token ไปด้วยแล้วโดนปฏิเสธ 401 */
+  openKpiReport: async (name) => {
+    const token = getToken();
+    const res = await fetch(`/api/kpi/report/${encodeURIComponent(name)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error(res.status === 401 ? 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' : 'เปิดรายงานไม่สำเร็จ');
+    const url = URL.createObjectURL(new Blob([await res.text()], { type: 'text/html' }));
+    window.open(url, '_blank', 'noopener');
+    // คืนหน่วยความจำหลังเบราว์เซอร์โหลดเสร็จ — เพิกถอนทันทีแท็บใหม่จะเปิดไม่ทัน
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  },
+
   listDocuments: () => req('/documents').then(normalizeDocs),
   getDocument: (no) => req('/documents/' + encodeURIComponent(no)).then(normalizeDoc),
   createDocument: (formData) => req('/documents', { method: 'POST', body: formData, isForm: true }).then(normalizeDoc),

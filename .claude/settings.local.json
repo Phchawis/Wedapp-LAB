@@ -408,7 +408,18 @@
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_reset.tgz root@188.166.181.243:/tmp/)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_mig.sql root@188.166.181.243:/tmp/)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/verify.mjs root@188.166.181.243:/tmp/)",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_acct.tgz root@188.166.181.243:/tmp/)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qms_acct.tgz root@188.166.181.243:/tmp/)",
+      "Bash(mkdir -p public/kpi-reports)",
+      "Bash(cp ~/Downloads/BloodBank_KPI_2569_online.html public/kpi-reports/bloodbank-2569.html)",
+      "Bash(cp ~/Downloads/Microbiology_KPI_2569_online.html public/kpi-reports/micro-2569.html)",
+      "Bash(cp ~/Downloads/LAB_KPI_Dashboard_2569_online.html public/kpi-reports/medtech-2569.html)",
+      "Bash(cp ~/Downloads/SummaryPlan_KPI_2569_online.html public/kpi-reports/summary-2569.html)",
+      "Bash(awk '{printf \"  %-24s %s\\\\n\", $9, $5}')",
+      "Bash(mkdir -p server/kpi-reports)",
+      "Bash(cp ~/Downloads/LAB_KPI_Dashboard_2569_online.html server/kpi-reports/medtech-2569.html)",
+      "Bash(cp ~/Downloads/SummaryPlan_KPI_2569_online.html server/kpi-reports/summary-2569.html)",
+      "Bash(grep -vE \"^#|^$\")",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/ml_rep.tgz root@188.166.181.243:/tmp/)"
     ]
   }
 }

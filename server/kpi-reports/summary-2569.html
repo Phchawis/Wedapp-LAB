@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปแผนการเก็บตัวชี้วัด ปีงบประมาณ 2569 - ฝ่ายสหเวชศาสตร์</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts: Prompt / Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        tu: {
+                            red: '#C8102E',
+                            yellow: '#FFC72C',
+                            dark: '#1E293B',
+                            light: '#F8FAFC'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+        }
+        .glass-card-hover {
+            transition: all 0.3s ease;
+        }
+        .glass-card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Prompt, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.relative{position:relative}.sticky{position:sticky}.top-0{top:0px}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-auto{margin-top:auto;margin-bottom:auto}.mb-1{margin-bottom:0.25rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mt-1{margin-top:0.25rem}.mt-12{margin-top:3rem}.mt-2{margin-top:0.5rem}.mt-6{margin-top:1.5rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.h-10{height:2.5rem}.h-12{height:3rem}.h-2{height:0.5rem}.h-56{height:14rem}.h-64{height:16rem}.h-72{height:18rem}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-2{width:0.5rem}.w-full{width:100%}.max-w-7xl{max-width:80rem}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.items-baseline{align-items:baseline}.items-stretch{align-items:stretch}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.space-x-4 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1rem * var(--tw-space-x-reverse));margin-left:calc(1rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-slate-800 > :not([hidden]) ~ :not([hidden]){--tw-divide-opacity:1;border-color:rgb(30 41 59 / var(--tw-divide-opacity, 1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-l-4{border-left-width:4px}.border-t{border-top-width:1px}.border-t-4{border-top-width:4px}.border-amber-500\/20{border-color:rgb(245 158 11 / 0.2)}.border-amber-500\/30{border-color:rgb(245 158 11 / 0.3)}.border-blue-500\/20{border-color:rgb(59 130 246 / 0.2)}.border-emerald-500\/20{border-color:rgb(16 185 129 / 0.2)}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-purple-500\/20{border-color:rgb(168 85 247 / 0.2)}.border-red-500\/30{border-color:rgb(239 68 68 / 0.3)}.border-rose-500\/20{border-color:rgb(244 63 94 / 0.2)}.border-rose-500\/30{border-color:rgb(244 63 94 / 0.3)}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-l-amber-500{--tw-border-opacity:1;border-left-color:rgb(245 158 11 / var(--tw-border-opacity, 1))}.border-l-blue-500{--tw-border-opacity:1;border-left-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-l-emerald-500{--tw-border-opacity:1;border-left-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.border-l-rose-500{--tw-border-opacity:1;border-left-color:rgb(244 63 94 / var(--tw-border-opacity, 1))}.border-t-blue-500{--tw-border-opacity:1;border-top-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-t-purple-500{--tw-border-opacity:1;border-top-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.border-t-red-500{--tw-border-opacity:1;border-top-color:rgb(239 68 68 / var(--tw-border-opacity, 1))}.bg-amber-400{--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.bg-amber-500\/10{background-color:rgb(245 158 11 / 0.1)}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-blue-400{--tw-bg-opacity:1;background-color:rgb(96 165 250 / var(--tw-bg-opacity, 1))}.bg-blue-500\/10{background-color:rgb(59 130 246 / 0.1)}.bg-blue-500\/20{background-color:rgb(59 130 246 / 0.2)}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-purple-400{--tw-bg-opacity:1;background-color:rgb(192 132 252 / var(--tw-bg-opacity, 1))}.bg-purple-500\/10{background-color:rgb(168 85 247 / 0.1)}.bg-purple-500\/20{background-color:rgb(168 85 247 / 0.2)}.bg-red-500\/20{background-color:rgb(239 68 68 / 0.2)}.bg-rose-500\/10{background-color:rgb(244 63 94 / 0.1)}.bg-rose-500\/20{background-color:rgb(244 63 94 / 0.2)}.bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-800\/80{background-color:rgb(30 41 59 / 0.8)}.bg-slate-900\/60{background-color:rgb(15 23 42 / 0.6)}.bg-slate-900\/80{background-color:rgb(15 23 42 / 0.8)}.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--tw-gradient-stops))}.from-red-600{--tw-gradient-from:#dc2626 var(--tw-gradient-from-position);--tw-gradient-to:rgb(220 38 38 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-amber-500{--tw-gradient-to:#f59e0b var(--tw-gradient-to-position)}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-12{padding-bottom:3rem}.pb-3{padding-bottom:0.75rem}.pb-4{padding-bottom:1rem}.pt-3{padding-top:0.75rem}.text-left{text-align:left}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-blue-400{--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-purple-400{--tw-text-opacity:1;color:rgb(192 132 252 / var(--tw-text-opacity, 1))}.text-red-400{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.text-rose-300{--tw-text-opacity:1;color:rgb(253 164 175 / var(--tw-text-opacity, 1))}.text-rose-400{--tw-text-opacity:1;color:rgb(251 113 133 / var(--tw-text-opacity, 1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-red-900\/30{--tw-shadow-color:rgb(127 29 29 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:bg-slate-600:hover{--tw-bg-opacity:1;background-color:rgb(71 85 105 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-800\/30:hover{background-color:rgb(30 41 59 / 0.3)}.hover\:bg-slate-800\/40:hover{background-color:rgb(30 41 59 / 0.4)}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-amber-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(245 158 11 / var(--tw-ring-opacity, 1))}@media (min-width: 640px){.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:items-center{align-items:center}.md\:justify-between{justify-content:space-between}}@media (min-width: 1024px){.lg\:col-span-12{grid-column:span 12 / span 12}.lg\:col-span-4{grid-column:span 4 / span 4}.lg\:col-span-8{grid-column:span 8 / span 8}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.lg\:flex-row{flex-direction:row}.lg\:items-center{align-items:center}.lg\:px-8{padding-left:2rem;padding-right:2rem}}</style></head>
+<body class="min-h-screen pb-12">
+
+    <!-- Header Section -->
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-red-900/30">
+                        <i class="fa-solid font-hospital-user fa-square-plus"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                                ปีงบประมาณ 2569
+                            </span>
+                            <span class="text-xs text-slate-400 flex items-center gap-1">
+                                <i class="fa-regular fa-calendar"></i> ตุลาคม 2568 - กรกฎาคม 2569
+                            </span>
+                        </div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+                            สรุปแผนการเก็บตัวชี้วัด ฝ่ายสหเวชศาสตร์
+                        </h1>
+                        <p class="text-xs sm:text-sm text-slate-400">
+                            โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Core Values Badge Box -->
+                <div class="glass-card p-3 rounded-xl flex flex-wrap gap-2 items-center text-xs">
+                    <span class="text-slate-400 font-medium px-1 flex items-center gap-1">
+                        <i class="fa-solid fa-heart text-red-400"></i> ค่านิยมองค์กร:
+                    </span>
+                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-circle-check text-[10px]"></i> ถูกต้อง
+                    </span>
+                    <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-bolt text-[10px]"></i> รวดเร็ว
+                    </span>
+                    <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-certificate text-[10px]"></i> ได้มาตรฐาน
+                    </span>
+                    <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-face-smile text-[10px]"></i> บริการประทับใจ
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        <!-- Controls / Filter Toolbar -->
+        <div class="glass-card p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+            <div class="flex items-center gap-2 text-sm text-slate-300 font-medium">
+                <i class="fa-solid fa-filter text-amber-400"></i>
+                <span>ตัวกรองมุมมองข้อมูล:</span>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Department Selector -->
+                <select id="unitFilter" onchange="filterDashboard()" class="bg-slate-800 text-slate-200 text-sm rounded-lg border border-slate-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <option value="ALL">หน่วยงานทั้งหมด (3 หน่วยงาน)</option>
+                    <option value="LAB">1. งานห้องปฏิบัติการเทคนิคการแพทย์</option>
+                    <option value="BLOOD">2. งานเวชศาสตร์บริการโลหิต</option>
+                    <option value="MICRO">3. งานจุลชีววิทยา</option>
+                </select>
+
+                <!-- Objective Filter -->
+                <select id="objectiveFilter" onchange="filterDashboard()" class="bg-slate-800 text-slate-200 text-sm rounded-lg border border-slate-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <option value="ALL">วัตถุประสงค์ทั้งหมด (4 ด้าน)</option>
+                    <option value="1">1. ความถูกต้อง (ประสิทธิผล)</option>
+                    <option value="2">2. ความรวดเร็ว (ประสิทธิภาพ)</option>
+                    <option value="3">3. มาตรฐานการบริการ (มาตรฐาน)</option>
+                    <option value="4">4. ความพึงพอใจ (การบริการ)</option>
+                </select>
+
+                <button onclick="resetFilters()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i> รีเซ็ต
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Summary Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Card 1: Total KPIs -->
+            <div class="glass-card glass-card-hover p-5 border-l-4 border-l-blue-500 relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">จำนวนตัวชี้วัดรวมทั้งหมด</p>
+                        <h3 id="statTotalKPIs" class="text-3xl font-extrabold text-white mt-1">142</h3>
+                        <p class="text-xs text-slate-400 mt-2">
+                            หลัก: <span id="statPrimaryKPIs" class="text-slate-200 font-semibold">37</span> | 
+                            รอง: <span id="statSecondaryKPIs" class="text-slate-200 font-semibold">105</span>
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Achieved KPIs -->
+            <div class="glass-card glass-card-hover p-5 border-l-4 border-l-emerald-500 relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">บรรลุเป้าหมาย</p>
+                        <div class="flex items-baseline gap-2">
+                            <h3 id="statAchievedKPIs" class="text-3xl font-extrabold text-emerald-400 mt-1">116</h3>
+                            <span id="statAchievedPercent" class="text-sm font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">81.7%</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">
+                            หลัก: <span id="statAchievedPrimary" class="text-emerald-300 font-semibold">28</span> | 
+                            รอง: <span id="statAchievedSecondary" class="text-emerald-300 font-semibold">88</span>
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Not Achieved KPIs -->
+            <div class="glass-card glass-card-hover p-5 border-l-4 border-l-rose-500 relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">ไม่บรรลุเป้าหมาย</p>
+                        <div class="flex items-baseline gap-2">
+                            <h3 id="statFailedKPIs" class="text-3xl font-extrabold text-rose-400 mt-1">23</h3>
+                            <span id="statFailedPercent" class="text-sm font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">16.2%</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">
+                            หลัก: <span id="statFailedPrimary" class="text-rose-300 font-semibold">9</span> | 
+                            รอง: <span id="statFailedSecondary" class="text-rose-300 font-semibold">14</span>
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Pending / In Progress -->
+            <div class="glass-card glass-card-hover p-5 border-l-4 border-l-amber-500 relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-400 font-medium">รอดำเนินการ</p>
+                        <div class="flex items-baseline gap-2">
+                            <h3 id="statPendingKPIs" class="text-3xl font-extrabold text-amber-400 mt-1">3</h3>
+                            <span id="statPendingPercent" class="text-sm font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">2.1%</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">
+                            หลัก: <span class="text-amber-300 font-semibold">0</span> | 
+                            รอง: <span class="text-amber-300 font-semibold">3</span> (เทคนิคการแพทย์ Obj 4)
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cross-Unit Objective Matrix Table (Directly from Document Table 1) -->
+        <div class="glass-card p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells-large text-amber-400"></i>
+                        ตารางสรุปความสำเร็จในแต่ละด้าน เปรียบเทียบ 3 หน่วยงาน
+                    </h2>
+                    <p class="text-xs text-slate-400">ภาพรวมการประเมินความสำเร็จรายวัตถุประสงค์หลัก</p>
+                </div>
+                <span class="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                    ข้อมูลเปรียบเทียบระดับองค์กร
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-300">
+                    <thead class="text-xs uppercase bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                        <tr>
+                            <th scope="col" class="py-3 px-4 font-semibold">วัตถุประสงค์ประเมินผล</th>
+                            <th scope="col" class="py-3 px-4 font-semibold text-center">1. งานห้องปฏิบัติการเทคนิคการแพทย์</th>
+                            <th scope="col" class="py-3 px-4 font-semibold text-center">2. งานเวชศาสตร์บริการโลหิต</th>
+                            <th scope="col" class="py-3 px-4 font-semibold text-center">3. งานจุลชีววิทยา</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        <!-- Obj 1 -->
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="py-3.5 px-4 font-medium text-white flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                1. ผลการวิเคราะห์มีความถูกต้อง <span class="text-slate-400 text-xs">(คุณภาพด้านประสิทธิผล)</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                    <i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                        </tr>
+
+                        <!-- Obj 2 -->
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="py-3.5 px-4 font-medium text-white flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                2. ความรวดเร็วในการรายงานผลตรวจ <span class="text-slate-400 text-xs">(คุณภาพด้านประสิทธิภาพ)</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                    <i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                        </tr>
+
+                        <!-- Obj 3 -->
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="py-3.5 px-4 font-medium text-white flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                                3. การให้บริการที่มีมาตรฐาน <span class="text-slate-400 text-xs">(ด้านมาตรฐาน)</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                        </tr>
+
+                        <!-- Obj 4 -->
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="py-3.5 px-4 font-medium text-white flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                                4. ผู้รับบริการมีความพึงพอใจ <span class="text-slate-400 text-xs">(ด้านการบริการ)</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts Grid Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Chart 1: Unit Performance Bar Chart -->
+            <div class="lg:col-span-8 glass-card p-6 flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-blue-400"></i>
+                            เปรียบเทียบสัดส่วนตัวชี้วัดจำแนกตามหน่วยงาน
+                        </h2>
+                        <p class="text-xs text-slate-400">แสดงสัดส่วน บรรลุ / ไม่บรรลุ / รอดำเนินการ ของแต่ละหน่วยงาน</p>
+                    </div>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="unitChart" width="752" height="288" style="display: block; box-sizing: border-box; height: 288px; width: 752.7px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Doughnut Overall Breakdown -->
+            <div class="lg:col-span-4 glass-card p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+                        สัดส่วนผลสำเร็จภาพรวม
+                    </h2>
+                    <p class="text-xs text-slate-400">สถานะตัวชี้วัดทั้งหมด 142 ตัวชี้วัด</p>
+                </div>
+                <div class="relative h-56 w-full my-auto">
+                    <canvas id="statusDoughnutChart" width="339" height="224" style="display: block; box-sizing: border-box; height: 224px; width: 339.3px;"></canvas>
+                </div>
+                <div class="grid grid-cols-3 gap-1 text-center text-xs mt-2 border-t border-slate-800 pt-3">
+                    <div>
+                        <span class="block text-emerald-400 font-bold">81.7%</span>
+                        <span class="text-slate-400">บรรลุ</span>
+                    </div>
+                    <div>
+                        <span class="block text-rose-400 font-bold">16.2%</span>
+                        <span class="text-slate-400">ไม่บรรลุ</span>
+                    </div>
+                    <div>
+                        <span class="block text-amber-400 font-bold">2.1%</span>
+                        <span class="text-slate-400">รอผล</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 3: Objectives Success Chart -->
+            <div class="lg:col-span-12 glass-card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-purple-400"></i>
+                            จำนวนตัวชี้วัดจำแนกตามวัตถุประสงค์ทั้ง 4 ด้าน
+                        </h2>
+                        <p class="text-xs text-slate-400">เปรียบเทียบจำนวนตัวชี้วัดหลักและตัวชี้วัดรองที่สำเร็จและไม่สำเร็จ</p>
+                    </div>
+                </div>
+                <div class="relative h-64 w-full">
+                    <canvas id="objectiveChart" width="1166" height="256" style="display: block; box-sizing: border-box; height: 256px; width: 1166px;"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Detailed Unit Performance Cards Section -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sitemap text-amber-400"></i>
+                    รายละเอียดสรุปผลการดำเนินงานรายหน่วยงาน
+                </h2>
+                <span class="text-xs text-slate-400">3 หน่วยงานในฝ่ายสหเวชศาสตร์</span>
+            </div>
+
+            <!-- Unit 1: Lab Unit -->
+            <div class="glass-card p-6 border-t-4 border-t-blue-500 unit-card" data-unit="LAB">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">
+                            1
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">1. งานห้องปฏิบัติการเทคนิคการแพทย์</h3>
+                            <p class="text-xs text-slate-400">
+                                ตัวชี้วัดรวม: <span class="text-white font-semibold">40 รายการ</span> (หลัก 10 | รอง 30)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-check"></i> บรรลุ 36 รายการ
+                        </span>
+                        <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-xmark"></i> ไม่บรรลุ 1 รายการ
+                        </span>
+                        <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-clock"></i> รอดำเนินการ 3 รายการ
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs sm:text-sm text-left text-slate-300">
+                        <thead class="uppercase bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="py-3 px-3">วัตถุประสงค์</th>
+                                <th class="py-3 px-3 text-center">จำนวน KPI หลัก</th>
+                                <th class="py-3 px-3 text-center">สรุปผล KPI หลัก</th>
+                                <th class="py-3 px-3 text-center">จำนวน KPI รอง</th>
+                                <th class="py-3 px-3">สรุปผล KPI รอง</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">1. ผลการวิเคราะห์มีความถูกต้อง (คุณภาพด้านประสิทธิผล)</td>
+                                <td class="py-3 px-3 text-center font-semibold">3</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">3</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">2. ความรวดเร็วในการรายงานผลตรวจ (คุณภาพด้านประสิทธิภาพ)</td>
+                                <td class="py-3 px-3 text-center font-semibold">3</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">12</td>
+                                <td class="py-3 px-3">
+                                    <div class="space-y-1">
+                                        <span class="text-emerald-400 block"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย 11</span>
+                                        <span class="text-rose-400 block"><i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย 1</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">3. การให้บริการที่มีมาตรฐาน (ด้านมาตรฐาน)</td>
+                                <td class="py-3 px-3 text-center font-semibold">3</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">11</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">4. ผู้รับบริการมีความพึงพอใจ (ด้านการบริการ)</td>
+                                <td class="py-3 px-3 text-center font-semibold">1</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">4</td>
+                                <td class="py-3 px-3">
+                                    <div class="space-y-1">
+                                        <span class="text-emerald-400 block"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย 1</span>
+                                        <span class="text-amber-400 block"><i class="fa-solid fa-clock"></i> รอดำเนินการ 3</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Unit 2: Blood Transfusion Unit -->
+            <div class="glass-card p-6 border-t-4 border-t-red-500 unit-card" data-unit="BLOOD">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center font-bold text-lg">
+                            2
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">2. งานเวชศาสตร์บริการโลหิต</h3>
+                            <p class="text-xs text-slate-400">
+                                ตัวชี้วัดรวม: <span class="text-white font-semibold">38 รายการ</span> (หลัก 11 | รอง 27)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-star"></i> บรรลุเป้าหมายครบ 100% (38/38)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs sm:text-sm text-left text-slate-300">
+                        <thead class="uppercase bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="py-3 px-3">วัตถุประสงค์</th>
+                                <th class="py-3 px-3 text-center">จำนวน KPI หลัก</th>
+                                <th class="py-3 px-3 text-center">สรุปผล KPI หลัก</th>
+                                <th class="py-3 px-3 text-center">จำนวน KPI รอง</th>
+                                <th class="py-3 px-3">สรุปผล KPI รอง</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">1. ผลการวิเคราะห์มีความถูกต้อง (คุณภาพด้านประสิทธิผล)</td>
+                                <td class="py-3 px-3 text-center font-semibold">3</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">8</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">2. ความรวดเร็วในการรายงานผลตรวจ (คุณภาพด้านประสิทธิภาพ)</td>
+                                <td class="py-3 px-3 text-center font-semibold">3</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">6</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">3. การให้บริการที่มีมาตรฐาน (ด้านมาตรฐาน)</td>
+                                <td class="py-3 px-3 text-center font-semibold">4</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">11</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">4. ผู้รับบริการมีความพึงพอใจ (ด้านการบริการ)</td>
+                                <td class="py-3 px-3 text-center font-semibold">1</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">2</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Unit 3: Microbiology Unit -->
+            <div class="glass-card p-6 border-t-4 border-t-purple-500 unit-card" data-unit="MICRO">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg">
+                            3
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">3. งานจุลชีววิทยา</h3>
+                            <p class="text-xs text-slate-400">
+                                ตัวชี้วัดรวม: <span class="text-white font-semibold">64 รายการ</span> (หลัก 16 | รอง 48)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-check"></i> บรรลุ 42 รายการ
+                        </span>
+                        <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i> ไม่บรรลุ 22 รายการ
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs sm:text-sm text-left text-slate-300">
+                        <thead class="uppercase bg-slate-800/80 text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="py-3 px-3">วัตถุประสงค์</th>
+                                <th class="py-3 px-3 text-center">จำนวน KPI หลัก</th>
+                                <th class="py-3 px-3 text-center">สรุปผล KPI หลัก</th>
+                                <th class="py-3 px-3 text-center">จำนวน KPI รอง</th>
+                                <th class="py-3 px-3">สรุปผล KPI รอง</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">1. ผลการวิเคราะห์มีความถูกต้อง (คุณภาพด้านประสิทธิผล)</td>
+                                <td class="py-3 px-3 text-center font-semibold">7</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-rose-400 font-medium"><i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">9</td>
+                                <td class="py-3 px-3">
+                                    <div class="space-y-1">
+                                        <span class="text-emerald-400 block"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย 5</span>
+                                        <span class="text-rose-400 block"><i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย 4</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">2. ความรวดเร็วในการรายงานผลตรวจ (คุณภาพด้านประสิทธิภาพ)</td>
+                                <td class="py-3 px-3 text-center font-semibold">2</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-rose-400 font-medium"><i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">11</td>
+                                <td class="py-3 px-3">
+                                    <div class="space-y-1">
+                                        <span class="text-emerald-400 block"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย 4</span>
+                                        <span class="text-rose-400 block"><i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย 7</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">3. การให้บริการที่มีมาตรฐาน (ด้านมาตรฐาน)</td>
+                                <td class="py-3 px-3 text-center font-semibold">6</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">23</td>
+                                <td class="py-3 px-3">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-medium text-white">4. ผู้รับบริการมีความพึงพอใจ (ด้านการบริการ)</td>
+                                <td class="py-3 px-3 text-center font-semibold">1</td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย</span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-semibold">5</td>
+                                <td class="py-3 px-3">
+                                    <div class="space-y-1">
+                                        <span class="text-emerald-400 block"><i class="fa-solid fa-circle-check"></i> บรรลุเป้าหมาย 3</span>
+                                        <span class="text-rose-400 block"><i class="fa-solid fa-circle-xmark"></i> ไม่บรรลุเป้าหมาย 2</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Strategic Summary & Recommendations -->
+        <div class="glass-card p-6 border-l-4 border-l-amber-500">
+            <h2 class="text-base font-bold text-white flex items-center gap-2 mb-3">
+                <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                ข้อสังเกตและข้อเสนอแนะเชิงกลยุทธ์ ฝ่ายสหเวชศาสตร์
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm text-slate-300">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <span class="text-emerald-400 font-semibold block mb-1">
+                        <i class="fa-solid fa-circle-check"></i> จุดแข็ง (Strengths)
+                    </span>
+                    <p class="text-slate-400">
+                        งานเวชศาสตร์บริการโลหิต บรรลุเป้าหมาย 100% ทั้งตัวชี้วัดหลักและตัวชี้วัดรอง ขณะที่ด้านการให้บริการที่มีมาตรฐาน (ด้านที่ 3) บรรลุเป้าหมายครบทั้ง 3 หน่วยงาน
+                    </p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <span class="text-rose-400 font-semibold block mb-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i> จุดที่ต้องปรับปรุง (Focus Areas)
+                    </span>
+                    <p class="text-slate-400">
+                        งานจุลชีววิทยา ไม่บรรลุเป้าหมายตัวชี้วัดหลักในด้านความถูกต้อง (7 KPIs) และความรวดเร็ว (2 KPIs) เนื่องจากกระบวนการทางเพาะเชื้อที่ใช้เวลา ควรกำหนดมาตรการเร่งรัดและทบทวนกระบวนการ
+                    </p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                    <span class="text-amber-400 font-semibold block mb-1">
+                        <i class="fa-solid fa-hourglass-half"></i> งานที่ต้องติดตาม (Pending Items)
+                    </span>
+                    <p class="text-slate-400">
+                        งานห้องปฏิบัติการเทคนิคการแพทย์ มีตัวชี้วัดรองด้านความพึงพอใจผู้รับบริการ 3 รายการ อยู่ระหว่างรอดำเนินการเก็บข้อมูล ควรเร่งสรุปผลให้ทันตามกำหนดกรกฎาคม 2569
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-800 py-6">
+        <p>ฝ่ายสหเวชศาสตร์ โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ © 2569 | ระบบรายงานสรุปผลการเก็บตัวชี้วัด</p>
+    </footer>
+
+    <script>
+        // Data Store
+        const rawData = {
+            units: [
+                {
+                    id: 'LAB',
+                    name: 'งานห้องปฏิบัติการเทคนิคการแพทย์',
+                    achieved: 36,
+                    failed: 1,
+                    pending: 3,
+                    total: 40,
+                    primaryAchieved: 10,
+                    primaryFailed: 0,
+                    secondaryAchieved: 26,
+                    secondaryFailed: 1,
+                    secondaryPending: 3
+                },
+                {
+                    id: 'BLOOD',
+                    name: 'งานเวชศาสตร์บริการโลหิต',
+                    achieved: 38,
+                    failed: 0,
+                    pending: 0,
+                    total: 38,
+                    primaryAchieved: 11,
+                    primaryFailed: 0,
+                    secondaryAchieved: 27,
+                    secondaryFailed: 0,
+                    secondaryPending: 0
+                },
+                {
+                    id: 'MICRO',
+                    name: 'งานจุลชีววิทยา',
+                    achieved: 42,
+                    failed: 22,
+                    pending: 0,
+                    total: 64,
+                    primaryAchieved: 7,
+                    primaryFailed: 9,
+                    secondaryAchieved: 35,
+                    secondaryFailed: 13,
+                    secondaryPending: 0
+                }
+            ],
+            objectives: [
+                { id: 1, name: '1. ความถูกต้อง (ประสิทธิผล)', primaryPass: 2, primaryFail: 1, secPass: 16, secFail: 4, secPending: 0 },
+                { id: 2, name: '2. ความรวดเร็ว (ประสิทธิภาพ)', primaryPass: 2, primaryFail: 1, secPass: 21, secFail: 8, secPending: 0 },
+                { id: 3, name: '3. มาตรฐานการบริการ (มาตรฐาน)', primaryPass: 3, primaryFail: 0, secPass: 45, secFail: 0, secPending: 0 },
+                { id: 4, name: '4. ความพึงพอใจ (การบริการ)', primaryPass: 3, primaryFail: 0, secPass: 6, secFail: 2, secPending: 3 }
+            ]
+        };
+
+        let unitChartInstance = null;
+        let statusDoughnutInstance = null;
+        let objectiveChartInstance = null;
+
+        window.onload = function() {
+            initCharts();
+        };
+
+        function initCharts() {
+            // Chart 1: Unit Performance Bar Chart
+            const ctxUnit = document.getElementById('unitChart').getContext('2d');
+            unitChartInstance = new Chart(ctxUnit, {
+                type: 'bar',
+                data: {
+                    labels: ['งานห้องปฏิบัติการเทคนิคการแพทย์', 'งานเวชศาสตร์บริการโลหิต', 'งานจุลชีววิทยา'],
+                    datasets: [
+                        {
+                            label: 'บรรลุเป้าหมาย',
+                            data: [36, 38, 42],
+                            backgroundColor: '#10B981',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'ไม่บรรลุเป้าหมาย',
+                            data: [1, 0, 22],
+                            backgroundColor: '#F43F5E',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'รอดำเนินการ',
+                            data: [3, 0, 0],
+                            backgroundColor: '#F59E0B',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94A3B8', font: { family: 'Prompt' } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} ตัวชี้วัด`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94A3B8', font: { family: 'Prompt' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#94A3B8', font: { family: 'Prompt' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Status Doughnut Chart
+            const ctxDoughnut = document.getElementById('statusDoughnutChart').getContext('2d');
+            statusDoughnutInstance = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['บรรลุเป้าหมาย', 'ไม่บรรลุเป้าหมาย', 'รอดำเนินการ'],
+                    datasets: [{
+                        data: [116, 23, 3],
+                        backgroundColor: ['#10B981', '#F43F5E', '#F59E0B'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94A3B8', font: { family: 'Prompt', size: 11 } }
+                        }
+                    }
+                }
+            });
+
+            // Chart 3: Objective Breakdown Bar Chart
+            const ctxObj = document.getElementById('objectiveChart').getContext('2d');
+            objectiveChartInstance = new Chart(ctxObj, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        '1. ความถูกต้อง (ประสิทธิผล)', 
+                        '2. ความรวดเร็ว (ประสิทธิภาพ)', 
+                        '3. การให้บริการที่มีมาตรฐาน', 
+                        '4. ความพึงพอใจผู้รับบริการ'
+                    ],
+                    datasets: [
+                        {
+                            label: 'บรรลุเป้าหมาย (รวม หลัก+รอง)',
+                            data: [18, 23, 48, 9],
+                            backgroundColor: '#8B5CF6',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'ไม่บรรลุเป้าหมาย (รวม หลัก+รอง)',
+                            data: [5, 9, 0, 2],
+                            backgroundColor: '#F43F5E',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'รอดำเนินการ',
+                            data: [0, 0, 0, 3],
+                            backgroundColor: '#F59E0B',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94A3B8', font: { family: 'Prompt' } }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94A3B8', font: { family: 'Prompt' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#94A3B8', font: { family: 'Prompt' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterDashboard() {
+            const selectedUnit = document.getElementById('unitFilter').value;
+            const unitCards = document.querySelectorAll('.unit-card');
+
+            unitCards.forEach(card => {
+                if (selectedUnit === 'ALL' || card.getAttribute('data-unit') === selectedUnit) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update stats dynamic based on filter
+            if (selectedUnit === 'ALL') {
+                updateStats(142, 37, 105, 116, '81.7%', 28, 88, 23, '16.2%', 9, 14, 3, '2.1%');
+            } else if (selectedUnit === 'LAB') {
+                updateStats(40, 10, 30, 36, '90.0%', 10, 26, 1, '2.5%', 0, 1, 3, '7.5%');
+            } else if (selectedUnit === 'BLOOD') {
+                updateStats(38, 11, 27, 38, '100.0%', 11, 27, 0, '0.0%', 0, 0, 0, '0.0%');
+            } else if (selectedUnit === 'MICRO') {
+                updateStats(64, 16, 48, 42, '65.6%', 7, 35, 22, '34.4%', 9, 13, 0, '0.0%');
+            }
+        }
+
+        function updateStats(total, pTot, sTot, ach, achPct, pAch, sAch, fail, failPct, pFail, sFail, pend, pendPct) {
+            document.getElementById('statTotalKPIs').innerText = total;
+            document.getElementById('statPrimaryKPIs').innerText = pTot;
+            document.getElementById('statSecondaryKPIs').innerText = sTot;
+            
+            document.getElementById('statAchievedKPIs').innerText = ach;
+            document.getElementById('statAchievedPercent').innerText = achPct;
+            document.getElementById('statAchievedPrimary').innerText = pAch;
+            document.getElementById('statAchievedSecondary').innerText = sAch;
+
+            document.getElementById('statFailedKPIs').innerText = fail;
+            document.getElementById('statFailedPercent').innerText = failPct;
+            document.getElementById('statFailedPrimary').innerText = pFail;
+            document.getElementById('statFailedSecondary').innerText = sFail;
+
+            document.getElementById('statPendingKPIs').innerText = pend;
+            document.getElementById('statPendingPercent').innerText = pendPct;
+        }
+
+        function resetFilters() {
+            document.getElementById('unitFilter').value = 'ALL';
+            document.getElementById('objectiveFilter').value = 'ALL';
+            filterDashboard();
+        }
+    </script>
+
+</body></html>

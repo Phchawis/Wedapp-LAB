@@ -572,6 +572,23 @@ async function callMasterlist(path, init = {}) {
   return data;
 }
 
+/* รายงานตัวชี้วัดฉบับเต็ม (ไฟล์ HTML แยก)
+
+   เสิร์ฟผ่าน API ที่ต้องล็อกอิน ไม่ได้วางใน dist/ เพราะไฟล์ใน dist เปิดสาธารณะทั้งหมด
+   ข้อมูลชุดนี้เป็นผลการดำเนินงานภายใน ไม่ควรเปิดให้ใครก็เข้าถึงได้ด้วย URL เปล่า ๆ
+   ชื่อไฟล์รับเฉพาะที่อยู่ในรายการ กัน path traversal ตั้งแต่ต้นทาง */
+const KPI_REPORTS = {
+  'medtech-2569': 'medtech-2569.html',
+  'summary-2569': 'summary-2569.html',
+};
+app.get('/api/kpi/report/:name', authMw, wrap(async (req, res) => {
+  const file = KPI_REPORTS[req.params.name];
+  if (!file) return res.status(404).json({ error: 'ไม่พบรายงาน' });
+  const full = path.join(__dirname, 'kpi-reports', file);
+  if (!fs.existsSync(full)) return res.status(404).json({ error: 'ไม่พบไฟล์รายงาน' });
+  res.type('html').sendFile(full);
+}));
+
 app.get('/api/kpi', authMw, wrap(async (req, res) => {
   const year = req.query.year ? `&year=${encodeURIComponent(req.query.year)}` : '';
   const data = await callMasterlist(`/api/kpi?work=${KPI_WORK}${year}`);

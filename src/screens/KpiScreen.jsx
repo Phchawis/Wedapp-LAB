@@ -91,6 +91,63 @@ const MONTHS_ROW = {
   alignItems: 'center',
 };
 
+/* รายงานตัวชี้วัดฉบับเต็ม (ไฟล์แยก)
+
+   ระบบนี้แนบเฉพาะของงานตัวเองกับสรุปรวมของฝ่าย ส่วนของงานอื่นอยู่ที่ระบบทะเบียนกลาง
+   เปิดเป็นแท็บใหม่เพราะเป็นหน้าเต็มที่มีกราฟและตารางของตัวเอง ยัดใส่กรอบแล้วอ่านไม่ออก */
+const REPORTS = [
+  { name: 'summary-2569', code: 'สรุป', title: 'สรุปแผนการเก็บตัวชี้วัด', note: 'ภาพรวมทั้งฝ่ายสหเวชศาสตร์ — แผนการเก็บและผลรวมทุกงาน' },
+  { name: 'medtech-2569', code: 'LAB', title: 'งานห้องปฏิบัติการเทคนิคการแพทย์', note: 'แดชบอร์ดตัวชี้วัดคุณภาพรายเดือนของงานเรา' },
+];
+
+function ReportCards() {
+  const [busy, setBusy] = useState('');
+  const [err, setErr] = useState('');
+
+  const open = async (name) => {
+    setBusy(name); setErr('');
+    try { await api.openKpiReport(name); }
+    catch (e) { setErr(e.message || 'เปิดรายงานไม่สำเร็จ'); }
+    finally { setBusy(''); }
+  };
+
+  return (
+    <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="FileText" size={16} color="var(--text-secondary)" /> รายงานฉบับเต็ม ปีงบประมาณ 2569</span>}>
+      <p style={{ font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>
+        เปิดในแท็บใหม่ — รายงานเหล่านี้เป็นไฟล์ที่จัดทำไว้ ไม่ได้ดึงตัวเลขสดจากตารางด้านบน
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+        {REPORTS.map((r) => (
+          <button
+            key={r.name}
+            type="button"
+            onClick={() => open(r.name)}
+            disabled={busy === r.name}
+            style={{
+              textAlign: 'left', cursor: busy === r.name ? 'progress' : 'pointer',
+              padding: '15px 16px', borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)', background: 'var(--surface-card)',
+              transition: 'border-color var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--brand-300)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
+              <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--brand-700)', padding: '4px 8px', border: '1px solid var(--brand-200, var(--border-subtle))', borderRadius: 'var(--radius-xs)' }}>{r.code}</span>
+              <span style={{ marginLeft: 'auto', font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>
+                {busy === r.name ? 'กำลังเปิด…' : '↗'}
+              </span>
+            </div>
+            <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-primary)', marginBottom: 5 }}>{r.title}</div>
+            <div style={{ font: 'var(--text-xs)/1.6 var(--font-body)', color: 'var(--text-secondary)' }}>{r.note}</div>
+          </button>
+        ))}
+      </div>
+      {err && <div style={{ marginTop: 12 }}><Alert tone="danger">{err}</Alert></div>}
+    </Card>
+  );
+}
+
 export function KpiScreen() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -435,6 +492,8 @@ export function KpiScreen() {
           </div>
         )}
       </Card>
+
+      <ReportCards />
     </div>
   );
 }

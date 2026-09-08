@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ดตัวชี้วัดคุณภาพ LAB · ปีงบประมาณ 2569</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F4F7F6;
+    --surface:#FFFFFF;
+    --surface-soft:#EEF3F1;
+    --ink:#152C2A;
+    --ink-soft:#4F6461;
+    --line:#DCE6E2;
+    --brand:#0E6E62;
+    --brand-deep:#0A5049;
+    --brand-tint:#E4F0EC;
+    --pass:#2E7D4F;
+    --pass-bg:#E7F3EB;
+    --fail:#B23B33;
+    --fail-bg:#FBEBE9;
+    --pending:#B07A20;
+    --pending-bg:#FBF1DF;
+    --nodata:#7A8985;
+    --nodata-bg:#EEF1F0;
+    --shadow: 0 1px 2px rgba(21,44,42,.04), 0 6px 20px -8px rgba(21,44,42,.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans Thai', sans-serif;
+    font-weight:400;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'IBM Plex Mono','IBM Plex Sans Thai',monospace;}
+  a{color:inherit;}
+
+  /* ===== Header ===== */
+  .topbar{
+    background:linear-gradient(155deg, var(--brand-deep) 0%, var(--brand) 62%, #12867a 100%);
+    color:#EFFAF6;
+    padding:40px clamp(20px,4vw,56px) 34px;
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute; right:-8%; top:-40%;
+    width:520px; height:520px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.10), rgba(255,255,255,0) 60%);
+    pointer-events:none;
+  }
+  .topbar-inner{position:relative; max-width:1240px; margin:0 auto;}
+  .org-line{
+    display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline;
+    font-size:13.5px; color:#CFEDE3; margin-bottom:18px;
+  }
+  .org-line b{color:#fff; font-weight:600;}
+  .org-line .sep{opacity:.5;}
+  h1.hero{
+    margin:0 0 6px;
+    font-size:clamp(26px,3.6vw,38px);
+    font-weight:600;
+    letter-spacing:-0.01em;
+    max-width:820px;
+  }
+  .hero-sub{
+    font-size:15px; color:#D9F1E9; max-width:640px; margin:0 0 28px;
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:14px;
+    max-width:980px;
+  }
+  .hero-stat{
+    background:rgba(255,255,255,.09);
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:14px;
+    padding:16px 18px;
+    backdrop-filter:blur(2px);
+  }
+  .hero-stat .n{font-family:'IBM Plex Mono'; font-size:28px; font-weight:600; line-height:1;}
+  .hero-stat .l{font-size:12.5px; color:#CFEDE3; margin-top:6px;}
+  .hero-stat.accent .n{color:#FFE9B3;}
+
+  /* ===== Layout ===== */
+  main{max-width:1240px; margin:0 auto; padding:34px clamp(20px,4vw,56px) 80px;}
+  section{margin-bottom:40px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap;}
+  .section-head h2{font-size:19px; margin:0; font-weight:600;}
+  .section-head p{margin:2px 0 0; font-size:13px; color:var(--ink-soft);}
+
+  /* ===== Category overview ===== */
+  .cat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px;}
+  .cat-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:18px 20px; cursor:pointer; box-shadow:var(--shadow);
+    transition:border-color .15s ease, transform .15s ease;
+    text-align:left;
+  }
+  .cat-card:hover{border-color:var(--brand); transform:translateY(-2px);}
+  .cat-card.active{border-color:var(--brand); background:var(--brand-tint);}
+  .cat-card .cat-name{font-size:14px; font-weight:600; margin-bottom:10px; min-height:38px;}
+  .cat-bar{height:8px; border-radius:5px; background:var(--surface-soft); overflow:hidden; display:flex; margin-bottom:8px;}
+  .cat-bar > span{height:100%; display:block;}
+  .cat-meta{display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-soft);}
+  .cat-meta .rate{font-family:'IBM Plex Mono'; font-weight:600; color:var(--ink);}
+
+  /* ===== Controls ===== */
+  .controls{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; box-shadow:var(--shadow);
+  }
+  .search-box{
+    flex:1 1 220px; display:flex; align-items:center; gap:8px;
+    background:var(--surface-soft); border-radius:10px; padding:9px 12px;
+  }
+  .search-box svg{flex:none; opacity:.55;}
+  .search-box input{
+    border:none; outline:none; background:transparent; font:inherit; font-size:14px; width:100%;
+    color:var(--ink);
+  }
+  .chip-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{
+    border:1px solid var(--line); background:var(--surface);
+    padding:7px 13px; border-radius:999px; font-size:13px; cursor:pointer;
+    color:var(--ink-soft); white-space:nowrap; transition:all .12s ease;
+  }
+  .chip:hover{border-color:var(--brand);}
+  .chip.active{background:var(--brand); border-color:var(--brand); color:#fff;}
+  .chip .dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:middle;}
+
+  /* ===== QI grid ===== */
+  .qi-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; margin-top:18px;
+  }
+  .qi-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:16px 16px 14px; cursor:pointer; box-shadow:var(--shadow);
+    transition:transform .15s ease, border-color .15s ease;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .qi-card:hover{transform:translateY(-3px); border-color:var(--brand);}
+  .qi-top{display:flex; justify-content:space-between; gap:8px; align-items:flex-start;}
+  .qi-code{font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--ink-soft); background:var(--surface-soft); padding:2px 7px; border-radius:6px;}
+  .status-badge{
+    font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .status-pass{background:var(--pass-bg); color:var(--pass);}
+  .status-fail{background:var(--fail-bg); color:var(--fail);}
+  .status-pending{background:var(--pending-bg); color:var(--pending);}
+  .status-nodata{background:var(--nodata-bg); color:var(--nodata);}
+  .qi-name{font-size:13.5px; font-weight:500; line-height:1.45; min-height:58px;}
+  .qi-bottom{display:flex; align-items:flex-end; justify-content:space-between; gap:10px;}
+  .qi-value .v{font-family:'IBM Plex Mono'; font-size:22px; font-weight:600;}
+  .qi-value .t{font-size:11.5px; color:var(--ink-soft);}
+  .qi-spark{width:110px; height:38px;}
+  .empty-msg{
+    text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:14px;
+    background:var(--surface); border-radius:14px; border:1px dashed var(--line);
+  }
+
+  /* ===== Detail panel ===== */
+  .overlay{
+    position:fixed; inset:0; background:rgba(13,28,26,.44);
+    display:none; align-items:flex-start; justify-content:center;
+    padding:5vh 16px; z-index:50; overflow-y:auto;
+    backdrop-filter:blur(1px);
+  }
+  .overlay.open{display:flex;}
+  .detail-card{
+    background:var(--surface); border-radius:20px; max-width:760px; width:100%;
+    padding:28px clamp(18px,3vw,34px) 30px; box-shadow:0 30px 60px -20px rgba(0,0,0,.35);
+    margin-bottom:5vh;
+  }
+  .detail-head{display:flex; justify-content:space-between; gap:14px; align-items:flex-start; margin-bottom:6px;}
+  .detail-head .qi-code{margin-bottom:8px; display:inline-block;}
+  .close-btn{
+    border:none; background:var(--surface-soft); width:32px; height:32px; border-radius:50%;
+    cursor:pointer; font-size:16px; color:var(--ink-soft); flex:none; line-height:1;
+  }
+  .close-btn:hover{background:var(--line); color:var(--ink);}
+  .detail-card h3{font-size:18px; margin:0 0 4px; line-height:1.4;}
+  .detail-kpi{font-size:13px; color:var(--ink-soft); margin-bottom:18px;}
+  .detail-stats{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:20px;
+  }
+  .detail-stats .box{background:var(--surface-soft); border-radius:12px; padding:12px 14px;}
+  .detail-stats .box .l{font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;}
+  .detail-stats .box .v{font-family:'IBM Plex Mono'; font-size:18px; font-weight:600;}
+  .chart-wrap{background:var(--surface-soft); border-radius:14px; padding:16px 10px 8px; margin-bottom:16px;}
+  .detail-owner{font-size:13px; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:14px;}
+  .detail-owner b{color:var(--ink); font-weight:600;}
+
+  /* ===== Table ===== */
+  .table-scroll{
+    overflow-x:auto; border:1px solid var(--line); border-radius:16px; background:var(--surface);
+    box-shadow:var(--shadow);
+  }
+  table{border-collapse:collapse; width:100%; font-size:13px; min-width:1080px;}
+  thead th{
+    position:sticky; top:0; background:var(--brand-deep); color:#EAFBF3;
+    text-align:left; padding:11px 12px; font-weight:500; font-size:12.5px; cursor:pointer;
+    white-space:nowrap; user-select:none;
+  }
+  thead th.num-col{text-align:right;}
+  thead th:hover{background:var(--brand);}
+  thead th .arrow{opacity:.55; margin-left:3px; font-size:10px;}
+  tbody td{padding:10px 12px; border-top:1px solid var(--line); vertical-align:top;}
+  tbody td.num-col{text-align:right; font-family:'IBM Plex Mono';}
+  tbody tr:hover{background:var(--brand-tint);}
+  tbody tr{cursor:pointer;}
+  .name-cell{max-width:340px;}
+  .name-cell .main{font-weight:500;}
+  .name-cell .sub{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+
+  footer{
+    max-width:1240px; margin:0 auto; padding:0 clamp(20px,4vw,56px) 50px;
+    color:var(--ink-soft); font-size:12.5px; border-top:1px solid var(--line); padding-top:18px;
+  }
+
+  @media (max-width:640px){
+    table{min-width:920px;}
+    .qi-name{min-height:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="org-line">
+      <b>โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ</b>
+      <span class="sep">/</span>
+      <span>ฝ่ายสหเวชศาสตร์ · งานปฏิบัติการเทคนิคการแพทย์</span>
+    </div>
+    <h1 class="hero">แดชบอร์ดตัวชี้วัดคุณภาพงานห้องปฏิบัติการ (LAB)</h1>
+    <p class="hero-sub">ติดตามผลตัวชี้วัดหลัก (KPI) และตัวชี้วัดรอง (QI) ปีงบประมาณ 2569 ตั้งแต่เดือนตุลาคมถึงกันยายน — ข้อมูลปัจจุบันครอบคลุมถึงเดือนกรกฎาคม</p>
+    <div class="hero-grid" id="heroStats">
+  <div class="hero-stat accent">
+    <div class="n">96.3%</div>
+    <div class="l">อัตราผ่านเกณฑ์ (จากตัวชี้วัดที่ประเมินแล้ว)</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">30</div>
+    <div class="l">ตัวชี้วัดรอง (QI) ทั้งหมด</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">26</div>
+    <div class="l">ผ่านการประเมิน</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">1</div>
+    <div class="l">ไม่ผ่านการประเมิน</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">3</div>
+    <div class="l">รอประเมิน / ยังไม่เก็บข้อมูล</div>
+  </div>
+</div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <h2>ภาพรวมตามหมวดตัวชี้วัด</h2>
+        <p>คลิกที่หมวดเพื่อกรองรายการด้านล่าง</p>
+      </div>
+    </div>
+    <div class="cat-grid" id="catGrid">
+    <button class="cat-card " data-cat="1">
+      <div class="cat-name">1. ความถูกต้องแม่นยำของผลตรวจ</div>
+      <div class="cat-bar">
+        <span style="width:100%; background:#0E6E62"></span>
+        <span style="width:0%; background:#B23B33"></span>
+        <span style="width:0%; background:#D8DEDB"></span>
+      </div>
+      <div class="cat-meta">
+        <span>3/3 ผ่านเกณฑ์</span>
+        <span class="rate">100%</span>
+      </div>
+    </button>
+    <button class="cat-card " data-cat="2">
+      <div class="cat-name">2. ความรวดเร็วในการให้บริการ</div>
+      <div class="cat-bar">
+        <span style="width:91.66666666666666%; background:#2C7BB6"></span>
+        <span style="width:8.333333333333332%; background:#B23B33"></span>
+        <span style="width:0%; background:#D8DEDB"></span>
+      </div>
+      <div class="cat-meta">
+        <span>11/12 ผ่านเกณฑ์</span>
+        <span class="rate">92%</span>
+      </div>
+    </button>
+    <button class="cat-card " data-cat="3">
+      <div class="cat-name">3. คุณภาพห้องปฏิบัติการ (EQA/QC)</div>
+      <div class="cat-bar">
+        <span style="width:100%; background:#8C5FBF"></span>
+        <span style="width:0%; background:#B23B33"></span>
+        <span style="width:0%; background:#D8DEDB"></span>
+      </div>
+      <div class="cat-meta">
+        <span>11/11 ผ่านเกณฑ์</span>
+        <span class="rate">100%</span>
+      </div>
+    </button>
+    <button class="cat-card " data-cat="4">
+      <div class="cat-name">4. ความพึงพอใจของผู้รับบริการ</div>
+      <div class="cat-bar">
+        <span style="width:25%; background:#C97A2B"></span>
+        <span style="width:0%; background:#B23B33"></span>
+        <span style="width:75%; background:#D8DEDB"></span>
+      </div>
+      <div class="cat-meta">
+        <span>1/4 ผ่านเกณฑ์</span>
+        <span class="rate">100%</span>
+      </div>
+    </button></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <h2>สำรวจตัวชี้วัดรอง (QI) รายตัว</h2>
+        <p>คลิกการ์ดเพื่อดูแนวโน้มรายเดือนแบบละเอียด</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input id="searchInput" type="text" placeholder="ค้นหาชื่อตัวชี้วัด, รหัส หรือผู้รับผิดชอบ...">
+      </div>
+      <div class="chip-row" id="statusChips"><button class="chip active" data-status="">ทั้งหมด</button>
+      <button class="chip " data-status="ผ่านการประเมิน">
+        <span class="dot" style="background:#2E7D4F"></span>ผ่านการประเมิน
+      </button>
+      <button class="chip " data-status="ไม่ผ่านการประเมิน">
+        <span class="dot" style="background:#B23B33"></span>ไม่ผ่านการประเมิน
+      </button>
+      <button class="chip " data-status="รอประเมิน">
+        <span class="dot" style="background:#B07A20"></span>รอประเมิน
+      </button>
+      <button class="chip " data-status="ยังไม่เก็บข้อมูล">
+        <span class="dot" style="background:#7A8985"></span>ยังไม่เก็บข้อมูล
+      </button></div>
+    </div>
+    <div class="qi-grid" id="qiGrid">
+    <div class="qi-card" data-code="1.1.1">
+      <div class="qi-top">
+        <span class="qi-code">1.1.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราความผิดพลาดในการรายงานผล LAB</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">0</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &lt; 0.5%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-1_1_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="1.2.1">
+      <div class="qi-top">
+        <span class="qi-code">1.2.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">จำนวน Incident report (IR) ที่หน่วยงานได้รับ</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">2.70</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &lt;5ครั้ง</div>
+        </div>
+        <canvas class="qi-spark" id="spark-1_2_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="1.3.1">
+      <div class="qi-top">
+        <span class="qi-code">1.3.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราความถูกต้องของสิ่งส่งตรวจในกระบวนการตรวจวิเคราะห์</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.04</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥95%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-1_3_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.1">
+      <div class="qi-top">
+        <span class="qi-code">2.1.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผลการทดสอบในกลุ่มผู้ป่วยที่มารับบริการที่ศูนย์การแพทย์ธรรมศาสตร์อยู่ในช่วงเวลาที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">94.12</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.2">
+      <div class="qi-top">
+        <span class="qi-code">2.1.2</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผลตรวจวิเคราะห์ทางเคมีคลินิกอยู่ในช่วงเวลาที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.42</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_2"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.3">
+      <div class="qi-top">
+        <span class="qi-code">2.1.3</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผลตรวจวิเคราะห์ Rapid test (UPT, METH, THCA, Stool for C. difficile toxin A/B, FOB และ Stool for H pylori Ag.) ของผู้ป่วย ER ภายในเวลาราชการ ไม่เกิน 30 นาที</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">98.42</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 95%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_3"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.4">
+      <div class="qi-top">
+        <span class="qi-code">2.1.4</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผลตรวจวิเคราะห์งาน cardiac marker (Troponin-T, CK-MB, PRO-BNP) และ Inflammation marker (PCT, IL-6) อยู่ในช่วงเวลาที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">93.64</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_4"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.5">
+      <div class="qi-top">
+        <span class="qi-code">2.1.5</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราร้อยละการรอคอยผล OUT LAB ที่ออกนอก Turn Around Time</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.08</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 95%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_5"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.6">
+      <div class="qi-top">
+        <span class="qi-code">2.1.6</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผล CBC กลุ่มผู้ป่วยทั่วไปและเร่งด่วนในช่วงเวลา 8.00-16.00 น. อยู่ในระยะเวลาที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">98.11</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 95%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_6"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.7">
+      <div class="qi-top">
+        <span class="qi-code">2.1.7</span>
+        <span class="status-badge status-fail">ไม่ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการดำเนินการควบคุมคุณภาพ (IQC) และการทดสอบความชำนาญ (PT) ของการตรวจ POCT ได้ถูกต้องและครบถ้วน จำแนกตามกลุ่มการตรวจ</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">92.70</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &gt; 95%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_7"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.8">
+      <div class="qi-top">
+        <span class="qi-code">2.1.8</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผลในกลุ่มผู้ป่วยนอกตามเวลาที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.95</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_8"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.1.9">
+      <div class="qi-top">
+        <span class="qi-code">2.1.9</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการรายงานผลในกลุ่มผู้ป่วยเร่งด่วนตามเวลาที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.39</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_1_9"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.2.1">
+      <div class="qi-top">
+        <span class="qi-code">2.2.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">ระยะเวลารอคอยเจาะเลือด ประจำหน่วยบริการผู้ป่วยศูนย์การแพทย์</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥80%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_2_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.2.2">
+      <div class="qi-top">
+        <span class="qi-code">2.2.2</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">ระยะเวลารอคอยเจาะเลือด ประจำหน่วยบริการผู้ป่วยนอก (OPD)</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">93.33</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥80%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_2_2"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="2.3.1">
+      <div class="qi-top">
+        <span class="qi-code">2.3.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">ร้อยละการตอบสนองต่อการรายงานค่าวิกฤต</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย 1</div>
+        </div>
+        <canvas class="qi-spark" id="spark-2_3_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.1.1">
+      <div class="qi-top">
+        <span class="qi-code">3.1.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการผลการทดสอบ EQA ศูนย์ปฏิบัติการตรวจวินิจฉัยทางการแพทย์ผ่านเกณฑ์มาตรฐานที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.91</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย 1</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_1_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.1.2">
+      <div class="qi-top">
+        <span class="qi-code">3.1.2</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการผลการทดสอบ EQA หน่วยเคมีคลินิกผ่านเกณฑ์มาตรฐานที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย 1</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_1_2"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.1.3">
+      <div class="qi-top">
+        <span class="qi-code">3.1.3</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการผลการทดสอบ EQA หน่วยจุลทรรศน์ศาสตร์และปรสิตวิทยาผ่านเกณฑ์มาตรฐานที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย 1</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_1_3"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.1.4">
+      <div class="qi-top">
+        <span class="qi-code">3.1.4</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการผลการทดสอบ EQA หน่วยภูมิคุ้มกันวิทยา ฮอร์โมนและระดับยา ผ่านเกณฑ์มาตรฐานที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย 1</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_1_4"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.1.5">
+      <div class="qi-top">
+        <span class="qi-code">3.1.5</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการผลการทดสอบ EQA หน่วยโลหิตวิทยาผ่านเกณฑ์มาตรฐานที่กำหนด</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย 1</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_1_5"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.2.1">
+      <div class="qi-top">
+        <span class="qi-code">3.2.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน ศูนย์ปฏิบัติการตรวจวินิจฉัยทางการแพทย์</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">97.74</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥ 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_2_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.2.2">
+      <div class="qi-top">
+        <span class="qi-code">3.2.2</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยเคมีคลินิก</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥ 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_2_2"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.2.3">
+      <div class="qi-top">
+        <span class="qi-code">3.2.3</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยจุลทรรศน์ศาสตร์และปรสิตวิทยา</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">100</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥ 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_2_3"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.2.4">
+      <div class="qi-top">
+        <span class="qi-code">3.2.4</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยภูมิคุ้มกันวิทยา ฮอร์โมนและระดับยา</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.14</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥ 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_2_4"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.2.5">
+      <div class="qi-top">
+        <span class="qi-code">3.2.5</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยโลหิตวิทยา</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">99.62</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥ 90%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_2_5"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="3.4.1">
+      <div class="qi-top">
+        <span class="qi-code">3.4.1</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">จำนวนการเกิดอุบัติการณ์ด้านความปลอดภัยของเจ้าหน้าที่ผู้ปฏิบัติงาน</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">0</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย &lt;1ครั้ง</div>
+        </div>
+        <canvas class="qi-spark" id="spark-3_4_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="4.1.1">
+      <div class="qi-top">
+        <span class="qi-code">4.1.1</span>
+        <span class="status-badge status-nodata">ยังไม่เก็บข้อมูล</span>
+      </div>
+      <div class="qi-name">อัตราความพึงพอใจของกลุ่มผู้ใช้บริการ (แพทย์/พยาบาล) (TUH)</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">—</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย —</div>
+        </div>
+        <canvas class="qi-spark" id="spark-4_1_1"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="4.1.2">
+      <div class="qi-top">
+        <span class="qi-code">4.1.2</span>
+        <span class="status-badge status-pending">รอประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราความพึงพอใจของกลุ่มผู้ใช้บริการ (แพทย์/พยาบาล) (OUT LAB)</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">—</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥85%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-4_1_2"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="4.1.3">
+      <div class="qi-top">
+        <span class="qi-code">4.1.3</span>
+        <span class="status-badge status-pending">รอประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราความพึงพอใจของกลุ่มผู้ใช้บริการ (แพทย์/พยาบาล) (THAMC)</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">—</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥85%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-4_1_3"></canvas>
+      </div>
+    </div>
+    <div class="qi-card" data-code="4.1.4">
+      <div class="qi-top">
+        <span class="qi-code">4.1.4</span>
+        <span class="status-badge status-pass">ผ่านการประเมิน</span>
+      </div>
+      <div class="qi-name">อัตราความพึงพอใจของกลุ่มผู้รับบริการ</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">90</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ≥85%</div>
+        </div>
+        <canvas class="qi-spark" id="spark-4_1_4"></canvas>
+      </div>
+    </div></div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <h2>ตารางข้อมูลฉบับเต็ม</h2>
+        <p>คลิกส่วนหัวคอลัมน์เพื่อจัดเรียง · คลิกแถวเพื่อดูรายละเอียด · ใช้ตัวกรองด้านบนร่วมกันได้</p>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr id="tableHead"><th class="" data-key="code">รหัส <span class="arrow">▲</span></th><th class="" data-key="name">ตัวชี้วัดรอง (QI) <span class="arrow"></span></th><th class="" data-key="target">เป้าหมาย <span class="arrow"></span></th><th class="num-col" data-key="total">เฉลี่ยรวม <span class="arrow"></span></th><th class="" data-key="status">ผลประเมิน <span class="arrow"></span></th><th class="" data-key="owner">ผู้จัดทำข้อมูล <span class="arrow"></span></th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  แดชบอร์ดสร้างจากไฟล์รายงานผล LAB ปีงบประมาณ 2569 · แสดงผลตัวชี้วัดรอง (QI) ทั้งหมด <span id="footCount">30</span> รายการ ใน 4 หมวดหลัก
+</footer>
+
+<div class="overlay" id="overlay">
+  <div class="detail-card" id="detailCard"></div>
+</div>
+
+<script id="kpi-data" type="application/json">
+{
+  "months": [
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย."
+  ],
+  "rows": [
+    {
+      "code": "1.1.1",
+      "cat": 1,
+      "catName": "1. ความถูกต้องแม่นยำของผลตรวจ",
+      "kpiMain": "1.1 อัตราความผิดพลาดของการรายงานผลการตรวจวิเคราะห์",
+      "kpiTarget": "< 0.5%",
+      "name": "อัตราความผิดพลาดในการรายงานผล LAB",
+      "target": "< 0.5%",
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        null,
+        null
+      ],
+      "total": 0,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.รัตนพร คฤหเดช"
+    },
+    {
+      "code": "1.2.1",
+      "cat": 1,
+      "catName": "1. ความถูกต้องแม่นยำของผลตรวจ",
+      "kpiMain": "1.2 จำนวนข้อร้องเรียนและ Incident report (IR)",
+      "kpiTarget": "<5ครั้ง",
+      "name": "จำนวน Incident report (IR) ที่หน่วยงานได้รับ",
+      "target": "<5ครั้ง",
+      "values": [
+        4,
+        1,
+        2,
+        4,
+        3,
+        3,
+        4,
+        2,
+        1,
+        3,
+        null,
+        null
+      ],
+      "total": 2.7,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.วศิน เอมเอาธาน"
+    },
+    {
+      "code": "1.3.1",
+      "cat": 1,
+      "catName": "1. ความถูกต้องแม่นยำของผลตรวจ",
+      "kpiMain": "1.3 อัตราความถูกต้องของสิ่งส่งตรวจ",
+      "kpiTarget": "≥95%",
+      "name": "อัตราความถูกต้องของสิ่งส่งตรวจในกระบวนการตรวจวิเคราะห์",
+      "target": "≥95%",
+      "values": [
+        99.06,
+        98.99,
+        98.94,
+        98.98,
+        98.93,
+        99,
+        98.88,
+        98.83,
+        98.81,
+        99.99,
+        null,
+        null
+      ],
+      "total": 99.041,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.นฤมล เสรีขจรจารุ"
+    },
+    {
+      "code": "2.1.1",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผลการทดสอบในกลุ่มผู้ป่วยที่มารับบริการที่ศูนย์การแพทย์ธรรมศาสตร์อยู่ในช่วงเวลาที่กำหนด",
+      "target": "> 90%",
+      "values": [
+        93.33,
+        88.04,
+        94,
+        98,
+        97.57,
+        89.75,
+        97.78,
+        93.96,
+        94.28,
+        94.48,
+        null,
+        null
+      ],
+      "total": 94.119,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.ธนภรณ์ เกิดทิพย์"
+    },
+    {
+      "code": "2.1.2",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผลตรวจวิเคราะห์ทางเคมีคลินิกอยู่ในช่วงเวลาที่กำหนด",
+      "target": "> 90%",
+      "values": [
+        99.93,
+        99.72,
+        99.9,
+        99.91,
+        99.91,
+        99.93,
+        99.84,
+        97.82,
+        97.56,
+        99.7,
+        null,
+        null
+      ],
+      "total": 99.422,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.อัจฉราพร ศรีสุวรรณ์"
+    },
+    {
+      "code": "2.1.3",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผลตรวจวิเคราะห์ Rapid test (UPT, METH, THCA, Stool for C. difficile toxin A/B, FOB และ Stool for H pylori Ag.) ของผู้ป่วย ER ภายในเวลาราชการ ไม่เกิน 30 นาที",
+      "target": "> 95%",
+      "values": [
+        100,
+        98.43,
+        100,
+        100,
+        95.11,
+        98.4,
+        97.5,
+        98.86,
+        97.18,
+        98.69,
+        null,
+        null
+      ],
+      "total": 98.417,
+      "status": "ผ่านการประเมิน",
+      "owner": "ดร.ทนพ.กฤษฎา ศิริสภาภรณ์"
+    },
+    {
+      "code": "2.1.4",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผลตรวจวิเคราะห์งาน cardiac marker (Troponin-T, CK-MB, PRO-BNP) และ Inflammation marker (PCT, IL-6) อยู่ในช่วงเวลาที่กำหนด",
+      "target": "> 90%",
+      "values": [
+        96.34,
+        96.34,
+        99.23,
+        99.23,
+        94.63,
+        90.87,
+        92.72,
+        91.11,
+        87.95,
+        88.03,
+        null,
+        null
+      ],
+      "total": 93.645,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ภควัต คำโสภา"
+    },
+    {
+      "code": "2.1.5",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราร้อยละการรอคอยผล OUT LAB ที่ออกนอก Turn Around Time",
+      "target": "> 95%",
+      "values": [
+        100,
+        96.67,
+        100,
+        100,
+        100,
+        100,
+        94.14,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 99.081,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.ยุพาพิน อ้นทอง"
+    },
+    {
+      "code": "2.1.6",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผล CBC กลุ่มผู้ป่วยทั่วไปและเร่งด่วนในช่วงเวลา 8.00-16.00 น. อยู่ในระยะเวลาที่กำหนด",
+      "target": "> 95%",
+      "values": [
+        97.62,
+        99.8,
+        97.89,
+        98.65,
+        98.34,
+        97.38,
+        98.1,
+        97.74,
+        97.88,
+        97.71,
+        null,
+        null
+      ],
+      "total": 98.111,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.เทอดศักดิ์ สินธนา"
+    },
+    {
+      "code": "2.1.7",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการดำเนินการควบคุมคุณภาพ (IQC) และการทดสอบความชำนาญ (PT) ของการตรวจ POCT ได้ถูกต้องและครบถ้วน จำแนกตามกลุ่มการตรวจ",
+      "target": "> 95%",
+      "values": [
+        90,
+        92,
+        91,
+        93,
+        93,
+        93,
+        91,
+        93,
+        96,
+        95,
+        null,
+        null
+      ],
+      "total": 92.7,
+      "status": "ไม่ผ่านการประเมิน",
+      "owner": "ทนพญ.นฤมล เสรีขจรจารุ"
+    },
+    {
+      "code": "2.1.8",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผลในกลุ่มผู้ป่วยนอกตามเวลาที่กำหนด",
+      "target": "≥90%",
+      "values": [
+        99.84,
+        99.98,
+        99.99,
+        99.97,
+        99.97,
+        99.99,
+        99.97,
+        99.96,
+        99.9,
+        99.98,
+        null,
+        null
+      ],
+      "total": 99.955,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.รัตนพร คฤหเดช"
+    },
+    {
+      "code": "2.1.9",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.1 อัตราการรายงานผลการตรวจวิเคราะห์ภายในระยะเวลาที่กำหนด",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการรายงานผลในกลุ่มผู้ป่วยเร่งด่วนตามเวลาที่กำหนด",
+      "target": "≥90%",
+      "values": [
+        100,
+        100,
+        100,
+        97.73,
+        100,
+        100,
+        100,
+        96.15,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 99.388,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.รัตนพร คฤหเดช"
+    },
+    {
+      "code": "2.2.1",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.2 อัตราการรอคอยเข้ารับบริการกลุ่มผู้รับบริการห้องเจาะเลือด",
+      "kpiTarget": "≥90%",
+      "name": "ระยะเวลารอคอยเจาะเลือด ประจำหน่วยบริการผู้ป่วยศูนย์การแพทย์",
+      "target": "≥80%",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ธวัชชัย ศรีพันธบุตร"
+    },
+    {
+      "code": "2.2.2",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.2 อัตราการรอคอยเข้ารับบริการกลุ่มผู้รับบริการห้องเจาะเลือด",
+      "kpiTarget": "≥90%",
+      "name": "ระยะเวลารอคอยเจาะเลือด ประจำหน่วยบริการผู้ป่วยนอก (OPD)",
+      "target": "≥80%",
+      "values": [
+        93.33,
+        96.66,
+        93.33,
+        90,
+        96.67,
+        93.33,
+        90,
+        93.33,
+        93.33,
+        93.33,
+        null,
+        null
+      ],
+      "total": 93.331,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.กิตติพิชญ์ ตาตะเกษม"
+    },
+    {
+      "code": "2.3.1",
+      "cat": 2,
+      "catName": "2. ความรวดเร็วในการให้บริการ",
+      "kpiMain": "2.3 อัตราการตอบสนองต่อการรายงานค่าวิกฤต",
+      "kpiTarget": "1",
+      "name": "ร้อยละการตอบสนองต่อการรายงานค่าวิกฤต",
+      "target": "1",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.นฤมล เสรีขจรจารุ"
+    },
+    {
+      "code": "3.1.1",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.1 อัตราการผลการทดสอบ EQA ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "kpiTarget": "1",
+      "name": "อัตราการผลการทดสอบ EQA ศูนย์ปฏิบัติการตรวจวินิจฉัยทางการแพทย์ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "target": "1",
+      "values": [
+        99.14,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 99.914,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.1.2",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.1 อัตราการผลการทดสอบ EQA ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "kpiTarget": "1",
+      "name": "อัตราการผลการทดสอบ EQA หน่วยเคมีคลินิกผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "target": "1",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.1.3",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.1 อัตราการผลการทดสอบ EQA ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "kpiTarget": "1",
+      "name": "อัตราการผลการทดสอบ EQA หน่วยจุลทรรศน์ศาสตร์และปรสิตวิทยาผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "target": "1",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.1.4",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.1 อัตราการผลการทดสอบ EQA ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "kpiTarget": "1",
+      "name": "อัตราการผลการทดสอบ EQA หน่วยภูมิคุ้มกันวิทยา ฮอร์โมนและระดับยา ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "target": "1",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.1.5",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.1 อัตราการผลการทดสอบ EQA ผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "kpiTarget": "1",
+      "name": "อัตราการผลการทดสอบ EQA หน่วยโลหิตวิทยาผ่านเกณฑ์มาตรฐานที่กำหนด",
+      "target": "1",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.2.1",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.2 อัตราความถูกต้องของการควบคุมคุณภาพภายใน",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน ศูนย์ปฏิบัติการตรวจวินิจฉัยทางการแพทย์",
+      "target": "≥ 90%",
+      "values": [
+        98.71,
+        97.28,
+        98.06,
+        96.77,
+        97.08,
+        98.71,
+        98,
+        96.44,
+        97.33,
+        99.03,
+        null,
+        null
+      ],
+      "total": 97.741,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.2.2",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.2 อัตราความถูกต้องของการควบคุมคุณภาพภายใน",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยเคมีคลินิก",
+      "target": "≥ 90%",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.2.3",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.2 อัตราความถูกต้องของการควบคุมคุณภาพภายใน",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยจุลทรรศน์ศาสตร์และปรสิตวิทยา",
+      "target": "≥ 90%",
+      "values": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 100,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.2.4",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.2 อัตราความถูกต้องของการควบคุมคุณภาพภายใน",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยภูมิคุ้มกันวิทยา ฮอร์โมนและระดับยา",
+      "target": "≥ 90%",
+      "values": [
+        99.5,
+        99.57,
+        98.49,
+        99.03,
+        98.08,
+        98.33,
+        99.83,
+        99.58,
+        99.32,
+        99.66,
+        null,
+        null
+      ],
+      "total": 99.139,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.2.5",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.2 อัตราความถูกต้องของการควบคุมคุณภาพภายใน",
+      "kpiTarget": "≥90%",
+      "name": "อัตราการแก้ไขการควบคุมคุณภาพให้ถูกต้องและครบถ้วน หน่วยโลหิตวิทยา",
+      "target": "≥ 90%",
+      "values": [
+        98.02,
+        99.15,
+        99.72,
+        99.89,
+        99.69,
+        99.72,
+        100,
+        100,
+        100,
+        100,
+        null,
+        null
+      ],
+      "total": 99.619,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพ.ชินวัฒน์ จันธิมา"
+    },
+    {
+      "code": "3.4.1",
+      "cat": 3,
+      "catName": "3. คุณภาพห้องปฏิบัติการ (EQA/QC)",
+      "kpiMain": "3.4 จำนวนการเกิดอุบัติการณ์ด้านความปลอดภัยของเจ้าหน้าที่ผู้ปฏิบัติงาน",
+      "kpiTarget": "<1ครั้ง",
+      "name": "จำนวนการเกิดอุบัติการณ์ด้านความปลอดภัยของเจ้าหน้าที่ผู้ปฏิบัติงาน",
+      "target": "<1ครั้ง",
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        null,
+        null
+      ],
+      "total": 0,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.รัตนพร คฤหเดช"
+    },
+    {
+      "code": "4.1.1",
+      "cat": 4,
+      "catName": "4. ความพึงพอใจของผู้รับบริการ",
+      "kpiMain": "4.1 อัตราความพึงพอใจของกลุ่มผู้ใช้บริการและผู้รับบริการ",
+      "kpiTarget": "≥85%",
+      "name": "อัตราความพึงพอใจของกลุ่มผู้ใช้บริการ (แพทย์/พยาบาล) (TUH)",
+      "target": null,
+      "values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "total": null,
+      "status": "ยังไม่เก็บข้อมูล",
+      "owner": "-"
+    },
+    {
+      "code": "4.1.2",
+      "cat": 4,
+      "catName": "4. ความพึงพอใจของผู้รับบริการ",
+      "kpiMain": "4.1 อัตราความพึงพอใจของกลุ่มผู้ใช้บริการและผู้รับบริการ",
+      "kpiTarget": "≥85%",
+      "name": "อัตราความพึงพอใจของกลุ่มผู้ใช้บริการ (แพทย์/พยาบาล) (OUT LAB)",
+      "target": "≥85%",
+      "values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "total": null,
+      "status": "รอประเมิน",
+      "owner": "ทนพญ.รัตนพร คฤหเดช"
+    },
+    {
+      "code": "4.1.3",
+      "cat": 4,
+      "catName": "4. ความพึงพอใจของผู้รับบริการ",
+      "kpiMain": "4.1 อัตราความพึงพอใจของกลุ่มผู้ใช้บริการและผู้รับบริการ",
+      "kpiTarget": "≥85%",
+      "name": "อัตราความพึงพอใจของกลุ่มผู้ใช้บริการ (แพทย์/พยาบาล) (THAMC)",
+      "target": "≥85%",
+      "values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "total": null,
+      "status": "รอประเมิน",
+      "owner": "ทนพญ.รัตนพร คฤหเดช"
+    },
+    {
+      "code": "4.1.4",
+      "cat": 4,
+      "catName": "4. ความพึงพอใจของผู้รับบริการ",
+      "kpiMain": "4.1 อัตราความพึงพอใจของกลุ่มผู้ใช้บริการและผู้รับบริการ",
+      "kpiTarget": "≥85%",
+      "name": "อัตราความพึงพอใจของกลุ่มผู้รับบริการ",
+      "target": "≥85%",
+      "values": [
+        null,
+        null,
+        85,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        95,
+        null,
+        null
+      ],
+      "total": 90,
+      "status": "ผ่านการประเมิน",
+      "owner": "ทนพญ.พนิดา เรืองดี, ทนพญ.กมลลักษณ์ ขรจนันทวงศ์"
+    }
+  ]
+}
+</script>
+
+<script>
+const DATA = JSON.parse(document.getElementById('kpi-data').textContent);
+const MONTHS = DATA.months;
+const ROWS = DATA.rows;
+
+const CAT_COLORS = {1:'#0E6E62', 2:'#2C7BB6', 3:'#8C5FBF', 4:'#C97A2B'};
+const STATUS_STYLE = {
+  'ผ่านการประเมิน': {cls:'status-pass', color:'#2E7D4F', label:'ผ่านการประเมิน'},
+  'ไม่ผ่านการประเมิน': {cls:'status-fail', color:'#B23B33', label:'ไม่ผ่านการประเมิน'},
+  'รอประเมิน': {cls:'status-pending', color:'#B07A20', label:'รอประเมิน'},
+  'ยังไม่เก็บข้อมูล': {cls:'status-nodata', color:'#7A8985', label:'ยังไม่เก็บข้อมูล'}
+};
+
+// ---------- Target parsing ----------
+function parseTarget(t){
+  if(!t) return null;
+  const raw = t.trim();
+  const numMatch = raw.match(/[\d.]+/);
+  if(!numMatch) return null;
+  const num = parseFloat(numMatch[0]);
+  let dir = 'min'; // higher is better by default
+  if(raw.includes('<')) dir = 'max';
+  else if(raw.includes('≥') || raw.includes('>')) dir = 'min';
+  else dir = 'min'; // bare number like "1" treated as minimum target (100%)
+  return {num, dir, isPercentLike: raw.includes('%') || (!raw.match(/ครั้ง/) && num<=1 === false && raw==='1') };
+}
+
+function evalStatusColor(status){
+  return (STATUS_STYLE[status] || STATUS_STYLE['ยังไม่เก็บข้อมูล']).color;
+}
+
+// ---------- Aggregate stats ----------
+const total = ROWS.length;
+const counts = {pass:0, fail:0, pending:0, nodata:0};
+ROWS.forEach(r=>{
+  if(r.status==='ผ่านการประเมิน') counts.pass++;
+  else if(r.status==='ไม่ผ่านการประเมิน') counts.fail++;
+  else if(r.status==='รอประเมิน') counts.pending++;
+  else counts.nodata++;
+});
+const evaluated = counts.pass + counts.fail;
+const passRate = evaluated ? Math.round((counts.pass/evaluated)*1000)/10 : 0;
+
+document.getElementById('heroStats').innerHTML = `
+  <div class="hero-stat accent">
+    <div class="n">${passRate}%</div>
+    <div class="l">อัตราผ่านเกณฑ์ (จากตัวชี้วัดที่ประเมินแล้ว)</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">${total}</div>
+    <div class="l">ตัวชี้วัดรอง (QI) ทั้งหมด</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">${counts.pass}</div>
+    <div class="l">ผ่านการประเมิน</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">${counts.fail}</div>
+    <div class="l">ไม่ผ่านการประเมิน</div>
+  </div>
+  <div class="hero-stat">
+    <div class="n">${counts.pending + counts.nodata}</div>
+    <div class="l">รอประเมิน / ยังไม่เก็บข้อมูล</div>
+  </div>
+`;
+document.getElementById('footCount').textContent = total;
+
+// ---------- Category overview ----------
+const catIds = [1,2,3,4];
+const catInfo = {};
+catIds.forEach(c=>{
+  const rows = ROWS.filter(r=>r.cat===c);
+  const p = rows.filter(r=>r.status==='ผ่านการประเมิน').length;
+  const f = rows.filter(r=>r.status==='ไม่ผ่านการประเมิน').length;
+  const pend = rows.filter(r=>r.status==='รอประเมิน' || r.status==='ยังไม่เก็บข้อมูล').length;
+  catInfo[c] = {name: rows[0].catName, total: rows.length, p, f, pend};
+});
+
+let activeCat = null;
+let activeStatus = null;
+let searchTerm = '';
+
+function renderCatGrid(){
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = catIds.map(c=>{
+    const info = catInfo[c];
+    const pPct = (info.p/info.total*100);
+    const fPct = (info.f/info.total*100);
+    const pendPct = (info.pend/info.total*100);
+    const evalRate = (info.p+info.f) ? Math.round(info.p/(info.p+info.f)*100) : 0;
+    return `
+    <button class="cat-card ${activeCat===c?'active':''}" data-cat="${c}">
+      <div class="cat-name">${info.name}</div>
+      <div class="cat-bar">
+        <span style="width:${pPct}%; background:${CAT_COLORS[c]}"></span>
+        <span style="width:${fPct}%; background:#B23B33"></span>
+        <span style="width:${pendPct}%; background:#D8DEDB"></span>
+      </div>
+      <div class="cat-meta">
+        <span>${info.p}/${info.total} ผ่านเกณฑ์</span>
+        <span class="rate">${evalRate}%</span>
+      </div>
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('.cat-card').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const c = parseInt(btn.dataset.cat);
+      activeCat = (activeCat===c) ? null : c;
+      renderAll();
+    });
+  });
+}
+
+// ---------- Status chips ----------
+const statusList = [
+  {key:'ผ่านการประเมิน', color:'#2E7D4F', label:'ผ่านการประเมิน'},
+  {key:'ไม่ผ่านการประเมิน', color:'#B23B33', label:'ไม่ผ่านการประเมิน'},
+  {key:'รอประเมิน', color:'#B07A20', label:'รอประเมิน'},
+  {key:'ยังไม่เก็บข้อมูล', color:'#7A8985', label:'ยังไม่เก็บข้อมูล'}
+];
+function renderChips(){
+  const row = document.getElementById('statusChips');
+  row.innerHTML = `<button class="chip ${activeStatus===null?'active':''}" data-status="">ทั้งหมด</button>` +
+    statusList.map(s=>`
+      <button class="chip ${activeStatus===s.key?'active':''}" data-status="${s.key}">
+        <span class="dot" style="background:${s.color}"></span>${s.label}
+      </button>`).join('');
+  row.querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeStatus = btn.dataset.status || null;
+      renderAll();
+    });
+  });
+}
+
+// ---------- Filtering ----------
+function filteredRows(){
+  return ROWS.filter(r=>{
+    if(activeCat && r.cat!==activeCat) return false;
+    if(activeStatus && r.status!==activeStatus) return false;
+    if(searchTerm){
+      const s = searchTerm.toLowerCase();
+      const hay = (r.name + ' ' + r.code + ' ' + r.owner + ' ' + r.kpiMain).toLowerCase();
+      if(!hay.includes(s)) return false;
+    }
+    return true;
+  });
+}
+
+// ---------- QI cards ----------
+const sparkCharts = {};
+function renderQiGrid(){
+  const grid = document.getElementById('qiGrid');
+  const rows = filteredRows();
+  if(rows.length===0){
+    grid.innerHTML = `<div class="empty-msg" style="grid-column:1/-1;">ไม่พบตัวชี้วัดที่ตรงกับเงื่อนไขที่เลือก</div>`;
+    return;
+  }
+  grid.innerHTML = rows.map(r=>{
+    const st = STATUS_STYLE[r.status] || STATUS_STYLE['ยังไม่เก็บข้อมูล'];
+    const valDisplay = (r.total===null || r.total===undefined) ? '—' : (Number.isInteger(r.total) ? r.total : r.total.toFixed(2));
+    return `
+    <div class="qi-card" data-code="${r.code}">
+      <div class="qi-top">
+        <span class="qi-code">${r.code}</span>
+        <span class="status-badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="qi-name">${r.name}</div>
+      <div class="qi-bottom">
+        <div class="qi-value">
+          <div class="v">${valDisplay}</div>
+          <div class="t">เฉลี่ยรวม · เป้าหมาย ${r.target || '—'}</div>
+        </div>
+        <canvas class="qi-spark" id="spark-${r.code.replace(/\./g,'_')}"></canvas>
+      </div>
+    </div>`;
+  }).join('');
+
+  rows.forEach(r=>{
+    const id = 'spark-' + r.code.replace(/\./g,'_');
+    const canvas = document.getElementById(id);
+    if(!canvas) return;
+    const vals = r.values.filter(v=>v!==null);
+    if(vals.length===0) return;
+    const color = evalStatusColor(r.status);
+    new Chart(canvas, {
+      type:'line',
+      data:{
+        labels: r.values.map((_,i)=>i),
+        datasets:[{
+          data: r.values,
+          borderColor: color,
+          borderWidth:2,
+          pointRadius:0,
+          tension:0.35,
+          spanGaps:true,
+          fill:true,
+          backgroundColor: color+'1A'
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        animation:false,
+        plugins:{legend:{display:false}, tooltip:{enabled:false}},
+        scales:{x:{display:false}, y:{display:false}}
+      }
+    });
+  });
+
+  grid.querySelectorAll('.qi-card').forEach(card=>{
+    card.addEventListener('click', ()=> openDetail(card.dataset.code));
+  });
+}
+
+// ---------- Table ----------
+let sortKey = 'code';
+let sortDir = 1;
+const columns = [
+  {key:'code', label:'รหัส'},
+  {key:'name', label:'ตัวชี้วัดรอง (QI)'},
+  {key:'target', label:'เป้าหมาย'},
+  {key:'total', label:'เฉลี่ยรวม', num:true},
+  {key:'status', label:'ผลประเมิน'},
+  {key:'owner', label:'ผู้จัดทำข้อมูล'}
+];
+function renderTableHead(){
+  const head = document.getElementById('tableHead');
+  head.innerHTML = columns.map(c=>{
+    const arrow = sortKey===c.key ? (sortDir===1?'▲':'▼') : '';
+    return `<th class="${c.num?'num-col':''}" data-key="${c.key}">${c.label} <span class="arrow">${arrow}</span></th>`;
+  }).join('');
+  head.querySelectorAll('th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(sortKey===key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+      renderTable();
+    });
+  });
+}
+function renderTable(){
+  const body = document.getElementById('tableBody');
+  let rows = filteredRows().slice();
+  rows.sort((a,b)=>{
+    let av = a[sortKey], bv = b[sortKey];
+    if(sortKey==='total'){ av = av===null?-1:av; bv = bv===null?-1:bv; }
+    if(typeof av === 'string') av = av.toLowerCase();
+    if(typeof bv === 'string') bv = bv.toLowerCase();
+    if(av<bv) return -1*sortDir;
+    if(av>bv) return 1*sortDir;
+    return 0;
+  });
+  if(rows.length===0){
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--ink-soft);">ไม่พบข้อมูล</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(r=>{
+    const st = STATUS_STYLE[r.status] || STATUS_STYLE['ยังไม่เก็บข้อมูล'];
+    const valDisplay = (r.total===null || r.total===undefined) ? '—' : (Number.isInteger(r.total) ? r.total : r.total.toFixed(2));
+    return `
+    <tr data-code="${r.code}">
+      <td class="num-col">${r.code}</td>
+      <td class="name-cell"><div class="main">${r.name}</div><div class="sub">${r.kpiMain}</div></td>
+      <td>${r.target || '—'}</td>
+      <td class="num-col">${valDisplay}</td>
+      <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+      <td>${r.owner}</td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('tr').forEach(tr=>{
+    tr.addEventListener('click', ()=> openDetail(tr.dataset.code));
+  });
+}
+
+// ---------- Detail modal ----------
+let detailChart = null;
+function openDetail(code){
+  const r = ROWS.find(x=>x.code===code);
+  if(!r) return;
+  const st = STATUS_STYLE[r.status] || STATUS_STYLE['ยังไม่เก็บข้อมูล'];
+  const vals = r.values.filter(v=>v!==null);
+  const min = vals.length ? Math.min(...vals) : null;
+  const max = vals.length ? Math.max(...vals) : null;
+  const valDisplay = (r.total===null || r.total===undefined) ? '—' : (Number.isInteger(r.total) ? r.total : r.total.toFixed(3));
+
+  const card = document.getElementById('detailCard');
+  card.innerHTML = `
+    <div class="detail-head">
+      <div>
+        <span class="qi-code">${r.code}</span>
+        <h3>${r.name}</h3>
+        <div class="detail-kpi">ตัวชี้วัดหลัก: ${r.kpiMain}</div>
+      </div>
+      <button class="close-btn" id="closeBtn">✕</button>
+    </div>
+    <div class="detail-stats">
+      <div class="box"><div class="l">ผลประเมิน</div><div class="v" style="color:${st.color}">${st.label}</div></div>
+      <div class="box"><div class="l">เป้าหมาย</div><div class="v">${r.target || '—'}</div></div>
+      <div class="box"><div class="l">เฉลี่ยรวม</div><div class="v">${valDisplay}</div></div>
+      <div class="box"><div class="l">ต่ำสุด / สูงสุด</div><div class="v">${min!==null?min:'—'} / ${max!==null?max:'—'}</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="detailCanvas" height="220"></canvas></div>
+    <div class="detail-owner">ผู้จัดทำข้อมูล: <b>${r.owner}</b></div>
+  `;
+  document.getElementById('closeBtn').addEventListener('click', closeDetail);
+  document.getElementById('overlay').classList.add('open');
+
+  const target = parseTarget(r.target);
+  const ctx = document.getElementById('detailCanvas');
+  if(detailChart) detailChart.destroy();
+  const color = st.color;
+  const datasets = [{
+    label:'ค่าที่วัดได้รายเดือน',
+    data: r.values,
+    borderColor: color,
+    backgroundColor: color+'22',
+    borderWidth:2.5,
+    pointRadius:4,
+    pointBackgroundColor: color,
+    tension:0.3,
+    spanGaps:true,
+    fill:true
+  }];
+  if(target){
+    datasets.push({
+      label:'เส้นเป้าหมาย ('+r.target+')',
+      data: MONTHS.map(()=>target.num),
+      borderColor:'#8A97A3',
+      borderDash:[6,5],
+      borderWidth:1.6,
+      pointRadius:0,
+      fill:false
+    });
+  }
+  detailChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels: MONTHS, datasets },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{ position:'bottom', labels:{ font:{family:"IBM Plex Sans Thai", size:12}, boxWidth:12 } },
+        tooltip:{ callbacks:{ label:(ctx)=> ctx.dataset.label + ': ' + (ctx.raw===null?'ไม่มีข้อมูล':ctx.raw) } }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{family:"IBM Plex Sans Thai", size:11.5}} },
+        y:{ grid:{color:'#E3EAE7'}, ticks:{font:{family:"IBM Plex Mono", size:11}} }
+      }
+    }
+  });
+}
+function closeDetail(){
+  document.getElementById('overlay').classList.remove('open');
+}
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id==='overlay') closeDetail();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDetail(); });
+
+// ---------- Search ----------
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim();
+  renderAll();
+});
+
+function renderAll(){
+  renderCatGrid();
+  renderChips();
+  renderQiGrid();
+  renderTable();
+}
+
+renderTableHead();
+renderAll();
+</script>
+
+
+</body></html>
