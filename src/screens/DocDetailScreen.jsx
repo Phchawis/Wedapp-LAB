@@ -494,8 +494,9 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {/* ตัวแสดงเอกสารย้ายไปอยู่เต็มความกว้างเหนือคอลัมน์ (ดูด้านบน) */}
 
-              {/* ไฟล์แนบอยู่บนสุด — เป็นสิ่งที่คนเข้ามาหน้านี้ต้องการเกือบทุกครั้ง
-                  ส่วนข้อมูลควบคุมเป็นข้อมูลอ้างอิงที่ดูเป็นครั้งคราว จึงย้ายลงไปท้ายสุด */}
+              {/* ข้อมูลควบคุมอยู่บนสุด — เป็นข้อมูลระบุตัวเอกสาร (รหัส ประเภท เวอร์ชัน สถานะ)
+                  ที่ควรอ่านก่อนเปิดไฟล์ จัดเป็นหลายคอลัมน์แล้วสูงแค่ 2 แถว เลื่อนผ่านไม่ลำบาก */}
+              <ControlCard doc={doc} typeObj={typeObj} catObj={catObj} reviewDue={reviewDueDate} />
 
               {/* Attachments — ไฟล์จริงที่อัปโหลด + ลิงก์ */}
               <Card padding="md" header={<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="Paperclip" size={16} color="var(--text-secondary)" /> ไฟล์แนบเอกสาร</span>}>
@@ -600,8 +601,6 @@ export function DocDetailScreen({ doc, role, onBack, onUpdate, onUpdateFile, onA
                   </div>
                 )}
               </Card>
-
-              <ControlCard doc={doc} typeObj={typeObj} catObj={catObj} reviewDue={reviewDueDate} />
             </div>
           )}
 
