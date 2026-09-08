@@ -102,11 +102,45 @@ export async function createPostgresStore() {
       const { rows } = await q('select * from app_users where lower(username) = lower($1)', [username.trim()]);
       if (!rows[0]) return null;
       const r = rows[0];
-      return { username: r.username, passwordHash: r.password_hash, name: r.name, role: r.role, cat: r.cat, createdAt: r.created_at, mustChangePassword: !!r.must_change_password };
+      return { username: r.username, passwordHash: r.password_hash, name: r.name, role: r.role, cat: r.cat, createdAt: r.created_at, mustChangePassword: !!r.must_change_password, email: r.email || '' };
     },
+    async getUserByEmail(email) {
+      const { rows } = await q("select * from app_users where email = $1 and email <> ''", [email]);
+      if (!rows[0]) return null;
+      const r = rows[0];
+      return { username: r.username, name: r.name, role: r.role, cat: r.cat, email: r.email || '' };
+    },
+
+    // ---- คำขอตั้งรหัสผ่านใหม่ ----
+    async createPasswordReset({ username, tokenHash, expiresAt, requestedIp }) {
+      await q(
+        'insert into password_resets (username, token_hash, expires_at, requested_ip) values ($1,$2,$3,$4)',
+        [username, tokenHash, expiresAt, requestedIp || null],
+      );
+    },
+    async getPasswordReset(tokenHash) {
+      const { rows } = await q('select * from password_resets where token_hash = $1', [tokenHash]);
+      if (!rows[0]) return null;
+      const r = rows[0];
+      return { id: r.id, username: r.username, expiresAt: r.expires_at, usedAt: r.used_at, requestedIp: r.requested_ip };
+    },
+    async countRecentResets(username, minutes) {
+      const { rows } = await q(
+        `select count(*)::int as n from password_resets
+          where username = $1 and created_at > now() - ($2 || ' minutes')::interval`,
+        [username, String(minutes)],
+      );
+      return rows[0].n;
+    },
+    // ตีตราใบที่ใช้ แล้วล้างใบที่ยังไม่ถูกใช้ของคนเดียวกันทิ้งในทีเดียว
+    async consumePasswordReset(id, username) {
+      await q('update password_resets set used_at = now() where id = $1', [id]);
+      await q('delete from password_resets where username = $1 and used_at is null', [username]);
+    },
+
     async listUsers() {
-      const { rows } = await q('select username, name, role, cat, created_at from app_users order by created_at');
-      return rows.map((r) => ({ username: r.username, name: r.name, role: r.role, cat: r.cat || null, createdAt: r.created_at }));
+      const { rows } = await q('select username, name, role, cat, created_at, email from app_users order by created_at');
+      return rows.map((r) => ({ username: r.username, name: r.name, role: r.role, cat: r.cat || null, createdAt: r.created_at, email: r.email || '' }));
     },
     async createUser(u) {
       const { rows } = await q(
@@ -127,6 +161,8 @@ export async function createPostgresStore() {
       if (patch.role != null) put('role', patch.role);
       if (patch.cat !== undefined) put('cat', patch.cat);
       if (patch.passwordHash != null) put('password_hash', patch.passwordHash);
+        if (patch.email != null) put('email', patch.email);
+        if (patch.mustChangePassword != null) put('must_change_password', patch.mustChangePassword);
       // เทียบ username แบบไม่สนตัวพิมพ์ ให้ตรงกับ getUserByUsername (กันแก้/ลบไม่โดนเพราะพิมพ์ต่างเคส)
       if (!sets.length) {
         const { rows } = await q('select username, name, role, cat, created_at from app_users where lower(username) = lower($1)', [username]);

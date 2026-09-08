@@ -82,6 +82,11 @@ export const api = {
     req('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } }),
   // เข้าสู่ระบบผ่านลิงก์จาก Masterlist ด้วย token อายุสั้นที่เซ็นมาแล้ว
   ssoLogin: (ssoToken) => req('/auth/sso', { method: 'POST', body: { token: ssoToken } }),
+  // ลืมรหัสผ่าน — ตั้งรหัสใหม่เองผ่านลิงก์ที่ส่งไปทางอีเมล
+  forgotPassword: (email) => req('/auth/forgot', { method: 'POST', body: { email } }),
+  checkResetToken: (token) => req(`/auth/reset/${encodeURIComponent(token)}`),
+  resetPassword: (token, password) => req('/auth/reset', { method: 'POST', body: { token, password } }),
+  updateMyEmail: (email) => req('/me/email', { method: 'PATCH', body: { email } }),
 
   listDocuments: () => req('/documents').then(normalizeDocs),
   getDocument: (no) => req('/documents/' + encodeURIComponent(no)).then(normalizeDoc),

@@ -5,6 +5,7 @@ import { can } from './auth/users.js';
 import { api, decodeToken, setToken } from './api.js';
 
 const LoginScreen = lazy(() => import('./screens/LoginScreen.jsx'));
+const ForgotScreen = lazy(() => import('./screens/ForgotScreen.jsx'));
 const AppShell = lazy(() => import('./screens/AppShell.jsx'));
 const DashboardScreen = lazy(() => import('./screens/DashboardScreen.jsx'));
 const RegisterScreen = lazy(() => import('./screens/RegisterScreen.jsx'));
@@ -42,6 +43,15 @@ export default function App() {
   // บัญชีที่ยังใช้รหัสผ่านชั่วคราว — ต้องตั้งรหัสใหม่ก่อนจึงใช้งานระบบได้
   const [mustChangePw, setMustChangePw] = useState(false);
   const [ssoError, setSsoError] = useState('');
+  // ลิงก์ตั้งรหัสใหม่จากอีเมลมาเป็น /?reset=<token> — ระบบนี้เป็นหน้าเดียว จึงอ่านจาก query
+  const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get('reset') || '');
+  const [forgot, setForgot] = useState(false);
+  const clearForgot = () => {
+    setForgot(false);
+    setResetToken('');
+    // ล้าง token ออกจากแถบที่อยู่ ไม่ให้ค้างอยู่ในประวัติเบราว์เซอร์หรือถูกแชร์ต่อโดยไม่ตั้งใจ
+    if (window.location.search) window.history.replaceState({}, '', window.location.pathname);
+  };
 
   const role = currentUser?.role;
   const canViewUsers = role && can(role, 'viewUsers');
@@ -121,10 +131,18 @@ export default function App() {
   if (booting) return <Loader text="กำลังโหลดระบบข้อมูล..." />;
 
   if (!currentUser) {
+    if (forgot || resetToken) {
+      return (
+        <Suspense fallback={<Loader text="กำลังเตรียมหน้าจอ..." />}>
+          <ForgotScreen resetToken={resetToken} onBack={clearForgot} onDone={clearForgot} />
+        </Suspense>
+      );
+    }
     return (
       <Suspense fallback={<Loader text="กำลังเตรียมหน้าจอ..." />}>
         <LoginScreen
           initialError={ssoError}
+          onForgot={() => setForgot(true)}
           onSubmit={async (username, password) => {
             const { token, user } = await api.login(username, password);
             setToken(token);

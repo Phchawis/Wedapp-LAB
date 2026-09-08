@@ -9,7 +9,7 @@ const seal = '/lab-seal.png';
    masthead panel (the hospital seal + system identity) beside a clean form.
    Restrained and institutional — no SaaS-hero gradient, glass, or coral fill.
    Authenticates against the API; session is cleared when the browser closes. */
-export function LoginScreen({ onSubmit, initialError = '' }) {
+export function LoginScreen({ onSubmit, initialError = '', onForgot }) {
   const [user, setUser] = useState('');
   const [pw, setPw] = useState('');
   const [error, setError] = useState(initialError);
@@ -113,8 +113,16 @@ export function LoginScreen({ onSubmit, initialError = '' }) {
               <Icon name="LogOut" size={14} color="var(--text-tertiary)" />
               ระบบจะออกจากระบบอัตโนมัติเมื่อปิดเบราว์เซอร์
             </div>
+            {/* เดิมบอกให้ติดต่อผู้ดูแลระบบทุกครั้ง ซึ่งกลายเป็นภาระของคนคนเดียว
+                ตอนนี้ตั้งรหัสใหม่เองได้ถ้ามีอีเมลอยู่ในระบบ */}
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-secondary)' }}>
-              ลืมรหัสผ่าน? <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>ติดต่อผู้ดูแลระบบ</span>
+              <button
+                type="button"
+                onClick={onForgot}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--brand-700)', textDecoration: 'underline', textUnderlineOffset: 3 }}
+              >
+                ลืมรหัสผ่าน?
+              </button>
             </div>
           </div>
         </div>

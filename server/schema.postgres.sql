@@ -24,6 +24,23 @@ create table if not exists app_users (
 -- เพิ่มคอลัมน์ให้ฐานข้อมูลที่สร้างไว้ก่อนหน้า (ปลอดภัยเมื่อรันซ้ำ)
 alter table app_users add column if not exists must_change_password boolean not null default false;
 
+-- อีเมลสำหรับส่งลิงก์ตั้งรหัสผ่านใหม่ (ว่างได้ = รีเซ็ตเองไม่ได้ ต้องให้ผู้ดูแลตั้งให้)
+alter table app_users add column if not exists email text not null default '';
+create unique index if not exists app_users_email_key on app_users (email) where email <> '';
+
+-- คำขอตั้งรหัสผ่านใหม่ — เก็บเฉพาะค่าแฮชของ token ไม่เก็บตัวจริง
+-- ถ้าฐานข้อมูลรั่ว คนอ่านก็เอา token ไปใช้ไม่ได้
+create table if not exists password_resets (
+  id           uuid primary key default gen_random_uuid(),
+  username     text not null references app_users(username) on delete cascade on update cascade,
+  token_hash   text not null unique,
+  created_at   timestamptz not null default now(),
+  expires_at   timestamptz not null,
+  used_at      timestamptz,
+  requested_ip text
+);
+create index if not exists password_resets_user_idx on password_resets (username, created_at desc);
+
 -- เอกสารคุณภาพ
 create table if not exists documents (
   no         text primary key,

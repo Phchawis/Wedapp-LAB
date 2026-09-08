@@ -45,7 +45,33 @@ export const lowdbStore = {
     return db.data.users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase()) || null;
   },
   async listUsers() {
-    return db.data.users.map((u) => ({ username: u.username, name: u.name, role: u.role, cat: u.cat || null, createdAt: u.createdAt }));
+    return db.data.users.map((u) => ({ username: u.username, name: u.name, role: u.role, cat: u.cat || null, createdAt: u.createdAt, email: u.email || '' }));
+  },
+  async getUserByEmail(email) {
+    if (!email) return null;
+    return db.data.users.find((u) => (u.email || '') === email) || null;
+  },
+
+  /* คำขอตั้งรหัสผ่านใหม่ — ที่เก็บสำรองนี้ใช้เฉพาะตอนไม่มีฐานข้อมูล (พัฒนา/ทดสอบ)
+     โครงสร้างให้ตรงกับฝั่ง PostgreSQL จะได้สลับที่เก็บแล้วโค้ดเรียกใช้เหมือนกัน */
+  async createPasswordReset({ username, tokenHash, expiresAt, requestedIp }) {
+    db.data.passwordResets ||= [];
+    db.data.passwordResets.push({ id: newId(), username, tokenHash, expiresAt, requestedIp: requestedIp || null, createdAt: new Date().toISOString(), usedAt: null });
+    await db.write();
+  },
+  async getPasswordReset(tokenHash) {
+    return (db.data.passwordResets || []).find((r) => r.tokenHash === tokenHash) || null;
+  },
+  async countRecentResets(username, minutes) {
+    const since = Date.now() - minutes * 60000;
+    return (db.data.passwordResets || []).filter((r) => r.username === username && new Date(r.createdAt).getTime() > since).length;
+  },
+  async consumePasswordReset(id, username) {
+    const list = db.data.passwordResets || [];
+    const row = list.find((r) => r.id === id);
+    if (row) row.usedAt = new Date().toISOString();
+    db.data.passwordResets = list.filter((r) => r.usedAt || r.username !== username);
+    await db.write();
   },
   async createUser(u) {
     const row = { ...u, createdAt: new Date().toISOString() };

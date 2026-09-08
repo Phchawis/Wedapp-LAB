@@ -14,6 +14,8 @@ import { store } from './store.js';
 import { newId, kindFromFile } from './seed.js';
 import { ROLE_ORDER, can } from '../src/auth/roles.js';
 import { ALLOWED_EXT_SET, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL, UNSUPPORTED_MSG } from '../src/data/file-types.js';
+import crypto from 'node:crypto';
+import { sendMail, resetMail, cleanEmail, isValidEmail } from './mailer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // dev: ใช้ QMS_API_PORT (เลี่ยงชน vite); production (โฮสต์): ใช้ PORT ที่โฮสต์กำหนด
@@ -424,9 +426,91 @@ app.patch('/api/users/:username', authMw, requirePerm('manage'), wrap(async (req
     patch.role = role;
   }
   if (cat !== undefined) patch.cat = cat.trim() || null;
+  if (req.body.email !== undefined) {
+    const em = cleanEmail(req.body.email);
+    if (em && !isValidEmail(em)) return res.status(400).json({ error: 'รูปแบบอีเมลไม่ถูกต้อง' });
+    // อีเมลซ้ำจะทำให้ลิงก์ตั้งรหัสใหม่ไปโผล่ผิดคน จึงห้ามซ้ำเช่นเดียวกับชื่อผู้ใช้
+    if (em) {
+      const dup = await store.getUserByEmail(em);
+      if (dup && dup.username.toLowerCase() !== req.params.username.toLowerCase()) {
+        return res.status(409).json({ error: 'อีเมลนี้ถูกใช้กับบัญชีอื่นแล้ว' });
+      }
+    }
+    patch.email = em;
+  }
   const updated = await store.updateUser(req.params.username, patch);
   await logAction(req.user, 'user:edit', patch.username || req.params.username);
   res.json(updated);
+}));
+
+/* อีเมลของตัวเอง — ให้เจ้าตัวแก้เองได้ ไม่ต้องผ่านผู้ดูแล
+   เพราะอีเมลที่นำเข้ามาจากทะเบียนบุคลากรมีทั้งที่ผิดและที่ยังไม่มี
+   ถ้าต้องรอผู้ดูแลกรอกให้ทีละคนก็กลับไปเป็นปัญหาเดิม */
+app.patch('/api/me/email', authMw, wrap(async (req, res) => {
+  const em = cleanEmail(req.body.email);
+  if (em && !isValidEmail(em)) return res.status(400).json({ error: 'รูปแบบอีเมลไม่ถูกต้อง' });
+  if (em) {
+    const dup = await store.getUserByEmail(em);
+    if (dup && dup.username.toLowerCase() !== req.user.username.toLowerCase()) {
+      return res.status(409).json({ error: 'อีเมลนี้ถูกใช้กับบัญชีอื่นแล้ว' });
+    }
+  }
+  await store.updateUser(req.user.username, { email: em });
+  await logAction(req.user, 'user:email', req.user.username);
+  res.json({ email: em });
+}));
+
+const RESET_TTL_MIN = 30;
+const RESET_MAX_PER_HOUR = 5; // กันยิงซ้ำจนกินโควตาผู้ให้บริการอีเมล
+const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex');
+
+/* ขอลิงก์ตั้งรหัสผ่านใหม่
+   ตอบข้อความเดียวกันเสมอไม่ว่าอีเมลจะมีในระบบหรือไม่ — ถ้าตอบต่างกัน
+   คนนอกจะไล่เดาได้ว่าใครมีบัญชีในระบบบ้าง */
+app.post('/api/auth/forgot', wrap(async (req, res) => {
+  const em = cleanEmail(req.body.email);
+  if (!em) return res.status(400).json({ error: 'กรุณากรอกอีเมล' });
+  const user = isValidEmail(em) ? await store.getUserByEmail(em) : null;
+  if (user) {
+    const recent = await store.countRecentResets(user.username, 60);
+    if (recent < RESET_MAX_PER_HOUR) {
+      const token = crypto.randomBytes(32).toString('base64url');
+      await store.createPasswordReset({
+        username: user.username,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + RESET_TTL_MIN * 60000).toISOString(),
+        requestedIp: (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || '',
+      });
+      const base = process.env.APP_BASE_URL || 'https://labqms.duckdns.org';
+      const mail = resetMail(user.name, `${base}/?reset=${token}`, RESET_TTL_MIN);
+      await sendMail(em, mail.subject, mail.text, mail.html);
+    }
+  }
+  res.json({ ok: true });
+}));
+
+/** ตรวจว่า token ยังใช้ได้ ก่อนแสดงฟอร์ม — จะได้ไม่ให้พิมพ์รหัสเสียเปล่า */
+app.get('/api/auth/reset/:token', wrap(async (req, res) => {
+  const row = await store.getPasswordReset(hashToken(req.params.token));
+  res.json({ valid: Boolean(row && !row.usedAt && new Date(row.expiresAt) > new Date()) });
+}));
+
+app.post('/api/auth/reset', wrap(async (req, res) => {
+  const { token = '', password = '' } = req.body;
+  if (password.length < 8) return res.status(400).json({ error: 'รหัสผ่านใหม่ต้องยาวอย่างน้อย 8 ตัวอักษร' });
+  const row = token ? await store.getPasswordReset(hashToken(token)) : null;
+  if (!row || row.usedAt || new Date(row.expiresAt) <= new Date()) {
+    return res.status(400).json({ error: 'ลิงก์นี้หมดอายุหรือถูกใช้ไปแล้ว กรุณาขอลิงก์ใหม่' });
+  }
+  const user = await store.getUserByUsername(row.username);
+  if (!user) return res.status(400).json({ error: 'ไม่พบบัญชีผู้ใช้' });
+
+  // ตั้งรหัสเองแล้ว จึงไม่ต้องบังคับเปลี่ยนซ้ำตอนเข้าระบบ
+  await store.updateUser(user.username, { passwordHash: bcrypt.hashSync(password, 10), mustChangePassword: false });
+  // ตีตราใบที่ใช้ และล้างใบที่เหลือของคนนั้น — เคยกดขอหลายครั้ง ใบเก่าต้องใช้ไม่ได้ทันที
+  await store.consumePasswordReset(row.id, row.username);
+  await logAction({ username: user.username, name: user.name }, 'user:reset-self', user.username);
+  res.json({ ok: true });
 }));
 
 app.post('/api/users/:username/reset-password', authMw, requirePerm('manage'), wrap(async (req, res) => {
