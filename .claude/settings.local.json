@@ -429,7 +429,29 @@
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/stor.sql root@188.166.181.243:/tmp/)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/paths.sql root@188.166.181.243:/tmp/)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/sz.sql root@188.166.181.243:/tmp/)",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/fu.sql root@188.166.181.243:/tmp/)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/fu.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/find.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/find2.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/alg.sql /tmp/alg2.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/chk.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/mkuser.mjs root@188.166.181.243:/tmp/mkuser.mjs)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/verify.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/promote.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/final.sql root@188.166.181.243:/tmp/)",
+      "Bash(mkdir -p /tmp/vendor)",
+      "Bash(curl -sSL -o chart.umd.min.js \"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js\")",
+      "Bash(curl -sSL -o tailwind.js \"https://cdn.tailwindcss.com\")",
+      "Bash(curl -sSL -o fa.css \"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css\")",
+      "Bash(mkdir -p public/kpi-reports/vendor)",
+      "Bash(cp -R /tmp/vendor/css /tmp/vendor/webfonts /tmp/vendor/chart.umd.min.js /tmp/vendor/tailwind.js public/kpi-reports/vendor/)",
+      "Bash(python3 /tmp/localise.py /kpi-reports/vendor public/kpi-reports/*.html)",
+      "Bash(mkdir -p server/kpi-reports/vendor)",
+      "Bash(cp -R /tmp/vendor/css /tmp/vendor/webfonts /tmp/vendor/chart.umd.min.js /tmp/vendor/tailwind.js server/kpi-reports/vendor/)",
+      "Bash(python3 /tmp/localise.py /api/kpi/report-asset server/kpi-reports/*.html)",
+      "Bash(rm -rf server/kpi-reports/vendor)",
+      "Bash(cp ~/Downloads/MT_Satisfaction_Dashboard_online.html server/kpi-reports/satisfaction-2569.html)",
+      "Bash(mkdir -p public/kpi-vendor)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qi.sql root@188.166.181.243:/tmp/)"
     ]
   }
 }
