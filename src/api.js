@@ -103,6 +103,26 @@ export const api = {
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   },
 
+  // แดชบอร์ดที่อัปโหลด — ข้อมูลอยู่ที่ระบบทะเบียนกลาง ที่นี่เรียกผ่านเซิร์ฟเวอร์ของตัวเอง
+  listKpiDashboards: () => req('/kpi/dashboards'),
+  uploadKpiDashboard: async (formData) => {
+    const res = await fetch('/api/kpi/dashboards', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: formData,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'อัปโหลดไม่สำเร็จ');
+    return data;
+  },
+  /* เปิดแดชบอร์ดที่อัปโหลด — ต้องเปิดเป็น URL จริง ไม่ใช่ blob
+     เพราะ blob จะได้ origin เดียวกับแอปแล้ว header sandbox หลุด
+     ขอตั๋วอายุสั้นก่อนเพราะแท็บใหม่ไม่ส่ง Authorization header ไปด้วย */
+  openKpiDashboard: async (id) => {
+    const { ticket } = await req(`/kpi/dashboards/${encodeURIComponent(id)}/ticket`, { method: 'POST' });
+    window.open(`/api/kpi/dashboards/${encodeURIComponent(id)}/view?t=${encodeURIComponent(ticket)}`, '_blank', 'noopener');
+  },
+
   openKpiReport: async (name) => {
     const token = getToken();
     const res = await fetch(`/api/kpi/report/${encodeURIComponent(name)}`, {

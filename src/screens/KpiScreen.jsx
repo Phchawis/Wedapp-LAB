@@ -105,10 +105,42 @@ const REPORTS = [
   { name: 'satisfaction-2569', code: 'พึงพอใจ', title: 'ความพึงพอใจผู้ใช้บริการ', note: 'แดชบอร์ดความพึงพอใจต่อห้องปฏิบัติการ', year: 'ปีงบ 2568–2569' },
 ];
 
-function ReportCards() {
+const INPUT_SM = {
+  width: '100%', padding: '9px 11px', borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--slate-300)', font: 'var(--text-sm)/1.4 var(--font-body)',
+  color: 'var(--text-primary)', background: 'var(--white)',
+};
+const LABEL_SM = { display: 'flex', flexDirection: 'column', gap: 6, font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-secondary)' };
+
+function ReportCards({ canEdit }) {
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const [tmplBusy, setTmplBusy] = useState(false);
+  const [uploaded, setUploaded] = useState([]);
+  const [showUp, setShowUp] = useState(false);
+  const [upBusy, setUpBusy] = useState(false);
+  const [upMsg, setUpMsg] = useState(null);
+
+  // รายการแดชบอร์ดที่อัปโหลด ดึงจากระบบทะเบียนกลางซึ่งเป็นเจ้าของข้อมูล
+  const loadUploaded = () => {
+    api.listKpiDashboards()
+      .then((d) => setUploaded(d.reports || []))
+      .catch(() => setUploaded([]));
+  };
+  useEffect(loadUploaded, []);
+
+  const submitUpload = async (e) => {
+    e.preventDefault();
+    setUpBusy(true); setUpMsg(null);
+    try {
+      await api.uploadKpiDashboard(new FormData(e.target));
+      e.target.reset();
+      setUpMsg({ ok: true, text: 'อัปโหลดแล้ว — การ์ดใหม่จะขึ้นในรายการด้านบน' });
+      loadUploaded();
+    } catch (ex) {
+      setUpMsg({ ok: false, text: ex.message || 'อัปโหลดไม่สำเร็จ' });
+    } finally { setUpBusy(false); }
+  };
 
   const downloadTemplate = async () => {
     setTmplBusy(true); setErr('');
@@ -117,10 +149,14 @@ function ReportCards() {
     finally { setTmplBusy(false); }
   };
 
-  const open = async (name) => {
+  const open = async (name, isUploaded = false) => {
     setBusy(name); setErr('');
-    try { await api.openKpiReport(name); }
-    catch (e) { setErr(e.message || 'เปิดรายงานไม่สำเร็จ'); }
+    try {
+      // ไฟล์ที่ผู้ใช้อัปโหลดต้องเปิดเป็น URL จริงเพื่อให้ header sandbox ติดไปด้วย
+      // ส่วนรายงานที่ติดมากับระบบเป็นไฟล์ที่เราวางเอง เปิดเป็น blob ได้ตามเดิม
+      if (isUploaded) await api.openKpiDashboard(name);
+      else await api.openKpiReport(name);
+    } catch (e) { setErr(e.message || 'เปิดรายงานไม่สำเร็จ'); }
     finally { setBusy(''); }
   };
 
@@ -162,6 +198,27 @@ function ReportCards() {
           </button>
         ))}
       </div>
+      {uploaded.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginTop: 14 }}>
+          {uploaded.map((r) => (
+            <button key={r.id} type="button" onClick={() => open(r.id, true)} disabled={busy === r.id}
+              style={{
+                textAlign: 'left', cursor: busy === r.id ? 'progress' : 'pointer',
+                padding: '15px 16px', borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-subtle)', background: 'var(--surface-card)',
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
+                <span style={{ font: 'var(--fw-bold) var(--text-2xs)/1 var(--font-mono)', color: 'var(--brand-700)', padding: '4px 8px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)' }}>{r.code}</span>
+                {r.yearLabel && <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{r.yearLabel}</span>}
+                <span style={{ marginLeft: 'auto', font: 'var(--text-xs)/1 var(--font-mono)', color: 'var(--text-tertiary)' }}>{busy === r.id ? 'กำลังเปิด…' : '↗'}</span>
+              </div>
+              <div style={{ font: 'var(--fw-semibold) var(--text-sm)/1.4 var(--font-body)', color: 'var(--text-primary)', marginBottom: 5 }}>{r.title}</div>
+              {r.note && <div style={{ font: 'var(--text-xs)/1.6 var(--font-body)', color: 'var(--text-secondary)' }}>{r.note}</div>}
+            </button>
+          ))}
+        </div>
+      )}
+
       {err && <div style={{ marginTop: 12 }}><Alert tone="danger">{err}</Alert></div>}
 
       {/* แบบฟอร์มกรอกผล — สร้างสดจากรายการตัวชี้วัดในระบบทุกครั้ง ไม่ใช่ไฟล์นิ่ง
@@ -185,6 +242,37 @@ function ReportCards() {
           ไฟล์ Excel มีรายชื่อตัวชี้วัดและช่อง 12 เดือนให้กรอก พร้อมกฎกันกรอกร้อยละผิดเป็นเศษส่วน
         </div>
       </div>
+
+      {/* อัปโหลดแดชบอร์ด — เฉพาะผู้มีสิทธิ์ประกาศใช้ (หัวหน้างาน/ผู้ดูแลระบบ)
+          เพราะไฟล์ HTML รันสคริปต์ได้ ต่างจากไฟล์แนบเอกสารทั่วไป */}
+      {canEdit && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-subtle)' }}>
+          <button type="button" onClick={() => setShowUp((v) => !v)}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--brand-700)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+            {showUp ? 'ปิดการอัปโหลด' : '+ อัปโหลดแดชบอร์ดใหม่'}
+          </button>
+
+          {showUp && (
+            <form onSubmit={submitUpload} style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, alignItems: 'end' }}>
+              <label style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 6, font: 'var(--fw-medium) var(--text-sm)/1.3 var(--font-body)', color: 'var(--text-secondary)' }}>
+                ไฟล์แดชบอร์ด (.html เท่านั้น · ไม่เกิน 10MB)
+                <input name="file" type="file" accept=".html,text/html" required style={{ ...INPUT_SM, padding: '9px 11px' }} />
+              </label>
+              <label style={LABEL_SM}>ชื่อรายงาน<input name="title" required placeholder="เช่น งานเคมีคลินิก" style={INPUT_SM} /></label>
+              <label style={LABEL_SM}>ป้ายสั้น<input name="code" maxLength={12} placeholder="เช่น CHE" style={INPUT_SM} /></label>
+              <label style={LABEL_SM}>ช่วงปี<input name="yearLabel" placeholder="เช่น ปีงบ 2569" style={INPUT_SM} /></label>
+              <label style={{ gridColumn: '1 / -1', ...LABEL_SM }}>คำอธิบายสั้น<input name="note" placeholder="อธิบายว่ารายงานนี้คืออะไร" style={INPUT_SM} /></label>
+              {upMsg && <div style={{ gridColumn: '1 / -1' }}><Alert tone={upMsg.ok ? 'success' : 'danger'}>{upMsg.text}</Alert></div>}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <Button type="submit" disabled={upBusy}>{upBusy ? 'กำลังอัปโหลด…' : 'อัปโหลดแดชบอร์ด'}</Button>
+              </div>
+              <p style={{ gridColumn: '1 / -1', font: 'var(--text-xs)/1.7 var(--font-body)', color: 'var(--text-tertiary)', margin: 0 }}>
+                ไฟล์จะถูกเปิดแบบจำกัดสิทธิ์ (sandbox) — กราฟและหน้าตาทำงานได้ตามปกติ แต่แตะข้อมูลผู้ใช้ในระบบไม่ได้
+              </p>
+            </form>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
@@ -330,7 +418,7 @@ export function KpiScreen() {
         </p>
       </div>
 
-      <ReportCards />
+      <ReportCards canEdit={canEdit} />
 
       <div style={{ display: 'flex', gap: '10px 24px', flexWrap: 'wrap', alignItems: 'center' }}>
         {[

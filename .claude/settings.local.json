@@ -452,7 +452,9 @@
       "Bash(cp ~/Downloads/MT_Satisfaction_Dashboard_online.html server/kpi-reports/satisfaction-2569.html)",
       "Bash(mkdir -p public/kpi-vendor)",
       "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/qi.sql root@188.166.181.243:/tmp/)",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/yr.sql root@188.166.181.243:/tmp/)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/yr.sql root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q /tmp/ml_up.tgz root@188.166.181.243:/tmp/)",
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q prisma/migrations/20260909000000_kpi_report_upload/migration.sql root@188.166.181.243:/tmp/mig3.sql)"
     ]
   }
 }

@@ -50,6 +50,19 @@ const upload = multer({
   },
 });
 
+/* ตัวรับไฟล์แยกสำหรับแดชบอร์ด — ตัวหลักไม่รับ .html โดยตั้งใจ
+   เพราะไฟล์แนบเอกสารทั่วไปไม่ควรเป็นไฟล์ที่รันสคริปต์ได้
+   ที่นี่รับได้เพราะจำกัดสิทธิ์ไว้แล้วและเสิร์ฟแบบ sandbox เท่านั้น */
+const uploadDashboard = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const name = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    if (/\.html?$/i.test(name)) return cb(null, true);
+    cb(new Error('รับเฉพาะไฟล์ .html เท่านั้น'));
+  },
+});
+
 const logAction = (actor, action, target = '') =>
   store.addLog({ id: newId(), ts: new Date().toISOString(), username: actor.username, name: actor.name, role: actor.role, action, target, detail: '' });
 
@@ -584,6 +597,70 @@ const KPI_REPORTS = {
 };
 /* แบบฟอร์ม Excel กรอกผลรายเดือน — ดึงจากระบบทะเบียนเอกสารกลางที่เป็นเจ้าของข้อมูล
    ไม่สร้างเองที่นี่ เพราะรายการตัวชี้วัดอยู่ที่นั่น ถ้าทำสองที่จะเพี้ยนกันเมื่อมีการแก้ */
+/* แดชบอร์ดที่เจ้าหน้าที่อัปโหลด — ข้อมูลอยู่ที่ระบบทะเบียนเอกสารกลาง ที่นี่เป็นทางผ่าน
+
+   ต่างจากรายงานที่ติดมากับระบบตรงที่ไฟล์พวกนี้ผู้ใช้อัปโหลดเอง จึงต้องเสิร์ฟแบบ sandbox
+   และ "ห้าม" เปิดเป็น blob แบบรายงานอื่น เพราะ blob จะได้ origin เดียวกับแอป
+   ทำให้ header sandbox หลุดและสคริปต์ในไฟล์อ่านข้อมูลผู้ใช้ได้
+   จึงให้เปิดเป็น URL จริงพร้อมตั๋วอายุสั้นแทน — header จะติดไปกับ response ตามที่ตั้งใจ */
+const dashUpstream = (path, init = {}) => {
+  if (!MASTERLIST_URL || !process.env.SSO_SHARED_SECRET) {
+    const e = new Error('ยังไม่ได้เชื่อมต่อกับระบบทะเบียนเอกสารกลาง'); e.status = 503; throw e;
+  }
+  return fetch(`${MASTERLIST_URL}${path}`, {
+    ...init,
+    headers: { 'x-internal-key': process.env.SSO_SHARED_SECRET, ...(init.headers || {}) },
+    signal: AbortSignal.timeout(30000),
+  });
+};
+
+app.get('/api/kpi/dashboards', authMw, wrap(async (req, res) => {
+  const up = await dashUpstream('/api/kpi/dashboard');
+  if (!up.ok) return res.status(up.status).json({ error: 'ดึงรายการแดชบอร์ดไม่สำเร็จ' });
+  res.json(await up.json());
+}));
+
+// ตั๋วอายุสั้นสำหรับเปิดแดชบอร์ดในแท็บใหม่ (แท็บใหม่ไม่ส่ง Authorization header ไปด้วย)
+app.post('/api/kpi/dashboards/:id/ticket', authMw, wrap(async (req, res) => {
+  const ticket = jwt.sign({ dash: req.params.id, u: req.user.username }, JWT_SECRET, { expiresIn: '60s' });
+  res.json({ ticket });
+}));
+
+app.get('/api/kpi/dashboards/:id/view', wrap(async (req, res) => {
+  let payload;
+  try { payload = jwt.verify(String(req.query.t || ''), JWT_SECRET); }
+  catch { return res.status(401).send('ลิงก์หมดอายุ กรุณาเปิดใหม่จากหน้าตัวชี้วัด'); }
+  if (payload.dash !== req.params.id) return res.status(403).send('ตั๋วไม่ตรงกับรายงาน');
+
+  const up = await dashUpstream(`/api/kpi/dashboard/${encodeURIComponent(req.params.id)}`);
+  if (!up.ok) return res.status(up.status).send('ไม่พบรายงาน');
+  const body = Buffer.from(await up.arrayBuffer());
+  // sandbox: ให้กราฟทำงานได้ แต่จับไปอยู่คนละ origin แตะคุกกี้/ข้อมูลระบบไม่ได้
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Security-Policy', 'sandbox allow-scripts allow-popups');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.send(body);
+}));
+
+app.post('/api/kpi/dashboards', authMw, requirePerm('publish'), uploadDashboard.single('file'), wrap(async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'กรุณาเลือกไฟล์' });
+  const name = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+  if (!/\.html?$/i.test(name)) return res.status(400).json({ error: 'รับเฉพาะไฟล์ .html เท่านั้น' });
+
+  const fd = new FormData();
+  fd.append('file', new Blob([req.file.buffer], { type: 'text/html' }), name);
+  for (const k of ['title', 'code', 'note', 'yearLabel']) {
+    if (req.body[k]) fd.append(k, req.body[k]);
+  }
+  fd.append('uploadedBy', req.user.name || req.user.username);
+
+  const up = await dashUpstream('/api/kpi/dashboard', { method: 'POST', body: fd });
+  const data = await up.json().catch(() => ({}));
+  if (!up.ok) return res.status(up.status).json({ error: data.error || 'อัปโหลดไม่สำเร็จ' });
+  await logAction(req.user, 'kpi:dashboard-upload', data.id || '');
+  res.json(data);
+}));
+
 app.get('/api/kpi/template', authMw, wrap(async (req, res) => {
   const year = Number(req.query.year) || 2569;
   // เรียกเองไม่ผ่าน callMasterlist เพราะตัวนั้นแปลงเป็น JSON ให้ ซึ่งใช้กับไฟล์ไม่ได้
