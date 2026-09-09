@@ -91,6 +91,18 @@ export const api = {
   /* ดึงรายงานตัวชี้วัดฉบับเต็มมาเปิดในแท็บใหม่
      ต้องดึงผ่าน fetch เพราะ token อยู่ในหัว Authorization ไม่ใช่คุกกี้ —
      ลิงก์ <a href> ธรรมดาจะไม่ติด token ไปด้วยแล้วโดนปฏิเสธ 401 */
+  // แบบฟอร์ม Excel กรอกผลรายเดือน — ต้องใช้ fetch เพราะ token อยู่ในหัว Authorization
+  downloadKpiTemplate: async (year = 2569) => {
+    const res = await fetch(`/api/kpi/template?year=${year}`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!res.ok) throw new Error('ดาวน์โหลดแบบฟอร์มไม่สำเร็จ');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = `KPI-Template-${year}.xlsx`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  },
+
   openKpiReport: async (name) => {
     const token = getToken();
     const res = await fetch(`/api/kpi/report/${encodeURIComponent(name)}`, {

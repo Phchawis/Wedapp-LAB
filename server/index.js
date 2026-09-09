@@ -582,6 +582,25 @@ const KPI_REPORTS = {
   'summary-2569': 'summary-2569.html',
   'satisfaction-2569': 'satisfaction-2569.html',
 };
+/* แบบฟอร์ม Excel กรอกผลรายเดือน — ดึงจากระบบทะเบียนเอกสารกลางที่เป็นเจ้าของข้อมูล
+   ไม่สร้างเองที่นี่ เพราะรายการตัวชี้วัดอยู่ที่นั่น ถ้าทำสองที่จะเพี้ยนกันเมื่อมีการแก้ */
+app.get('/api/kpi/template', authMw, wrap(async (req, res) => {
+  const year = Number(req.query.year) || 2569;
+  // เรียกเองไม่ผ่าน callMasterlist เพราะตัวนั้นแปลงเป็น JSON ให้ ซึ่งใช้กับไฟล์ไม่ได้
+  if (!MASTERLIST_URL || !process.env.SSO_SHARED_SECRET) {
+    return res.status(503).json({ error: 'ยังไม่ได้เชื่อมต่อกับระบบทะเบียนเอกสารกลาง' });
+  }
+  const upstream = await fetch(
+    `${MASTERLIST_URL}/api/kpi/template?year=${year}&work=${KPI_WORK}`,
+    { headers: { 'x-internal-key': process.env.SSO_SHARED_SECRET }, signal: AbortSignal.timeout(20000) },
+  );
+  if (!upstream.ok) return res.status(upstream.status).json({ error: 'ดึงแบบฟอร์มไม่สำเร็จ' });
+  const buf = Buffer.from(await upstream.arrayBuffer());
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(`KPI-Template-${year}.xlsx`)}`);
+  res.send(buf);
+}));
+
 app.get('/api/kpi/report/:name', authMw, wrap(async (req, res) => {
   const file = KPI_REPORTS[req.params.name];
   if (!file) return res.status(404).json({ error: 'ไม่พบรายงาน' });
