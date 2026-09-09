@@ -115,7 +115,6 @@ const LABEL_SM = { display: 'flex', flexDirection: 'column', gap: 6, font: 'var(
 function ReportCards({ canEdit }) {
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
-  const [tmplBusy, setTmplBusy] = useState(false);
   const [uploaded, setUploaded] = useState([]);
   const [showUp, setShowUp] = useState(false);
   const [upBusy, setUpBusy] = useState(false);
@@ -142,12 +141,6 @@ function ReportCards({ canEdit }) {
     } finally { setUpBusy(false); }
   };
 
-  const downloadTemplate = async () => {
-    setTmplBusy(true); setErr('');
-    try { await api.downloadKpiTemplate(); }
-    catch (e) { setErr(e.message || 'ดาวน์โหลดแบบฟอร์มไม่สำเร็จ'); }
-    finally { setTmplBusy(false); }
-  };
 
   const open = async (name, isUploaded = false) => {
     setBusy(name); setErr('');
@@ -221,28 +214,6 @@ function ReportCards({ canEdit }) {
 
       {err && <div style={{ marginTop: 12 }}><Alert tone="danger">{err}</Alert></div>}
 
-      {/* แบบฟอร์มกรอกผล — สร้างสดจากรายการตัวชี้วัดในระบบทุกครั้ง ไม่ใช่ไฟล์นิ่ง
-          ถ้าเพิ่มหรือแก้ตัวชี้วัด แบบฟอร์มที่โหลดได้จะตรงกันเสมอ */}
-      <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
-        <button
-          type="button"
-          onClick={downloadTemplate}
-          disabled={tmplBusy}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 9, cursor: tmplBusy ? 'progress' : 'pointer',
-            padding: '10px 16px', borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-default, var(--slate-300))', background: 'var(--white)',
-            font: 'var(--fw-medium) var(--text-sm)/1 var(--font-body)', color: 'var(--text-primary)',
-          }}
-        >
-          <Icon name="Download" size={16} color="var(--brand-700)" />
-          {tmplBusy ? 'กำลังสร้างแบบฟอร์ม…' : 'ดาวน์โหลดแบบฟอร์มกรอกผล (Excel)'}
-        </button>
-        <div style={{ font: 'var(--text-xs)/1.6 var(--font-body)', color: 'var(--text-tertiary)', marginTop: 8 }}>
-          ไฟล์ Excel มีรายชื่อตัวชี้วัดและช่อง 12 เดือนให้กรอก พร้อมกฎกันกรอกร้อยละผิดเป็นเศษส่วน
-        </div>
-      </div>
-
       {/* อัปโหลดแดชบอร์ด — เฉพาะผู้มีสิทธิ์ประกาศใช้ (หัวหน้างาน/ผู้ดูแลระบบ)
           เพราะไฟล์ HTML รันสคริปต์ได้ ต่างจากไฟล์แนบเอกสารทั่วไป */}
       {canEdit && (
@@ -286,6 +257,14 @@ export function KpiScreen() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState('');
   const [open, setOpen] = useState(null); // แถวที่กางกราฟอยู่
+  const [tmplBusy, setTmplBusy] = useState(false);
+
+  const downloadTemplate = async () => {
+    setTmplBusy(true); setError('');
+    try { await api.downloadKpiTemplate(); }
+    catch (e) { setError(e.message || 'ดาวน์โหลดแบบฟอร์มไม่สำเร็จ'); }
+    finally { setTmplBusy(false); }
+  };
 
   const load = async (year) => {
     setLoading(true);
@@ -620,6 +599,24 @@ export function KpiScreen() {
             {blocking && <span style={{ font: 'var(--type-caption)', color: 'var(--red-700)' }}>แก้ค่าที่ผิดรูปแบบก่อนจึงจะบันทึกได้</span>}
             {saved && <span style={{ font: 'var(--type-caption)', color: PASS }}>{saved}</span>}
             {error && <span style={{ font: 'var(--type-caption)', color: 'var(--red-700)' }}>{error}</span>}
+
+            {/* แบบฟอร์ม Excel อยู่ข้างปุ่มบันทึก ไม่ไปรวมกับกรอบแดชบอร์ด
+                เพราะเป็นของที่ "โหลดไปกรอก" คนละเรื่องกับ "รายงานให้อ่าน" */}
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              disabled={tmplBusy}
+              title="ไฟล์ Excel มีรายชื่อตัวชี้วัดและช่อง 12 เดือน พร้อมกฎกันกรอกร้อยละผิดเป็นเศษส่วน"
+              style={{
+                marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,
+                cursor: tmplBusy ? 'progress' : 'pointer', padding: '9px 14px',
+                borderRadius: 'var(--radius-md)', border: '1px solid var(--slate-300)',
+                background: 'var(--white)', font: 'var(--text-sm)/1 var(--font-body)', color: 'var(--text-secondary)',
+              }}
+            >
+              <Icon name="Download" size={15} color="var(--brand-700)" />
+              {tmplBusy ? 'กำลังสร้าง…' : 'แบบฟอร์ม Excel'}
+            </button>
           </div>
         )}
       </Card>
