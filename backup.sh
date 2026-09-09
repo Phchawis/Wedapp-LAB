@@ -2,100 +2,132 @@
 # ════════════════════════════════════════════════════════════════
 # TUH Lab QMS — สำรองข้อมูลรายวัน (ฐานข้อมูล + ไฟล์แนบ)
 #
-# เก็บไว้บน VPS 30 วัน และอัปโหลดขึ้น Google Drive ชุดเดียวกับ Masterlist
-# ติดตั้งเป็น cron:  15 0 * * * /opt/labqms/backup.sh >> /var/log/labqms-backup.log 2>&1
+# cron:  15 0 * * * /opt/labqms/backup.sh >> /var/log/labqms-backup.log 2>&1
+#
+# แนวคิด (เปลี่ยนจากเดิมเมื่อ ก.ย. 2569):
+#
+#   เดิมทำสำเนา "ทั้งก้อน" ทุกคืนแล้วเก็บ 30 ชุด ซึ่งคัดลอกไฟล์เดิมซ้ำ 30 รอบ
+#   โดยไม่ได้ประโยชน์ — ไฟล์แนบ 340MB กลายเป็น 10GB บน Drive ภายในเดือนเดียว
+#   และเกินเพดาน Apps Script จนไม่เคยขึ้นไปถึง Drive เลย
+#
+#   ตอนนี้แยกตามธรรมชาติของข้อมูล:
+#     ฐานข้อมูล  เล็กมาก (50KB) → เก็บหลายจุดแบบปู่-พ่อ-ลูก ย้อนได้ 5 ปี
+#     ไฟล์แนบ   ใหญ่แต่แทบไม่เปลี่ยน → sync เฉพาะที่ต่าง ไม่คัดลอกซ้ำ
+#                ไฟล์ที่ถูกลบ/แก้ ย้ายไปเก็บในโฟลเดอร์ลงวันที่ ไม่ทิ้งหาย
+#
+#   ผลคือใช้พื้นที่ ~1GB แทน 23GB และได้ประวัติยาวกว่าเดิม
 #
 # แยกไฟล์จาก backup.sh ของ Masterlist โดยตั้งใจ — ถ้าอันใดอันหนึ่งพัง อีกอันยังทำงาน
 # ════════════════════════════════════════════════════════════════
 set -uo pipefail
 
-BACKUP_DIR="/var/backups/labqms"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-DB_FILE="${BACKUP_DIR}/labqms_db_${TIMESTAMP}.sql"
-FILES_FILE="${BACKUP_DIR}/labqms_files_${TIMESTAMP}.tar.gz"
-
+APP="labqms"
+BACKUP_DIR="/var/backups/${APP}"
 DB_CONTAINER="masterlist-db-1"          # Postgres ที่ใช้ร่วมกัน (คนละ database)
 DB_USER="labqms"
 DB_NAME="labqms"
 UPLOADS_VOLUME="/var/lib/docker/volumes/labqms_labqms_uploads/_data"
 
-# ปลายทาง Google Drive (ชุดเดียวกับ Masterlist)
-WEBAPP_URL="https://script.google.com/macros/s/AKfycbw2bff6uuXa7v9iNff4vbRlL2R3GY14Rn1swrcLrom7xK1gAHKyLlGw7HGor8vPn_Rf/exec"
-TOKEN="masterlist_backup_token_2026_xYz987"
-JSON_FILE="/tmp/labqms_backup_payload.json"
-
-# Apps Script รับ payload ได้ ~50MB และ base64 ทำให้ไฟล์ใหญ่ขึ้น ~33%
-# จึงกำหนดเพดานไฟล์ต้นทางไว้ 35MB (≈47MB หลัง base64) เผื่อขอบไว้เล็กน้อย
-# ทดสอบแล้วไฟล์ 20MB อัปโหลดผ่านจริง
-# ⚠️ เมื่อไฟล์แนบเยอะขึ้น (หลักร้อย–พันเอกสาร) จะเกินเพดานนี้แน่นอน
-#    ถึงตอนนั้นต้องเปลี่ยนไปใช้ rclone ไปยัง Google Drive/S3 แทนการยัด base64
-MAX_UPLOAD_BYTES=$((35 * 1024 * 1024))
+REMOTE="gdrive:TUH-Backup/${APP}"
+TODAY=$(date +%F)
+STAMP=$(date +"%Y%m%d_%H%M%S")
+DB_FILE="${BACKUP_DIR}/${APP}_db_${STAMP}.sql"
 
 log() { echo "[$(date +'%F %T')] $*"; }
+FAILURES=()
+fail() { FAILURES+=("$1"); log "❌ $1"; }
 
 mkdir -p "$BACKUP_DIR"
 
-# ── อัปโหลดขึ้น Google Drive (ข้ามถ้าไฟล์ใหญ่เกิน) ──
-upload() {
-  local path="$1" name="$2" size
-  size=$(stat -c%s "$path" 2>/dev/null || echo 0)
-  if [ "$size" -gt "$MAX_UPLOAD_BYTES" ]; then
-    log "⚠️  ข้ามการอัปโหลด $name ($(numfmt --to=iec "$size")) — ใหญ่เกินขีดจำกัด เก็บไว้บน VPS เท่านั้น"
-    log "    (ควรเปลี่ยนไปใช้ rclone/rsync ไปที่เก็บภายนอกเมื่อไฟล์แนบเยอะขึ้น)"
-    return 0
-  fi
-  printf '{"token":"%s","filename":"%s","file":"%s"}' \
-    "$TOKEN" "$name" "$(base64 -w 0 "$path")" > "$JSON_FILE"
-  if curl -L -sS --max-time 300 -H "Content-Type: application/json" -d @"$JSON_FILE" "$WEBAPP_URL" >/dev/null; then
-    log "✅ อัปโหลด $name ($(numfmt --to=iec "$size")) ขึ้น Google Drive แล้ว"
-  else
-    log "❌ อัปโหลด $name ไม่สำเร็จ — ไฟล์ยังอยู่บน VPS"
-  fi
-  rm -f "$JSON_FILE"
-}
-
-# ── 1) ฐานข้อมูล ──
-DB_OK=0
-FILES_OK=0
-if docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" --clean --if-exists "$DB_NAME" > "$DB_FILE" 2>/dev/null; then
+# ── 1) ฐานข้อมูล ────────────────────────────────────────────────
+if docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" "$DB_NAME" > "$DB_FILE" 2>/dev/null && [ -s "$DB_FILE" ]; then
   gzip -f "$DB_FILE"
   log "✅ สำรองฐานข้อมูลแล้ว ($(numfmt --to=iec "$(stat -c%s "${DB_FILE}.gz")"))"
   DB_OK=1
-  upload "${DB_FILE}.gz" "labqms_db_${TIMESTAMP}.sql.gz"
 else
-  log "❌ สำรองฐานข้อมูลไม่สำเร็จ"
   rm -f "$DB_FILE"
+  fail "สำรองฐานข้อมูลไม่สำเร็จ"
+  DB_OK=0
 fi
 
-# ── 2) ไฟล์แนบ ──
-if [ -d "$UPLOADS_VOLUME" ]; then
-  if tar -czf "$FILES_FILE" -C "$UPLOADS_VOLUME" . 2>/dev/null; then
-    log "✅ สำรองไฟล์แนบแล้ว ($(numfmt --to=iec "$(stat -c%s "$FILES_FILE")") · $(find "$UPLOADS_VOLUME" -type f | wc -l) ไฟล์)"
-    FILES_OK=1
-    upload "$FILES_FILE" "labqms_files_${TIMESTAMP}.tar.gz"
+# ── 2) ตรวจว่าต่อ Google Drive ได้ก่อนค่อยทำงานต่อ ──────────────
+if command -v rclone >/dev/null 2>&1 && rclone about gdrive: >/dev/null 2>&1; then
+  DRIVE_OK=1
+else
+  DRIVE_OK=0
+  fail "ต่อ Google Drive ไม่ได้ — สั่ง rclone config reconnect gdrive: เพื่อเชื่อมใหม่"
+fi
+
+# ── 3) ส่งฐานข้อมูลขึ้น Drive แบบปู่-พ่อ-ลูก ────────────────────
+#     รายวัน เก็บ 30 วัน · รายสัปดาห์ (จันทร์) 12 สัปดาห์ · รายเดือน (วันที่ 1) 60 เดือน
+#     ไฟล์เล็กมากจึงเก็บได้ยาวโดยแทบไม่กินพื้นที่ และตรงกับระยะจัดเก็บ 5 ปีที่ประกาศไว้
+if [ "$DB_OK" = 1 ] && [ "$DRIVE_OK" = 1 ]; then
+  if rclone copy "${DB_FILE}.gz" "${REMOTE}/db/daily/" --timeout 10m 2>/dev/null; then
+    log "☁️  ฐานข้อมูล → Drive (รายวัน)"
+    [ "$(date +%u)" = "1" ] && rclone copy "${DB_FILE}.gz" "${REMOTE}/db/weekly/" --timeout 10m 2>/dev/null && log "☁️  สำเนารายสัปดาห์"
+    [ "$(date +%d)" = "01" ] && rclone copy "${DB_FILE}.gz" "${REMOTE}/db/monthly/" --timeout 10m 2>/dev/null && log "☁️  สำเนารายเดือน"
+
+    rclone delete "${REMOTE}/db/daily/"   --min-age 30d  2>/dev/null
+    rclone delete "${REMOTE}/db/weekly/"  --min-age 90d  2>/dev/null
+    rclone delete "${REMOTE}/db/monthly/" --min-age 1825d 2>/dev/null
   else
-    log "❌ สำรองไฟล์แนบไม่สำเร็จ"
+    fail "อัปโหลดฐานข้อมูลขึ้น Drive ไม่สำเร็จ"
   fi
-else
-  log "❌ ไม่พบที่เก็บไฟล์แนบ: $UPLOADS_VOLUME"
 fi
 
-# ── 2.5) อัปโหลดขึ้น Google Drive ด้วย rclone (รองรับไฟล์ใหญ่ ไม่ติดเพดาน ~35MB) ──
-# ตั้งค่าครั้งเดียวด้วย  rclone config  (สร้าง remote ชื่อ gdrive) — ถ้ายังไม่ตั้งจะข้ามไป
-# ใช้วิธี base64 เดิมเป็น fallback สำหรับไฟล์เล็ก (DB) อยู่แล้วด้านบน
-if command -v rclone >/dev/null 2>&1 && rclone listremotes 2>/dev/null | grep -q "^gdrive:"; then
-  RCLONE_DEST="gdrive:Masterlist_Backups/labqms"
-  ok=0
-  [ "$DB_OK" = 1 ]    && rclone copy "${DB_FILE}.gz" "$RCLONE_DEST/" --max-time 600 2>/dev/null && ok=$((ok+1))
-  [ "$FILES_OK" = 1 ] && rclone copy "$FILES_FILE"   "$RCLONE_DEST/" --max-time 900 2>/dev/null && ok=$((ok+1))
-  log "☁️  rclone → Google Drive: อัปโหลดแล้ว $ok ไฟล์ (ไม่จำกัดขนาด)"
+# ── 4) ไฟล์แนบ — sync ไม่ใช่คัดลอกทั้งก้อน ─────────────────────
+#     --backup-dir ทำให้ไฟล์ที่ถูกลบหรือแก้ ถูกย้ายไปเก็บในโฟลเดอร์ลงวันที่
+#     แทนที่จะหายไปเลย — กันกรณีมีคนลบเอกสารผิดแล้วรู้ตัวทีหลัง
+if [ "$DRIVE_OK" = 1 ]; then
+  n=$(find "$UPLOADS_VOLUME" -type f 2>/dev/null | wc -l)
+  # กันพลาดชั้นที่ 1: sync จะลบของปลายทางให้เหมือนต้นทาง
+  # ถ้าวันไหน volume หลุด/ย้าย แล้วต้นทางกลายเป็นว่าง สำเนาบน Drive จะถูกลบเกลี้ยง
+  # จึงไม่ยอม sync เมื่อต้นทางว่าง — ถือว่าผิดปกติเสมอ ระบบนี้ไม่มีทางมี 0 ไฟล์
+  if [ ! -d "$UPLOADS_VOLUME" ] || [ "$n" -eq 0 ]; then
+    fail "ต้นทางไฟล์แนบผิดปกติ ($n ไฟล์) — ไม่ซิงก์ เพื่อไม่ให้สำเนาบน Drive ถูกลบตาม"
+  else
+    # กันพลาดชั้นที่ 2: ถ้ารอบไหนจะลบเกิน 20 ไฟล์ ให้หยุดแล้วแจ้งเตือนแทน
+    # ลบทีละไม่กี่ไฟล์เป็นเรื่องปกติ แต่ลบทีเป็นสิบแปลว่ามีอะไรผิด
+    if rclone sync "$UPLOADS_VOLUME" "${REMOTE}/files/" \
+         --backup-dir "${REMOTE}/files-replaced/${TODAY}" \
+         --max-delete 20 \
+         --transfers 4 --checkers 8 --timeout 30m 2>/dev/null; then
+      log "☁️  ไฟล์แนบ → Drive แล้ว ($n ไฟล์ · ส่งเฉพาะที่เปลี่ยน)"
+    else
+      fail "ซิงก์ไฟล์แนบไม่สำเร็จ (อาจเพราะจะต้องลบไฟล์เกิน 20 รายการ — ตรวจสอบก่อน)"
+    fi
+  fi
 fi
 
-# ── 3) ลบไฟล์เก่าเกิน 30 วัน — เฉพาะเมื่อสำรองวันนี้สำเร็จทั้งคู่ ──
-# (กันกรณีสำรองพังเงียบ ๆ แล้วไฟล์เก่าถูกลบจนไม่เหลือ backup เลย)
-if [ "$DB_OK" = 1 ] && [ "$FILES_OK" = 1 ]; then
-  find "$BACKUP_DIR" -type f -name "labqms_*" -mtime +30 -delete
-  log "── เสร็จสิ้น (ลบ backup เก่าเกิน 30 วันแล้ว) ──"
+# ── 5) เก็บกวาดสำเนาบนเครื่อง ──────────────────────────────────
+#     ลบเฉพาะเมื่อรอบนี้สำเร็จ — ถ้าสำรองพลาดแล้วยังลบของเก่า จะไม่เหลืออะไรเลย
+if [ ${#FAILURES[@]} -eq 0 ]; then
+  find "$BACKUP_DIR" -type f -name "${APP}_*" -mtime +30 -delete
+  # ไฟล์ tar จากวิธีเดิมไม่ได้ใช้แล้ว ลบทิ้งเพื่อคืนพื้นที่
+  find "$BACKUP_DIR" -type f -name "*_files_*.tar.gz" -mtime +7 -delete
+  log "🧹 ลบสำเนาเก่าเกิน 30 วันบนเครื่องแล้ว"
 else
-  log "⚠️ สำรองวันนี้ไม่ครบ — ข้ามการลบ backup เก่า เพื่อความปลอดภัย"
+  log "⏸  ข้ามการลบสำเนาเก่า เพราะรอบนี้มีข้อผิดพลาด"
 fi
+
+# ── 6) แจ้งเตือนเมื่อล้มเหลว ───────────────────────────────────
+#     ที่ผ่านมา backup พังเงียบ 36 วันโดยไม่มีใครรู้ เพราะ cron ไม่บอกใคร
+#     ส่งอีเมลผ่านตัวส่งเดียวกับที่ระบบใช้อยู่แล้ว (ไม่ต้องตั้งค่าเพิ่ม)
+if [ ${#FAILURES[@]} -gt 0 ]; then
+  BODY="ระบบสำรองข้อมูล Lab QMS ทำงานไม่สำเร็จ $(date +'%F %T')%0A%0A"
+  for f in "${FAILURES[@]}"; do BODY="${BODY}- ${f}%0A"; done
+  docker exec -e ALERT_TO="ahs.tuh.register@gmail.com" -e ALERT_BODY="$BODY" labqms-app node -e '
+    const n = require("nodemailer");
+    if (!process.env.SMTP_HOST) process.exit(0);
+    n.createTransport({host:process.env.SMTP_HOST,port:+process.env.SMTP_PORT,secure:false,
+      auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}})
+     .sendMail({from:process.env.SMTP_FROM,to:process.env.ALERT_TO,
+       subject:"⚠️ สำรองข้อมูล Lab QMS ล้มเหลว",
+       text:decodeURIComponent(process.env.ALERT_BODY.replace(/%0A/g,"\n"))})
+     .then(()=>console.log("ส่งอีเมลแจ้งเตือนแล้ว")).catch(e=>console.error("แจ้งเตือนไม่ได้:",e.message));
+  ' 2>&1 | sed 's/^/    /'
+  log "── เสร็จสิ้น · มีข้อผิดพลาด ${#FAILURES[@]} รายการ ──"
+  exit 1
+fi
+
+log "── เสร็จสิ้น · ปกติทุกอย่าง ──"
