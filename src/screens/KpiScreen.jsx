@@ -370,7 +370,7 @@ export function KpiScreen() {
 
         {/* จอแคบให้ตารางเลื่อนแนวนอนในกรอบตัวเอง แทนบีบจนอ่านไม่ออก */}
         <div style={{ overflowX: 'auto' }}>
-        <div style={{ minWidth: 700 }}>
+        <div style={{ minWidth: 860 }}>
         <div style={{ ...ROW, paddingBottom: 6, borderBottom: '1px solid var(--border-default)' }}>
           <span style={{ font: 'var(--text-2xs)/1 var(--font-mono)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>ตัวชี้วัด</span>
           <div style={MONTHS_ROW}>
@@ -443,8 +443,8 @@ export function KpiScreen() {
                               title={`${m} · กำลังแก้ไข`}
                               placeholder="—"
                               style={{
-                                width: '100%', minWidth: 0, height: 24, font: 'var(--text-2xs)/1 var(--font-mono)',
-                                textAlign: 'center', padding: '2px 3px', borderRadius: 'var(--radius-xs)',
+                                width: '100%', minWidth: 0, height: 34, font: 'var(--text-sm)/1 var(--font-mono)',
+                                textAlign: 'center', padding: '4px 5px', borderRadius: 'var(--radius-xs)',
                                 background: canEdit ? 'var(--surface-card)' : 'var(--slate-50)',
                                 color: 'var(--text-primary)',
                                 border: `2px solid ${warn ? 'var(--amber-600)' : ok === false ? 'var(--red-600)' : 'var(--brand-600)'}`,
