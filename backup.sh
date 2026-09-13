@@ -64,8 +64,12 @@ fi
 if [ "$DB_OK" = 1 ] && [ "$DRIVE_OK" = 1 ]; then
   if rclone copy "${DB_FILE}.gz" "${REMOTE}/db/daily/" --timeout 10m 2>/dev/null; then
     log "☁️  ฐานข้อมูล → Drive (รายวัน)"
-    [ "$(date +%u)" = "1" ] && rclone copy "${DB_FILE}.gz" "${REMOTE}/db/weekly/" --timeout 10m 2>/dev/null && log "☁️  สำเนารายสัปดาห์"
-    [ "$(date +%d)" = "01" ] && rclone copy "${DB_FILE}.gz" "${REMOTE}/db/monthly/" --timeout 10m 2>/dev/null && log "☁️  สำเนารายเดือน"
+    # สำเนารายสัปดาห์/รายเดือนทำเฉพาะรอบเที่ยงคืน — สคริปต์รันทุก 6 ชม.
+    # ถ้าไม่กัน วันจันทร์จะได้สำเนารายสัปดาห์ซ้ำ 4 ชุดโดยไม่จำเป็น
+    if [ "$(date +%H)" = "00" ]; then
+      [ "$(date +%u)" = "1" ]  && rclone copy "${DB_FILE}.gz" "${REMOTE}/db/weekly/"  --timeout 10m 2>/dev/null && log "☁️  สำเนารายสัปดาห์"
+      [ "$(date +%d)" = "01" ] && rclone copy "${DB_FILE}.gz" "${REMOTE}/db/monthly/" --timeout 10m 2>/dev/null && log "☁️  สำเนารายเดือน"
+    fi
 
     rclone delete "${REMOTE}/db/daily/"   --min-age 30d  2>/dev/null
     rclone delete "${REMOTE}/db/weekly/"  --min-age 90d  2>/dev/null
