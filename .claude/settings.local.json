@@ -461,7 +461,23 @@
       "Bash(bash -n \"/Users/gpharkchawisp/Documents/ทะเบียนเอกสารสหเวชศาสตร์/backup.sh\")",
       "Bash(bash -n restore-test.sh)",
       "Bash(chmod +x restore-test.sh)",
-      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q restore-test.sh root@188.166.181.243:/opt/labqms/restore-test.sh)"
+      "Bash(scp -P 8443 -i ~/.ssh/ahs_deploy -q restore-test.sh root@188.166.181.243:/opt/labqms/restore-test.sh)",
+      "Bash(ssh -o ConnectTimeout=15 ahs-droplet-8443 'ls -la /etc/logrotate.d/ 2>/dev/null | head -30; echo \"---- ขนาด log ----\"; ls -la /var/log/*backup*.log /var/log/restore-test.log 2>/dev/null')",
+      "Bash(ssh -o ConnectTimeout=20 ahs-droplet-8443 'echo \"=== logrotate ทั้งระบบยังทำงานปกติไหม ===\" *)",
+      "Bash(ssh -o ConnectTimeout=20 ahs-droplet-8443 'echo \"=== สคริปต์สำรองบุคลากร: ส่วนที่ใช้รหัส ===\" *)",
+      "Bash(ssh -o ConnectTimeout=20 ahs-droplet-8443 'grep -n \"REMOTE=\\\\|rclone delete\\\\|min-age\" /opt/ahs-personnel/scripts/backup.sh *)",
+      "Bash(ssh -o ConnectTimeout=20 ahs-droplet-8443 'echo \"=== ท้าย log สำรองบุคลากร ===\"; tail -12 /opt/ahs-personnel/backups/backup.log *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== เวลาเครื่อง ===\"; date +\"%F %T\" *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== /opt/ahs-personnel/scripts/backup.sh \\(ทั้งไฟล์\\) ===\"; cat -n /opt/ahs-personnel/scripts/backup.sh')",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ไฟล์ db เข้ารหัส GPG บน Drive \\(โฟลเดอร์ใหม่\\) ===\" *)",
+      "Bash(ssh -o ConnectTimeout=20 ahs-droplet-8443 'mv /root/.ahs-backup-pass.old-until-20260923 /root/.ahs-backup-pass.old-20260909 *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ไฟล์แนบในเครื่อง \\(ต้นฉบับจริง\\) ===\" *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ตรวจ: ทุกไฟล์บน Drive ถอดด้วยรหัสใหม่ได้ และรหัสเก่าใช้ไม่ได้แล้ว ===\" *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'rclone about gdrive: 2>/dev/null *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'echo \"=== ทุกรายการในถังขยะ ===\" *)",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 \"rclone lsl gdrive: --drive-trashed-only -R 2>/dev/null | sort -k4 | cut -c1-140\")",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 \"rclone lsf gdrive: --drive-trashed-only -R 2>/dev/null | sort\")",
+      "Bash(ssh -o ConnectTimeout=25 ahs-droplet-8443 'date +\"%F %T\" *)"
     ]
   }
 }
