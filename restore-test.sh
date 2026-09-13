@@ -115,6 +115,34 @@ test_app "ห้องปฏิบัติการเทคนิคการ�
   'documents app_users attachments acknowledgments' \
   gdrive:TUH-Backup/labqms
 
+# ── เก็บผลทดสอบเป็นบันทึกบน Drive ──
+#    log บนเครื่องอย่างเดียวไม่พอ เพราะกรณีที่ต้องใช้จริงคือ "เครื่องพัง"
+#    ผู้ตรวจขอดูหลักฐานว่าทดสอบกู้คืนสม่ำเสมอ — ต้องหยิบมาได้แม้เครื่องไม่อยู่แล้ว
+save_evidence() {
+  local f="/tmp/restore-test-$(date +%Y%m).txt"
+  { echo "ผลทดสอบกู้คืนข้อมูล · $(date +'%F %T')"
+    echo "ระบบ: ทะเบียนเอกสารคุณภาพ (Masterlist) + ห้องปฏิบัติการเทคนิคการแพทย์ (Lab QMS)"
+    echo
+    if [ ${#PROBLEMS[@]} -eq 0 ]; then
+      echo "ผลการทดสอบ: ผ่านทั้งหมด"
+      echo "- กู้คืนฐานข้อมูลได้ครบถ้วน ข้อมูลตรงกับของจริง"
+      echo "- ดึงไฟล์สำรองจาก Google Drive กลับมาได้และไฟล์ไม่เสียหาย"
+    else
+      echo "ผลการทดสอบ: พบปัญหา ${#PROBLEMS[@]} รายการ"
+      for p in "${PROBLEMS[@]}"; do echo "- $p"; done
+    fi
+    echo
+    echo "ทดสอบโดยระบบอัตโนมัติ · /opt/labqms/restore-test.sh"
+  } > "$f"
+  rclone copy "$f" gdrive:TUH-Backup/restore-tests/ --timeout 5m 2>/dev/null \
+    && echo "  📄 เก็บผลทดสอบขึ้น Drive แล้ว ($(basename "$f"))" \
+    || echo "  ⚠️  เก็บผลทดสอบขึ้น Drive ไม่สำเร็จ"
+  rm -f "$f"
+  # เก็บผลย้อนหลัง 5 ปี ให้ตรงกับระยะจัดเก็บที่ประกาศไว้ในทะเบียนเอกสาร
+  rclone delete gdrive:TUH-Backup/restore-tests/ --min-age 1825d 2>/dev/null
+}
+save_evidence
+
 hdr "สรุปผล"
 if [ ${#PROBLEMS[@]} -eq 0 ]; then
   echo "  ✅ ทุกระบบกู้คืนได้ครบถ้วน และสำเนาบน Google Drive ใช้งานได้จริง"
