@@ -90,7 +90,9 @@ def table(rows, widths, header=True, sz=28, aligns=None):
 W = 9634  # ความกว้างเนื้อหา = ความกว้างตารางหัวกระดาษ
 
 def H(text):          # หัวข้อหลัก เลขอัตโนมัติ 1..11
-    return p(text, bold=True, style='ListParagraph', num=2, spacing='auto')
+    x = p(text, bold=True, style='ListParagraph', num=2, spacing='auto')
+    # ใส่ระดับเค้าโครงให้ Word แทรก/อัปเดตสารบัญเองได้ด้วยคำสั่งเดียว
+    return x.replace('</w:pPr>', '<w:outlineLvl w:val="0"/></w:pPr>', 1)
 def S(text):          # หัวข้อย่อย
     return p(text, bold=True, spacing='auto')
 def P(text, ind=360): # ย่อหน้าเนื้อความ
@@ -108,29 +110,55 @@ def GAP():
 D = []
 A = D.append
 
-# ── หน้าปก ──────────────────────────────────────────────────────
-A(p('คู่มือมาตรฐานการปฏิบัติงาน', bold=True, sz=36, align='center', spacing='tight'))
-A(p('(Standard Operation Procedure : SOP)', bold=True, sz=32, align='center', spacing='tight'))
-A(GAP())
-A(p('เรื่อง ' + TITLE, bold=True, sz=36, align='center', spacing='tight'))
-A(p('ระบบทะเบียนเอกสารคุณภาพห้องปฏิบัติการเทคนิคการแพทย์ (Lab QMS)',
-    bold=True, sz=32, align='center', spacing='tight'))
-A(p('หน่วยงานห้องปฏิบัติการเทคนิคการแพทย์  ฝ่ายสหเวชศาสตร์',
-    bold=True, sz=32, align='center', spacing='tight'))
-A(GAP()); A(GAP()); A(GAP())
+# ── หน้าปก: ยกจากไฟล์ต้นแบบทั้งชุด เปลี่ยนเฉพาะข้อความ ─────────
+#    เพื่อให้ได้ตราโรงพยาบาลกลางหน้า สีหัวเรื่อง และตารางลงนามเหมือนต้นแบบ 100%
+_doc = open(f'{SRC}/word/document.xml', encoding='utf-8').read()
+_body = _doc[_doc.index('<w:body>') + 8 : _doc.rindex('<w:sectPr')]
 
-SIGW = [1600, 2678, 2678, 2678]
-SIG = '\n\n.................................................\n(                           )'
-A(table([
-    ['', SIG, SIG, SIG],
-    ['ตำแหน่ง', 'ผู้จัดทำ', 'ผู้ทบทวน', 'ผู้อนุมัติ'],
-    ['วันที่', '', '', ''],
-], SIGW, header=False, sz=28, aligns=[None, 'center', 'center', 'center']))
+def _children(xml):
+    out, i = [], 0
+    while i < len(xml):
+        m = re.compile(r'<w:(p|tbl)\b').search(xml, i)
+        if not m: break
+        tag = m.group(1); depth = 0; j = len(xml)
+        for mm in re.finditer(r'<w:%s\b[^>]*/>|<w:%s\b[^>]*>|</w:%s>' % (tag, tag, tag), xml[m.start():]):
+            t = mm.group(0)
+            if t.endswith('/>') and mm.start() == 0:
+                j = m.start() + mm.end(); break
+            if t.startswith('</'):
+                depth -= 1
+                if depth == 0: j = m.start() + mm.end(); break
+            elif not t.endswith('/>'):
+                depth += 1
+        out.append(xml[m.start():j]); i = j
+    return out
 
-A(GAP()); A(GAP())
-A(p('ผู้เกี่ยวข้องที่ต้องทราบ', spacing='tight'))
-A(p('.' * 110, spacing='tight'))
-A(p('.' * 110, spacing='tight'))
+_ch = _children(_body)
+_cut = next(i for i, x in enumerate(_ch)
+            if 'สารบัญ' in ''.join(re.findall(r'<w:t[^>]*>(.*?)</w:t>', x, re.S)))
+cover = ''.join(_ch[:_cut])
+
+BLANK = ' ' * 30
+for a, b in [
+    # ชื่อเรื่องบนหน้าปก
+    ('<w:t>ระบบ</w:t>', f'<w:t xml:space="preserve">{esc(TITLE)}</w:t>'),
+    ('<w:t>ความปลอดภัย</w:t>', '<w:t xml:space="preserve"></w:t>'),
+    ('<w:t>ศูนย์ปฏิบัติการตรวจวินิจฉัยทางการแพทย์</w:t>', '<w:t xml:space="preserve"></w:t>'),
+    # ชื่อผู้ลงนาม — เว้นว่างให้กรอกเอง
+    ('<w:t>ทนพญ.</w:t>', f'<w:t xml:space="preserve">{BLANK}</w:t>'),
+    ('<w:t>เบญจวรร</w:t>', '<w:t xml:space="preserve"></w:t>'),
+    ('<w:t>ณ รุ่งเรือง</w:t>', '<w:t xml:space="preserve"></w:t>'),
+    ('<w:t>(ดร.ทนพ.พลากร  พุทธรักษ์</w:t>', f'<w:t xml:space="preserve">({BLANK}</w:t>'),
+    ('<w:t>กภ. สุพรรณี เฉยรอด</w:t>', f'<w:t xml:space="preserve">{BLANK}</w:t>'),
+    # ตำแหน่งผู้ลงนามช่องแรก — เอกสารนี้ผู้จัดทำเป็นคนละตำแหน่งกับต้นแบบ
+    ('<w:t>ผู้ปฏิบัติหน้าที่หัวหน้า</w:t>', '<w:t xml:space="preserve">ผู้จัดทำ</w:t>'),
+    ('<w:t>ศูนย์ปฏิบัติการตรวจวินิจฉัย</w:t>', '<w:t xml:space="preserve"></w:t>'),
+    ('<w:t>ทางการแพทย์</w:t>', '<w:t xml:space="preserve"></w:t>'),
+]:
+    assert a in cover, f'ไม่พบข้อความในหน้าปก: {a}'
+    cover = cover.replace(a, b, 1)
+
+A(cover)
 A(pagebreak())
 
 # ── สารบัญ ──────────────────────────────────────────────────────
