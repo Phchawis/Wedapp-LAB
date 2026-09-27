@@ -13,9 +13,14 @@ OUT="${1:-sop.pdf}"
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 render() {   # $1=html  $2=pdf
+  # ต้องใช้โปรไฟล์ชั่วคราวเสมอ ไม่งั้นถ้าผู้ใช้เปิด Chrome อยู่ headless จะใช้โปรไฟล์เดิมไม่ได้
+  # แล้วออกมาเป็น PDF หน้าเปล่าหน้าเดียวโดยไม่แจ้ง error
+  local prof; prof=$(mktemp -d)
   "$CHROME" --headless --disable-gpu --no-sandbox --allow-file-access-from-files \
+    --user-data-dir="$prof" \
     --run-all-compositor-stages-before-draw --virtual-time-budget=30000 \
     --no-pdf-header-footer --print-to-pdf="$PWD/$2" "file://$PWD/$1" 2>/dev/null
+  rm -rf "$prof"
 }
 
 count() { python3 -c "from pypdf import PdfReader; print(len(PdfReader('$1').pages))"; }
