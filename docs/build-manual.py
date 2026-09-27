@@ -22,20 +22,21 @@ COLOR = '<w:color w:val="000000" w:themeColor="text1"/>'
 def esc(s):
     return html.escape(str(s), quote=False)
 
-def rpr(bold=False, sz=32, para=False):
+def rpr(bold=False, sz=32, para=False, color=None):
     f = FONT_P if para else FONT
     b = '<w:b/><w:bCs/>' if bold else ''
     cs = '' if para else '<w:cs/>'
-    return f'<w:rPr>{f}{b}{COLOR}<w:sz w:val="{sz}"/><w:szCs w:val="{sz}"/>{cs}</w:rPr>'
+    c = f'<w:color w:val="{color}"/>' if color else COLOR
+    return f'<w:rPr>{f}{b}{c}<w:sz w:val="{sz}"/><w:szCs w:val="{sz}"/>{cs}</w:rPr>'
 
-def run(text, bold=False, sz=32):
-    return f'<w:r>{rpr(bold, sz)}<w:t xml:space="preserve">{esc(text)}</w:t></w:r>'
+def run(text, bold=False, sz=32, color=None):
+    return f'<w:r>{rpr(bold, sz, color=color)}<w:t xml:space="preserve">{esc(text)}</w:t></w:r>'
 
 SPACING = '<w:spacing w:before="100" w:beforeAutospacing="1" w:after="100" w:afterAutospacing="1"/>'
 TIGHT = '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>'
 
 def p(text='', bold=False, sz=32, ind=None, hang=None, style=None,
-      num=None, align=None, spacing='auto', jc=None):
+      num=None, align=None, spacing='auto', jc=None, color=None, rule=None):
     pr = ['<w:pPr>']
     if style: pr.append(f'<w:pStyle w:val="{style}"/>')
     if num is not None:
@@ -46,9 +47,11 @@ def p(text='', bold=False, sz=32, ind=None, hang=None, style=None,
         h = f' w:hanging="{hang}"' if hang else ''
         pr.append(f'<w:ind w:left="{ind}"{h}/>')
     if align: pr.append(f'<w:jc w:val="{align}"/>')
-    pr.append(rpr(bold, sz, para=True).replace('<w:rPr>', '<w:rPr>').replace('<w:cs/>', ''))
+    if rule: pr.insert(1, f'<w:pBdr><w:bottom w:val="single" w:sz="{rule}" '
+                          'w:space="6" w:color="0E6B3D"/></w:pBdr>')
+    pr.append(rpr(bold, sz, para=True, color=color).replace('<w:cs/>', ''))
     pr.append('</w:pPr>')
-    body = run(text, bold, sz) if text != '' else ''
+    body = run(text, bold, sz, color=color) if text != '' else ''
     return '<w:p>' + ''.join(pr) + body + '</w:p>'
 
 def pagebreak():
@@ -138,21 +141,89 @@ A = D.append
 
 
 
-# ── ปก: แบบคู่มือ ไม่เป็นทางการมาก ──────────────────────────────
-#    ใช้ตราโรงพยาบาลจากไฟล์ต้นแบบ แต่ไม่มีตารางควบคุมและช่องลงนามแบบ SOP
-_doc = open(f'{SRC}/word/document.xml', encoding='utf-8').read()
-_body = _doc[_doc.index('<w:body>') + 8 : _doc.rindex('<w:sectPr')]
-_logo = _body[:_body.index('</w:p>') + len('</w:p>')]   # ย่อหน้าแรกคือรูปตราโรงพยาบาล
+# ── ปก: แบบคู่มือมีงานกราฟิก ────────────────────────────────────
+#    พื้นหลังเป็นรูปเต็มหน้าวางแบบ "อยู่หลังข้อความ" แล้ววางข้อความจริงทับ
+#    ข้อความทุกบรรทัดยังแก้ไขใน Word ได้ตามปกติ รวมทั้งตารางควบคุมมุมขวาบน
+A4_W, A4_H = 7560000, 10692000          # ขนาด A4 หน่วย EMU
 
-A(_logo)
-A(GAP())
-A(p('คู่มือการปฏิบัติงาน', bold=True, sz=52, align='center', spacing='tight'))
-A(GAP())
-A(p(MANUAL_TITLE, bold=True, sz=40, align='center', spacing='tight'))
-A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP())
-A(p('ฝ่ายสหเวชศาสตร์', sz=32, align='center', spacing='tight'))
-A(p('โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ', sz=32, align='center', spacing='tight'))
-A(p('2569', sz=32, align='center', spacing='tight'))
+def anchored_bg(rid):
+    """รูปพื้นหลังเต็มหน้า วางหลังข้อความ ชิดมุมกระดาษ"""
+    return (
+      '<w:p><w:pPr>' + TIGHT + '</w:pPr><w:r><w:rPr><w:noProof/></w:rPr><w:drawing>'
+      '<wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="1"'
+      ' behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1">'
+      '<wp:simplePos x="0" y="0"/>'
+      '<wp:positionH relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionH>'
+      '<wp:positionV relativeFrom="page"><wp:posOffset>0</wp:posOffset></wp:positionV>'
+      f'<wp:extent cx="{A4_W}" cy="{A4_H}"/>'
+      '<wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/>'
+      '<wp:docPr id="900" name="พื้นหลังปก"/><wp:cNvGraphicFramePr/>'
+      '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+      '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+      '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+      '<pic:nvPicPr><pic:cNvPr id="900" name="cover-bg.png"/><pic:cNvPicPr/></pic:nvPicPr>'
+      f'<pic:blipFill><a:blip r:embed="{rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+      f'<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{A4_W}" cy="{A4_H}"/></a:xfrm>'
+      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
+      '</pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r></w:p>')
+
+def inline_logo(rid, cx=1000000):
+    cy = int(cx * 1606164 / 1680999)        # คงสัดส่วนเดิมของไฟล์ตรา
+    return (
+      '<w:p><w:pPr>' + TIGHT + '<w:jc w:val="right"/></w:pPr>'
+      '<w:r><w:rPr><w:noProof/></w:rPr><w:drawing>'
+      '<wp:inline distT="0" distB="0" distL="0" distR="0">'
+      f'<wp:extent cx="{cx}" cy="{cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
+      '<wp:docPr id="901" name="ตราโรงพยาบาล"/><wp:cNvGraphicFramePr/>'
+      '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+      '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+      '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+      '<pic:nvPicPr><pic:cNvPr id="901" name="logo"/><pic:cNvPicPr/></pic:nvPicPr>'
+      f'<pic:blipFill><a:blip r:embed="{rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+      f'<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
+      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
+      '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>')
+
+def ctrl_table():
+    """ตารางควบคุมมุมขวาบน เว้นค่าไว้ให้กรอกเอง
+
+    ใช้คอลัมน์ว่างไม่มีเส้นขอบเป็นตัวดันไปทางขวา แทนการสั่งจัดชิดขวาที่ตัวตาราง
+    เพราะโปรแกรมแปลงเอกสารบางตัวไม่รองรับการจัดตำแหน่งตาราง
+    """
+    SPACER, LBL, VAL = 5739, 1500, 2400
+    NOBDR = ('<w:tcBorders><w:top w:val="nil"/><w:left w:val="nil"/>'
+             '<w:bottom w:val="nil"/><w:right w:val="nil"/></w:tcBorders>')
+    spacer = (f'<w:tc><w:tcPr><w:tcW w:w="{SPACER}" w:type="dxa"/>{NOBDR}</w:tcPr>'
+              '<w:p><w:pPr>' + TIGHT + '</w:pPr></w:p></w:tc>')
+    rows = [['รหัสเอกสาร', ''], ['วันที่ประกาศใช้', ''],
+            ['ผู้ทบทวน', ''], ['ผู้อนุมัติ', '']]
+    wds = [SPACER, LBL, VAL]
+    out = ['<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>'
+           f'<w:tblW w:w="{sum(wds)}" w:type="dxa"/>'
+           '<w:tblLook w:val="04A0" w:firstRow="0" w:lastRow="0" w:firstColumn="0"'
+           ' w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr>'
+           '<w:tblGrid>' + ''.join(f'<w:gridCol w:w="{w}"/>' for w in wds) + '</w:tblGrid>']
+    for label, val in rows:
+        out.append('<w:tr>' + spacer
+                   + cell(label, LBL, bold=True, sz=24, shade='EFF4F1')
+                   + cell(val, VAL, sz=24) + '</w:tr>')
+    out.append('</w:tbl><w:p><w:pPr>' + TIGHT + '</w:pPr></w:p>')
+    return ''.join(out)
+
+A(anchored_bg('rIdCoverBg'))
+A(inline_logo('rId7'))
+A(ctrl_table())
+A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP())
+
+A(p('คู่มือ', bold=True, sz=112, ind=280, spacing='tight', color='0E6B3D'))
+A(p('การปฏิบัติงาน', bold=True, sz=60, ind=300, spacing='tight', color='1E8F80'))
+A(GAP()); A(GAP())
+A(p(MANUAL_TITLE, bold=True, sz=40, ind=300, spacing='tight',
+    color='1F2A24', rule=8))
+A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP())
+A(p('ฝ่ายสหเวชศาสตร์', bold=True, sz=32, ind=300, spacing='tight', color='1F2A24'))
+A(p('โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ', sz=30, ind=300, spacing='tight', color='4A5450'))
+A(p('2569', sz=30, ind=300, spacing='tight', color='4A5450'))
 
 # ── คำนำ ────────────────────────────────────────────────────────
 A(pagebreak())
@@ -925,6 +996,21 @@ sect = sect.replace('<w:footerReference',
 sect = sect.replace('<w:docGrid', '<w:titlePg/><w:docGrid', 1)
 new = head + ''.join(D) + sect + '</w:body></w:document>'
 open(f'{DST}/word/document.xml', 'w', encoding='utf-8').write(new)
+
+# ── ใส่รูปพื้นหลังปกเข้าไฟล์ ────────────────────────────────────
+shutil.copyfile('cover-bg.png', f'{DST}/word/media/cover-bg.png')
+_rp = f'{DST}/word/_rels/document.xml.rels'
+_r = open(_rp, encoding='utf-8').read()
+if 'rIdCoverBg' not in _r:
+    _r = _r.replace('</Relationships>',
+        '<Relationship Id="rIdCoverBg" '
+        'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" '
+        'Target="media/cover-bg.png"/></Relationships>')
+    open(_rp, 'w', encoding='utf-8').write(_r)
+
+_ct = open(f'{DST}/[Content_Types].xml', encoding='utf-8').read()
+assert 'Extension="png"' in _ct, 'ยังไม่มีชนิดไฟล์ png ใน [Content_Types].xml'
+
 
 # แก้หัวกระดาษ: ชื่อเรื่อง เลขที่เอกสาร และชื่องาน
 h = MANUAL_HEADER_XML

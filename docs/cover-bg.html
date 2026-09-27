@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;padding:0;background:#fff}
+  svg{display:block}
+</style>
+<!-- พื้นหลังปกคู่มือ A4 ที่ 200 dpi = 1654 x 2339 px
+     ครึ่งบนเว้นว่างไว้ใส่ตราโรงพยาบาล ตารางควบคุม และชื่อเรื่อง (เป็นข้อความจริงใน Word)
+     ครึ่งล่างเป็นงานกราฟิกหกเหลี่ยม โทนเขียวของโรงพยาบาล -->
+<svg width="1654" height="2339" viewBox="0 0 1654 2339" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#FFFFFF"/>
+      <stop offset="55%"  stop-color="#F7F9F8"/>
+      <stop offset="100%" stop-color="#EEF2F0"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#0E6B3D"/>
+      <stop offset="100%" stop-color="#14874C"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#1E8F80"/>
+      <stop offset="100%" stop-color="#2FB3A2"/>
+    </linearGradient>
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#0E6B3D"/>
+      <stop offset="60%"  stop-color="#14874C"/>
+      <stop offset="100%" stop-color="#2FB3A2"/>
+    </linearGradient>
+
+    <!-- หกเหลี่ยมหนึ่งหน่วย รัศมี 100 วางแนวตั้ง (flat-top) -->
+    <symbol id="hex" viewBox="-100 -87 200 174">
+      <polygon points="-50,-87 50,-87 100,0 50,87 -50,87 -100,0"/>
+    </symbol>
+  </defs>
+
+  <rect width="1654" height="2339" fill="url(#bg)"/>
+
+  <!-- แถบสีบางแนวตั้งริมซ้าย เป็นหลักให้สายตา -->
+  <rect x="0" y="0" width="26" height="2339" fill="url(#sweep)"/>
+
+  <!-- ── กลุ่มหกเหลี่ยมครึ่งล่าง ───────────────────────────── -->
+  <g>
+    <!-- แถวหลัง จาง ๆ -->
+    <use href="#hex" x="1180" y="1420" width="420" height="365" fill="#0E6B3D" opacity="0.07"/>
+    <use href="#hex" x="1330" y="1700" width="420" height="365" fill="#2FB3A2" opacity="0.10"/>
+    <use href="#hex" x="1030" y="1985" width="420" height="365" fill="#0E6B3D" opacity="0.06"/>
+
+    <!-- แถวหน้า ทึบ -->
+    <use href="#hex" x="1000" y="1640" width="300" height="261" fill="url(#deep)"/>
+    <use href="#hex" x="1230" y="1790" width="300" height="261" fill="url(#teal)"/>
+    <use href="#hex" x="1000" y="1940" width="300" height="261" fill="#9AA3A8" opacity="0.55"/>
+    <use href="#hex" x="1230" y="2090" width="300" height="261" fill="#E8A33D" opacity="0.9"/>
+    <use href="#hex" x="770"  y="1940" width="300" height="261" fill="#14874C" opacity="0.28"/>
+
+    <!-- หกเหลี่ยมโครงร่าง เติมจังหวะ -->
+    <use href="#hex" x="770"  y="1640" width="300" height="261" fill="none"
+         stroke="#0E6B3D" stroke-width="7" opacity="0.35"/>
+    <use href="#hex" x="540"  y="2090" width="300" height="261" fill="none"
+         stroke="#1E8F80" stroke-width="7" opacity="0.30"/>
+    <use href="#hex" x="1460" y="1490" width="300" height="261" fill="none"
+         stroke="#0E6B3D" stroke-width="7" opacity="0.22"/>
+  </g>
+
+  <!-- แถบโค้งมุมล่างซ้าย ถ่วงน้ำหนักภาพ -->
+  <path d="M0,2339 L0,1980 C 300,2070 520,2180 700,2339 Z"
+        fill="url(#sweep)" opacity="0.14"/>
+
+  <!-- หกเหลี่ยมจาง ๆ มุมบนซ้าย ให้ครึ่งบนไม่ว่างจนเกินไป -->
+  <use href="#hex" x="60" y="230" width="220" height="191" fill="none"
+       stroke="#0E6B3D" stroke-width="6" opacity="0.13"/>
+  <use href="#hex" x="175" y="380" width="150" height="130" fill="#2FB3A2" opacity="0.10"/>
+</svg>
