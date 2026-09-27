@@ -36,7 +36,8 @@ SPACING = '<w:spacing w:before="100" w:beforeAutospacing="1" w:after="100" w:aft
 TIGHT = '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>'
 
 def p(text='', bold=False, sz=32, ind=None, hang=None, style=None,
-      num=None, align=None, spacing='auto', jc=None, color=None, rule=None):
+      num=None, align=None, spacing='auto', jc=None, color=None, rule=None,
+      outline=None):
     pr = ['<w:pPr>']
     if style: pr.append(f'<w:pStyle w:val="{style}"/>')
     if num is not None:
@@ -49,6 +50,8 @@ def p(text='', bold=False, sz=32, ind=None, hang=None, style=None,
     if align: pr.append(f'<w:jc w:val="{align}"/>')
     if rule: pr.insert(1, f'<w:pBdr><w:bottom w:val="single" w:sz="{rule}" '
                           'w:space="6" w:color="0E6B3D"/></w:pBdr>')
+    # outlineLvl ต้องอยู่หลัง jc และก่อน rPr ตามลำดับที่ schema กำหนด
+    if outline is not None: pr.append(f'<w:outlineLvl w:val="{outline}"/>')
     pr.append(rpr(bold, sz, para=True, color=color).replace('<w:cs/>', ''))
     pr.append('</w:pPr>')
     body = run(text, bold, sz, color=color) if text != '' else ''
@@ -99,8 +102,10 @@ def H(text):          # หัวข้อหลัก เลขอัตโน�
     x = p(text, bold=True, style='ListParagraph', num=2, spacing='auto')
     # ใส่ระดับเค้าโครงให้ Word แทรก/อัปเดตสารบัญเองได้ด้วยคำสั่งเดียว
     return x.replace('</w:pPr>', '<w:outlineLvl w:val="0"/></w:pPr>', 1)
+_NUMHEAD = __import__('re').compile(r'^(\d+\.\d+\s|ภาคผนวก [ก-ฮ]\s)')
 def S(text):          # หัวข้อย่อย
-    return p(text, bold=True, spacing='auto')
+    lvl = 1 if _NUMHEAD.match(text) else None
+    return p(text, bold=True, spacing='auto', outline=lvl)
 def P(text, ind=360): # ย่อหน้าเนื้อความ
     return p(text, ind=ind, spacing='auto')
 def B(text):          # บุลเล็ต
@@ -119,15 +124,35 @@ MANUAL_TITLE = 'การควบคุมเอกสารและบัน�
 SYSTEM_NAME = 'ระบบทะเบียนเอกสารคุณภาพห้องปฏิบัติการเทคนิคการแพทย์ (Lab QMS)'
 
 def CH(n, title):     # หัวบท ขึ้นหน้าใหม่ จัดกลาง
+    # รวมเป็นย่อหน้าเดียว เพื่อให้สารบัญอัตโนมัติดึงข้อความครบทั้ง "บทที่ n" และชื่อบท
     return (pagebreak()
-            + p(f'บทที่ {n}', bold=True, sz=36, align='center', spacing='tight')
-            + p(title, bold=True, sz=36, align='center', spacing='tight')
+            + p(f'บทที่ {n}  {title}', bold=True, sz=36, align='center',
+                spacing='tight', outline=0)
             + GAP())
 
 def CHX(title):       # หัวข้อระดับบท ที่ไม่มีเลขบท
     return (pagebreak()
-            + p(title, bold=True, sz=36, align='center', spacing='tight')
+            + p(title, bold=True, sz=36, align='center', spacing='tight', outline=0)
             + GAP())
+
+def _fld(kind, instr=None):
+    """ชิ้นส่วนฟิลด์ของ Word — ใช้ประกอบสารบัญอัตโนมัติ"""
+    r = f'<w:r><w:fldChar w:fldCharType="{kind}"/></w:r>'
+    if instr:
+        r += ('<w:r><w:rPr>' + FONT_P + '</w:rPr>'
+              f'<w:instrText xml:space="preserve">{instr}</w:instrText></w:r>')
+    return r
+
+def TOC_BEGIN():
+    # \o "1-2" = เก็บหัวข้อระดับ 1-2 · \h = ทำเป็นลิงก์ · \z,\u = ตัวเลือกมาตรฐาน
+    return ('<w:p><w:pPr>' + TIGHT + '</w:pPr>'
+            + _fld('begin')
+            + '<w:r><w:rPr>' + FONT_P + '</w:rPr>'
+              '<w:instrText xml:space="preserve"> TOC \\o "1-2" \\h \\z \\u </w:instrText></w:r>'
+            + _fld('separate') + '</w:p>')
+
+def TOC_END():
+    return '<w:p><w:pPr>' + TIGHT + '</w:pPr>' + _fld('end') + '</w:p>'
 
 def TOCLINE(text, ind=720, bold=False):
     return p(text, ind=ind, hang=360, spacing='tight', bold=bold)
@@ -212,6 +237,7 @@ def ctrl_table():
 
 A(anchored_bg('rIdCoverBg'))
 A(inline_logo('rId7'))
+A(GAP()); A(GAP())        # เว้นให้ตราไม่ติดกล่องตารางควบคุม
 A(ctrl_table())
 A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP())
 
@@ -220,7 +246,7 @@ A(p('การปฏิบัติงาน', bold=True, sz=60, ind=300, spacin
 A(GAP()); A(GAP())
 A(p(MANUAL_TITLE, bold=True, sz=40, ind=300, spacing='tight',
     color='1F2A24', rule=8))
-A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP())
+A(GAP()); A(GAP()); A(GAP()); A(GAP())
 A(p('ฝ่ายสหเวชศาสตร์', bold=True, sz=32, ind=300, spacing='tight', color='1F2A24'))
 A(p('โรงพยาบาลธรรมศาสตร์เฉลิมพระเกียรติ', sz=30, ind=300, spacing='tight', color='4A5450'))
 A(p('2569', sz=30, ind=300, spacing='tight', color='4A5450'))
@@ -246,6 +272,7 @@ A(p('ฝ่ายสหเวชศาสตร์', sz=32, align='right', spaci
 A(pagebreak())
 A(p('สารบัญ', bold=True, sz=36, align='center', spacing='tight'))
 A(GAP())
+A(TOC_BEGIN())
 for _t in [
     'คำนำ', 'สารบัญ',
     'บทที่ 1  บทนำ',
@@ -299,9 +326,10 @@ for _t in [
     '        ภาคผนวก ง  สิ่งที่ต้องดำเนินการก่อนประกาศใช้',
 ]:
     A(TOCLINE(_t, bold=_t.startswith(('บทที่', 'บรรณ', 'ภาคผนวก'))))
+A(TOC_END())
 A(GAP())
-A(p('หมายเหตุ  เลขหน้าในสารบัญให้ปรับตามเล่มจริงหลังจัดหน้าเสร็จ '
-    'หรือใช้คำสั่งแทรกสารบัญอัตโนมัติของโปรแกรมประมวลผลคำ', ind=720, spacing='tight'))
+A(p('หมายเหตุ  สารบัญนี้เป็นสารบัญอัตโนมัติ เลขหน้าจะขึ้นเมื่อสั่งอัปเดต '
+    'โดยคลิกขวาที่สารบัญแล้วเลือก Update Field หรือกด F9', ind=720, spacing='tight'))
 
 
 
