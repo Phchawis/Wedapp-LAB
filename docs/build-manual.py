@@ -196,10 +196,13 @@ def anchored_bg(rid):
       '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'
       '</pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r></w:p>')
 
-def inline_logo(rid, cx=1000000):
+def inline_logo(rid, cx=1000000, after=460):
+    # after = ระยะใต้ตราถึงตารางควบคุม หน่วยทวิป (460 ทวิป ~ 0.8 ซม.)
     cy = int(cx * 1606164 / 1680999)        # คงสัดส่วนเดิมของไฟล์ตรา
     return (
-      '<w:p><w:pPr>' + TIGHT + '<w:jc w:val="right"/></w:pPr>'
+      '<w:p><w:pPr>'
+      f'<w:spacing w:before="0" w:after="{after}" w:line="240" w:lineRule="auto"/>'
+      '<w:jc w:val="right"/></w:pPr>'
       '<w:r><w:rPr><w:noProof/></w:rPr><w:drawing>'
       '<wp:inline distT="0" distB="0" distL="0" distR="0">'
       f'<wp:extent cx="{cx}" cy="{cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
@@ -241,7 +244,6 @@ def ctrl_table():
 
 A(anchored_bg('rIdCoverBg'))
 A(inline_logo('rId7'))
-A(GAP()); A(GAP())        # เว้นให้ตราไม่ติดกล่องตารางควบคุม
 A(ctrl_table())
 A(GAP()); A(GAP()); A(GAP()); A(GAP()); A(GAP())
 
