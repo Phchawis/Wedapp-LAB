@@ -1036,6 +1036,16 @@ if 'rIdCoverBg' not in _r:
         'Target="media/cover-bg.png"/></Relationships>')
     open(_rp, 'w', encoding='utf-8').write(_r)
 
+# ── สั่งให้ Word คำนวณฟิลด์สารบัญให้เองตอนเปิดไฟล์ ──────────────
+#    ตำแหน่งของ updateFields ใน settings.xml ต้องอยู่ก่อน hdrShapeDefaults
+#    ตาม schema ไม่งั้น Word จะฟ้องว่าไฟล์เสีย
+_sp = f'{DST}/word/settings.xml'
+_st = open(_sp, encoding='utf-8').read()
+if 'updateFields' not in _st:
+    _st = _st.replace('<w:hdrShapeDefaults',
+                      '<w:updateFields w:val="true"/><w:hdrShapeDefaults', 1)
+    open(_sp, 'w', encoding='utf-8').write(_st)
+
 _ct = open(f'{DST}/[Content_Types].xml', encoding='utf-8').read()
 assert 'Extension="png"' in _ct, 'ยังไม่มีชนิดไฟล์ png ใน [Content_Types].xml'
 
