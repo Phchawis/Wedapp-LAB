@@ -116,11 +116,15 @@ def GAP():
     return p('', spacing='tight')
 
 
-MANUAL_HEADER_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:p><w:pPr><w:pStyle w:val="Header"/><w:tabs><w:tab w:val="right" w:pos="9639"/></w:tabs><w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="999999"/></w:pBdr><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK" w:hint="cs"/><w:sz w:val="26"/><w:szCs w:val="26"/><w:cs/></w:rPr><w:t xml:space="preserve">คู่มือการปฏิบัติงาน : การควบคุมเอกสารและบันทึกด้วยระบบสารสนเทศ</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK" w:hint="cs"/><w:sz w:val="26"/><w:szCs w:val="26"/><w:cs/></w:rPr><w:t xml:space="preserve">หน้า </w:t></w:r><w:fldSimple w:instr=" PAGE "><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr><w:t>1</w:t></w:r></w:fldSimple></w:p></w:hdr>'
+MANUAL_HEADER_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:p><w:pPr><w:pStyle w:val="Header"/><w:tabs><w:tab w:val="right" w:pos="9639"/></w:tabs><w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="999999"/></w:pBdr><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK" w:hint="cs"/><w:sz w:val="26"/><w:szCs w:val="26"/><w:cs/></w:rPr><w:t xml:space="preserve">คู่มือการปฏิบัติงาน : การควบคุมเอกสารและบันทึกด้วยระบบสารสนเทศ</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK" w:hint="cs"/><w:sz w:val="26"/><w:szCs w:val="26"/><w:cs/></w:rPr><w:t xml:space="preserve">SD-09-156-006 · หน้า </w:t></w:r><w:fldSimple w:instr=" PAGE "><w:r><w:rPr><w:rFonts w:ascii="TH SarabunPSK" w:hAnsi="TH SarabunPSK" w:cs="TH SarabunPSK"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr><w:t>1</w:t></w:r></w:fldSimple></w:p></w:hdr>'
 
 
 OUT = 'คู่มือ-การควบคุมเอกสารและบันทึกด้วยระบบสารสนเทศ.docx'
 MANUAL_TITLE = 'การควบคุมเอกสารและบันทึกด้วยระบบสารสนเทศ'
+DOC_CODE   = 'SD-09-156-006'
+EFF_DATE   = '1 ตุลาคม 2569'
+REVIEWER   = 'ทนพ. พัศวัฒน์ ศุภดำรงค์เกียรติ'
+APPROVER   = 'กภ. สุพรรณี เฉยรอด'
 SYSTEM_NAME = 'ระบบทะเบียนเอกสารคุณภาพห้องปฏิบัติการเทคนิคการแพทย์ (Lab QMS)'
 
 def CH(n, title):     # หัวบท ขึ้นหน้าใหม่ จัดกลาง
@@ -220,8 +224,8 @@ def ctrl_table():
              '<w:bottom w:val="nil"/><w:right w:val="nil"/></w:tcBorders>')
     spacer = (f'<w:tc><w:tcPr><w:tcW w:w="{SPACER}" w:type="dxa"/>{NOBDR}</w:tcPr>'
               '<w:p><w:pPr>' + TIGHT + '</w:pPr></w:p></w:tc>')
-    rows = [['รหัสเอกสาร', ''], ['วันที่ประกาศใช้', ''],
-            ['ผู้ทบทวน', ''], ['ผู้อนุมัติ', '']]
+    rows = [['รหัสเอกสาร', DOC_CODE], ['วันที่ประกาศใช้', EFF_DATE],
+            ['ผู้ทบทวน', REVIEWER], ['ผู้อนุมัติ', APPROVER]]
     wds = [SPACER, LBL, VAL]
     out = ['<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>'
            f'<w:tblW w:w="{sum(wds)}" w:type="dxa"/>'
@@ -891,7 +895,7 @@ A(GAP())
 A(p('ประวัติการแก้ไข', bold=True, spacing='tight'))
 A(table([
     ['ครั้งที่แก้ไข', 'รายละเอียดการแก้ไข', 'ฉบับที่', 'หน้าที่', 'วันที่มีผลบังคับใช้หลังการแก้ไข'],
-    ['1', 'ประกาศใช้ครั้งแรก', '', '', ''],
+    ['1', 'ประกาศใช้ครั้งแรก', '1', 'ทั้งฉบับ', EFF_DATE],
     ['', '', '', '', ''],
     ['', '', '', '', ''],
     ['', '', '', '', ''],
